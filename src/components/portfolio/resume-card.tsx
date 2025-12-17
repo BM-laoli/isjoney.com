@@ -22,6 +22,7 @@ interface ResumeCardProps {
   description?: string;
   useMarkdown?: boolean;
   location?: string;
+  isExpandedShow?: boolean;
 }
 export const ResumeCard = ({
   logoUrl,
@@ -34,8 +35,9 @@ export const ResumeCard = ({
   description,
   useMarkdown = false,
   location,
+  isExpandedShow = false,
 }: ResumeCardProps) => {
-  const [isExpanded, setIsExpanded] = React.useState(false);
+  const [isExpanded, setIsExpanded] = React.useState(isExpandedShow);
   const [isTapped, setIsTapped] = React.useState(false);
 
   const handleClick = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
@@ -103,9 +105,9 @@ export const ResumeCard = ({
                 )}
               />
             </h3>
-            <div className="text-muted-foreground text-right text-xs tabular-nums sm:text-sm">
+            {/* <div className="text-muted-foreground text-right text-xs tabular-nums sm:text-sm">
               {location ? `${location} | ${period}` : period}
-            </div>
+            </div> */}
           </div>
           {subtitle && (
             <div className="font-sans text-xs">

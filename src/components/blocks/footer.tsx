@@ -7,7 +7,7 @@ import { Icons } from "@/components/icons";
 import { Separator } from "@/components/ui/separator";
 import { DATA, getEmail } from "@/data";
 
-// Use DATA.contact.social directly instead of redefining socialLinks
+// @TODO: 这里要重新设计
 
 export default function Footer() {
   const pathname = usePathname();
@@ -260,7 +260,7 @@ export default function Footer() {
                 className="hover:text-foreground inline-flex items-center gap-1 transition-colors"
               >
                 <Icons.github className="h-4 w-4" />
-                <span>zhengzangw/nextjs-portfolio-blog-research</span>
+                <span>thk: zhengzangw</span>
               </Link>
             </div>
           </div>

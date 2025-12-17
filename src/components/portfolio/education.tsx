@@ -17,8 +17,9 @@ interface EducationProps {
 export default function Education({ educations }: EducationProps) {
   return (
     <div className="flex flex-col gap-y-3">
-      {educations.map((education) => (
+      {educations.map((education,idx) => (
         <ResumeCard
+          // isExpandedShow={idx===0}
           key={education.school}
           href={education.href}
           logoUrl={education.logoUrl}

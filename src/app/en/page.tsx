@@ -70,16 +70,16 @@ export default function Page() {
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
                   Check out my latest work
                 </h2>
-                <p className="text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                {/* <p className="text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
                   From research to web applications. View the full list of
                   publications on{" "}
-                  <Link
+                  <Link 
                     href={DATA.contact.social.GoogleScholar.url}
                     className="text-blue-500 underline hover:no-underline"
                   >
                     Google Scholar
                   </Link>
-                </p>
+                </p> */}
               </div>
             </div>
           </BlurFade>
@@ -136,8 +136,8 @@ export default function Page() {
         </BlurFade>
       </section>
 
-      {/* Academic Services Section */}
-      <section id="academic-services">
+      {/* Academic Services Section 学术 */}
+      {/* <section id="academic-services">
         <div className="flex min-h-0 flex-col gap-y-3">
           <BlurFade delay={BLUR_FADE_DELAY * 7}>
             <h2 className="text-xl font-bold">Academic Services</h2>
@@ -150,7 +150,7 @@ export default function Page() {
             />
           </BlurFade>
         </div>
-      </section>
+      </section> */}
 
       {/* Invited Talks Section */}
       <section id="invited-talks">
@@ -176,6 +176,7 @@ export default function Page() {
         </div>
       </section>
 
+        {/* 你知道 关于我的跟多信息吗？ https://www.zangwei.dev/ 下边Section内容 @TODO: */}
     </main>
   );
 }

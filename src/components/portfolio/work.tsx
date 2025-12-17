@@ -19,8 +19,9 @@ interface WorkProps {
 export default function Work({ work }: WorkProps) {
   return (
     <div className="flex flex-col gap-y-3">
-      {work.map((item) => (
+      {work.map((item,idx) => (
         <ResumeCard
+          isExpandedShow={idx===0}
           key={item.company}
           logoUrl={item.logoUrl}
           altText={item.company}

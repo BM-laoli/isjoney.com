@@ -1,7 +1,8 @@
 {
-  "name": "porfolio",
+  "name": "iamjoney.com",
   "version": "1.0.0",
   "private": true,
+  "author": "JoneyZang",
   "scripts": {
     "build": "next build",
     "dev": "next dev --turbopack",
