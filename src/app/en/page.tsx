@@ -1,18 +1,18 @@
 import Link from "next/link";
 
-import AwardsSection from "@/components/portfolio/awards-section";
-import Brief from "@/components/portfolio/brief";
-import Contact from "@/components/portfolio/contact";
-import Education from "@/components/portfolio/education";
-import NewsSection from "@/components/portfolio/news";
-import ProjectsSection from "@/components/portfolio/projects-section/projects-section";
-import Services from "@/components/portfolio/services";
-import Skills from "@/components/portfolio/skills";
-import SocialLinks from "@/components/portfolio/socallinks";
-import Talks from "@/components/portfolio/talks";
-import Work from "@/components/portfolio/work";
-import { CustomReactMarkdown } from "@/components/react-markdown";
-import { BlurFade } from "@/components/ui/blur-fade";
+import AwardsSection from "@/components/portfolio/AwardsSection";
+import Brief from "@/components/portfolio/Brief";
+import Contact from "@/components/portfolio/Contact";
+import Education from "@/components/portfolio/Education";
+import NewsSection from "@/components/portfolio/News";
+import ProjectsSection from "@/components/portfolio/ProjectsSection/ProjectsSection";
+import Services from "@/components/portfolio/Services";
+import Skills from "@/components/portfolio/Skills";
+import SocialLinks from "@/components/portfolio/Socallinks";
+import Talks from "@/components/portfolio/Talks";
+import Work from "@/components/portfolio/Work";
+import { CustomReactMarkdown } from "@/components/ReactMarkdown";
+import { BlurFade } from "@/components/ui/BlurFade";
 import { BLUR_FADE_DELAY, DATA } from "@/data";
 
 export default function Page() {

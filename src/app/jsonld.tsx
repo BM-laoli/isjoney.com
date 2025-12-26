@@ -220,3 +220,92 @@ export function generateBlogPostingJsonLd(post: {
 
   return JSON.stringify(blogPosting);
 }
+
+
+/*
+ * Generate Projects List JSON-LD
+ */
+export function generateProjectsJsonLd(
+  projects: {
+    metadata: Record<string, unknown> & {
+      title: string;
+      summary?: string;
+      tech?: string[];
+      status?: string;
+    };
+    slug: string;
+  }[],
+): string {
+  const itemListElements = projects.map((project, index) => {
+    const projectUrl = `${DATA.url}/projects/${project.slug}`;
+
+    return {
+      "@type": "ListItem",
+      position: index + 1,
+      url: projectUrl,
+    };
+  });
+
+  return JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Projects",
+    description: DATA.projectInfo.description,
+    itemListElement: itemListElements,
+  });
+}
+
+/*
+ * Generate Single Project JSON-LD (SoftwareSourceCode)
+ */
+export function generateProjectJsonLd(project: {
+  metadata: Record<string, unknown> & {
+    title: string;
+    summary?: string;
+    tech?: string[];
+    status?: string;
+    date?: string;
+    github?: string;
+    demo?: string;
+    image?: string;
+  };
+  slug: string;
+}): string {
+  const socialMediaUrls = getSocialMediaUrls();
+  const projectUrl = `${DATA.url}/projects/${project.slug}`;
+
+  const author: Person = {
+    "@type": "Person",
+    name: DATA.name,
+    url: DATA.url,
+    sameAs: socialMediaUrls,
+  };
+
+  // 使用 SoftwareSourceCode 类型，更适合项目
+  const softwareSourceCode = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareSourceCode",
+    name: project.metadata.title,
+    description: project.metadata.summary,
+    url: projectUrl,
+    author,
+    ...(project.metadata.github && {
+      codeRepository: project.metadata.github,
+    }),
+    ...(project.metadata.tech && {
+      programmingLanguage: project.metadata.tech,
+    }),
+    ...(project.metadata.date && {
+      dateCreated: project.metadata.date,
+    }),
+    ...(project.metadata.image && {
+      image: `${DATA.url}${project.metadata.image}`,
+    }),
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": projectUrl,
+    },
+  };
+
+  return JSON.stringify(softwareSourceCode);
+}

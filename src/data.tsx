@@ -1,4 +1,4 @@
-import { Icons } from "@/components/icons";
+import { Icons } from "@/components/Icons";
 
 export const BLUR_FADE_DELAY = 0.05;
 
@@ -6,11 +6,11 @@ export const DATA = {
   // Website data
   url: "https://iamjoney.com/",
   lastUpdated: "Oct 2025",
-  avatarUrl: "/me.png", //@TODO: 需要换
+  avatarUrl: "/mex.jpg",
   navbar: [ // @TODO: 需要换
     { href: "/", icon: Icons.home, label: "Home" },
-    { href: "/product", icon: Icons.fileuser, label: "CV" }, // Personal Produces
-    { href: "/blog", icon: Icons.notebook, label: "Blog" }, // blog
+    { href: "/projects", icon: Icons.fileuser, label: "Projects" }, // Personal Produces
+    { href: "/blog", icon: Icons.notebook, label: "Blog" }, // blog 需要改成外联
     { href: "/resume.pdf", icon: Icons.fileuser, label: "CV" },
   ],
   // Blog info
@@ -18,7 +18,6 @@ export const DATA = {
     "Thoughts on AI, software, life and more. Short notes and longer write-ups.",
   blogCharacter: "Z", // @TODO:需要换
   blogInfo: {  // @TODO:需要换 blog 可以不用要了 链接到另外的地方去
-    // For OpenGraph image gener ation
     "bp-deduction": {
       title: "A Detailed Derivation of Backpropagation",
     },
@@ -45,7 +44,7 @@ export const DATA = {
   subtitle: "Game Developer(UE4) & Full Stack Architect(React)",
   description: "Crafting Immersive Worlds with Engineering Precision\n Unreal Engine C++ | React | Nodejs | .NET Core",
   summary:
-    "Hi, I'm Joney👋, an **Independent Game Developer** with a unique engineering DNA. I bridge the gap between high-fidelity **Game Development** and scalable **Full Stack Architecture**.\n\ \n My journey evolved from a solid background in enterprise software (**React & .NET Core**) to mastering **Unreal Engine 4**. This cross-disciplinary expertise allows me to not only craft immersive gameplay using **C++**, but also engineer robust backend systems and custom pipeline tools that power them. I bring the rigor of web architecture to the creative chaos of game development.\n \n I earned my B.Sc. in Computer Science from ![NKU Logo](/icon/nku.png) [Nankai University](https://www.nankai.edu.cn/) (NKU). Currently, I operate as a freelancer, leveraging my hybrid skillset to build connected games and interactive 3D solutions. You can see my work in my [Portfolio](./portfolio).\n \n 🛠 **Tech Stack:** **Unreal Engine 4** (C++ Gameplay/Slate), **.NET Core** (Game Server/Backend), **React** (Web/Tools UI), HLSL.",
+    "Hi, I'm Joney👋, an **Independent Game Developer** with a unique engineering DNA. I bridge the gap between high-fidelity **Game Development** and scalable **Full Stack Architecture**.\n\ \n My journey evolved from a solid background in enterprise software (**React & .NET Core**) to mastering **Unreal Engine 4**. This cross-disciplinary expertise allows me to not only craft immersive gameplay using **C++**, but also engineer robust backend systems and custom pipeline tools that power them. I bring the rigor of web architecture to the creative chaos of game development.\n \n I earned my B.Sc. in Computer Science from ![NKU Logo](/icon/nku.png) [Nankai University](https://www.nankai.edu.cn/) (NKU). Currently, I operate as a freelancer, leveraging my hybrid skillset to build connected games and interactive 3D solutions. You can see my work in my [Portfolio](./portfolio).\n \n 🛠 **Tech Stack:** **Unreal Engine 4** (C++ Gameplay/Slate), **.NET Core 1Y** (Game Server/Backend), **React Native 3Y** (Web/Tools UI), HLSL.",
   surname: "Li",
   firstName: "Joney",
   initials: "J.S",
@@ -662,7 +661,7 @@ export const DATA = {
       logoUrl: "/icon/y-almy.png",
     },
   ],
-  // Discover (footer)
+  // @TODO: 这里放的几个你自己 比较知名的项目 ，挑出 4 个
   discover: [
     {
       name: "HPC-AI Lab",
@@ -692,6 +691,11 @@ export const DATA = {
       { category: "Video", name: "Seedance-1" },
     ],
   },
+  projectInfo:{
+    description:
+      "Here are some of my notable projects that showcase my skills and expertise.",
+    moreLink: "/project",
+  }
 } as const;
 
 export function getEmail(): string {

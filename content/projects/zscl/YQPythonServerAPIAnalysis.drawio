@@ -1,0 +1,271 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/28.2.8 Chrome/140.0.7339.240 Electron/38.4.0 Safari/537.36" version="28.2.8">
+  <diagram name="第 1 页" id="_SRiWrkcd9h_2jJSI6O4">
+    <mxGraphModel dx="1426" dy="849" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-88" value="" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="290" y="2570" width="200" height="710" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-1" value="http://7.26.123.99:9200/admin/pesclub/commonpic/115/change/?_to_field=id&amp;amp;_popup=1&lt;br&gt;&lt;br&gt;经排查调用链路如下所示" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="150" y="30" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-2" value="从项目结构来看 这是一个 Django 项目" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="420" y="40" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-42" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-3" target="ZuObOWrYlH4JRjlXTX8o-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-3" value="前端的渲染方式是 SSR 的方式&lt;div&gt;模板文件在&amp;nbsp;change_form.html&lt;/div&gt;" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="90" y="120" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-4" value="前端通过&amp;nbsp;multipart/form-dat 格式把from 数据向后端传输" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="308" y="120" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-6" target="ZuObOWrYlH4JRjlXTX8o-7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-6" value="请求 抵达中间件" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="270" y="210" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-7" target="ZuObOWrYlH4JRjlXTX8o-9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-7" value="OAuth 中间件验证&amp;nbsp;&lt;br&gt;OauthMiddleware" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="270" y="320" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-8" target="ZuObOWrYlH4JRjlXTX8o-12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-8" value="Django Admin 权限检查" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="270" y="555" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-9" target="ZuObOWrYlH4JRjlXTX8o-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-28" value="Y" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ZuObOWrYlH4JRjlXTX8o-24">
+          <mxGeometry x="0.0351" y="7" relative="1" as="geometry">
+            <mxPoint x="-1" y="-4" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-9" value="是否同通过" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="288" y="420" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-10" value="跳转到 Oatuh 登录" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="180" y="480" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-33" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-11" target="ZuObOWrYlH4JRjlXTX8o-14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-11" value="表单数据验证&lt;br&gt;CommonPicForm&amp;nbsp;" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="270" y="770" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-12" target="ZuObOWrYlH4JRjlXTX8o-11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-12" value="有修改权限？" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="290" y="650" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-13" value="返回错误" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="170" y="675" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-32" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-14" target="ZuObOWrYlH4JRjlXTX8o-15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-34" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-14" target="ZuObOWrYlH4JRjlXTX8o-16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-14" value="校验通过" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="290" y="860" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-15" value="返回表单错误" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="160" y="890" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-35" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-16" target="ZuObOWrYlH4JRjlXTX8o-17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-16" value="处理文件上传&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;保存到ImageStorage&lt;/div&gt;" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="270" y="980" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-36" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-17" target="ZuObOWrYlH4JRjlXTX8o-18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-37" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-17" target="ZuObOWrYlH4JRjlXTX8o-19">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-17" value="更新DB Redis Job" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="270" y="1100" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-18" value="返回响应" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="298" y="1210" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-19" value="库&amp;nbsp;fansclub&lt;br&gt;表&amp;nbsp;pesclub_commonpic&lt;br&gt;更新&amp;nbsp;CommonPic&amp;nbsp; 记录" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="510" y="1090" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-39" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-20" target="ZuObOWrYlH4JRjlXTX8o-21">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-20" value="Redis :&lt;br&gt;sessiondb cache&lt;br&gt;&lt;br&gt;common_cache&amp;nbsp;&lt;br&gt;缓存刷新调用&lt;br&gt;主要是用户状态&lt;br&gt;settings.py" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="505" y="1180" width="130" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-21" value="Job和同步&lt;br&gt;Job没有，但是&lt;br&gt;SVN有同步&lt;br&gt;&lt;br&gt;settings.py&lt;br&gt;78头像自动同步任务，每周五下午三点跑一次" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="510" y="1300" width="130" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.783;entryY=0.267;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-9" target="ZuObOWrYlH4JRjlXTX8o-10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-27" value="N" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ZuObOWrYlH4JRjlXTX8o-26">
+          <mxGeometry x="-0.2137" y="-2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-30" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.907;entryY=0.495;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-12" target="ZuObOWrYlH4JRjlXTX8o-13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-38" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.005;entryY=0.595;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-19" target="ZuObOWrYlH4JRjlXTX8o-20">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-40" value="潜在问题：&lt;br&gt;settings 中&amp;nbsp;&#39;default&#39;: 缓存&lt;br&gt;&lt;br&gt;虽然 CommonPic 模型有 cdn_url 字段，但在当前调用中没有直接的 Redis 缓存操作" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1195" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-41" value="CommonPic 存储的图片可能需要通过 SVN 同步到 CDN，参数我们的此次调用链 不会直接调用" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="660" y="1340" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-43" value="AI 提示&lt;br&gt;&lt;div&gt;问 这个仓库中，一段 POST http://7.26.123.99:9200/admin/pesclub/commonpic/115/change/?_to_field=id&amp;amp;_popup=1&lt;/div&gt;&lt;div&gt;是如何 从前端请求来的？你需要回答&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;1.前端的View 看起来是SSR方式，这个View在哪里？&lt;/div&gt;&lt;div&gt;2.前端的View 是以什么格式传递到 server的？&lt;/div&gt;&lt;div&gt;3.server的接受 API 是在哪里？&lt;/div&gt;&lt;div&gt;4.server API 接受到请求之后的后续处理逻辑是什么？&lt;/div&gt;&lt;div&gt;5.server 在处理数据的过程中 的 流程图是什么？&lt;/div&gt;&lt;div&gt;6.涉及到哪些DB / Redis / Job 的调用？&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="435" y="110" width="340" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-89" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-44" target="ZuObOWrYlH4JRjlXTX8o-47">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-44" value="模板文件位于&lt;br&gt;&lt;br&gt;/gift/change_form.html 中" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="80" y="1650" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-46" value="通过&amp;nbsp;multipart/form-data 传递数据到 server" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="360" y="1650" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-47" value="POST请求到达" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="1740" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-48" value="OAuth中间件验证" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="1830" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-49" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-47" target="ZuObOWrYlH4JRjlXTX8o-48">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-50" value="用户已认证?" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="1930" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-51" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-48" target="ZuObOWrYlH4JRjlXTX8o-50">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-52" value="跳转OAuth登录" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="1940" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-53" value="否" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-50" target="ZuObOWrYlH4JRjlXTX8o-52">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-54" value="权限检查" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="2050" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-55" value="是" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-50" target="ZuObOWrYlH4JRjlXTX8o-54">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-56" value="有修改权限?" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="2150" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-57" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-54" target="ZuObOWrYlH4JRjlXTX8o-56">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-58" value="返回权限错误" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="2160" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-59" value="否" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-56" target="ZuObOWrYlH4JRjlXTX8o-58">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-60" value="前端JS验证&lt;div&gt;代码位于&lt;br&gt;&lt;br&gt;change_from.html 中的 130 行开始&amp;nbsp;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="2270" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-61" value="是" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-56" target="ZuObOWrYlH4JRjlXTX8o-60">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-62" value="表单数据验证&lt;br&gt;服务端位于&amp;nbsp;&lt;br&gt;apps/pesgift/admin.py&amp;nbsp;&lt;br&gt;中 92行开始" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="2370" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-63" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-60" target="ZuObOWrYlH4JRjlXTX8o-62">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-64" value="验证通过?" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="2470" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-65" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-62" target="ZuObOWrYlH4JRjlXTX8o-64">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-66" value="返回表单错误" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="2480" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-67" value="否" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-64" target="ZuObOWrYlH4JRjlXTX8o-66">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-68" value="开始数据库事务" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="2590" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-69" value="是" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-64" target="ZuObOWrYlH4JRjlXTX8o-68">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-70" value="创建备份记录GiftBak&lt;br&gt;GitDetailBak&lt;br&gt;&lt;br&gt;代码位 174行 于&amp;nbsp;&lt;span style=&quot;color: rgb(80, 250, 123); background-color: rgb(40, 42, 54); font-family: Monaco, Consolas, &amp;quot;Courier New&amp;quot;, monospace; white-space: pre;&quot;&gt;save_model 中&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="2690" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-71" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-68" target="ZuObOWrYlH4JRjlXTX8o-70">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-72" value="保存主表Gift数据" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="2790" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-73" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-70" target="ZuObOWrYlH4JRjlXTX8o-72">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-74" value="处理内联GiftDetail" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="2890" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-75" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-72" target="ZuObOWrYlH4JRjlXTX8o-74">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-86" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-76">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="600" y="3020" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-76" value="生成gift_detail_conf JSON" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="2990" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-77" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-74" target="ZuObOWrYlH4JRjlXTX8o-76">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-78" value="关联CommonPic图片" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="3090" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-79" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-76" target="ZuObOWrYlH4JRjlXTX8o-78">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-80" value="提交事务" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="3190" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-81" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-78" target="ZuObOWrYlH4JRjlXTX8o-80">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-82" value="返回成功响应" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="3290" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-83" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ZuObOWrYlH4JRjlXTX8o-80" target="ZuObOWrYlH4JRjlXTX8o-82">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-85" value="设计导的表比较多&lt;div&gt;有 他们都在 Fansclub 库下&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;div&gt;pesgift_gift (主表)&lt;/div&gt;&lt;div&gt;pesgift_giftdetail (礼包详情)&lt;/div&gt;&lt;div&gt;pesgift_giftbak (礼包备份)&lt;/div&gt;&lt;div&gt;pesgift_giftdetailbak (详情备份)&lt;/div&gt;&lt;div&gt;pesclub_commonpic (关联图片)&lt;/div&gt;&lt;/div&gt;" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="510" y="2570" width="190" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="ZuObOWrYlH4JRjlXTX8o-87" value="此动作把调用&lt;br&gt;download_gift_data&amp;nbsp; 方法 把数据存储到&amp;nbsp;&lt;br&gt;&lt;br&gt;&amp;nbsp;/data/new_json/gift_data.json&lt;br&gt;中" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="620" y="3000" width="140" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

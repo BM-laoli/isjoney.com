@@ -1,15 +1,16 @@
 import { MetadataRoute } from "next";
 
 import { DATA } from "@/data";
-import { getBlogPosts } from "@/lib/blog";
+import { getContentList } from "@/lib/content";
+
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = DATA.url;
 
   // Get all blog posts for both languages
   const [englishPosts, chinesePosts] = await Promise.all([
-    getBlogPosts("en"),
-    getBlogPosts("zh"),
+    getContentList("projects"),
+    getContentList("projects"), // 无中文选项
   ]);
 
   // Static routes

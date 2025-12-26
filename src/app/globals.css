@@ -253,3 +253,24 @@ code[data-line-numbers-max-digits="3"] > [data-line]::before {
 .dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background-color: hsl(var(--muted-foreground) / 0.4);
 }
+
+
+/* DrawIO styling */
+/* DrawIO 容器样式 */
+.drawio-container {
+  @apply my-6 rounded-lg border bg-white overflow-hidden;
+  min-height: 300px;
+}
+
+.dark .drawio-container {
+  @apply bg-gray-900;
+}
+
+/* mxgraph 内部样式覆盖 */
+.drawio-container .mxgraph {
+  @apply w-full;
+}
+
+.drawio-container svg {
+  @apply max-w-full h-auto;
+}

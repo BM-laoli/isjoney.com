@@ -1,11 +1,11 @@
 import { DATA, getEmail } from "@/data";
-import { getBlogPosts } from "@/lib/blog";
+import { getContentList } from "@/lib/content";
 
 // ISR configuration - revalidate every hour (3600 seconds)
 export const revalidate = 3600;
 
 export async function GET() {
-  const posts = await getBlogPosts();
+  const posts = await getContentList('projects');
 
   // Sort posts by published date (newest first)
   const sortedPosts = posts.sort((a, b) => {
@@ -44,7 +44,7 @@ export async function GET() {
       <email>${getEmail()}</email>
     </author>
     <summary>${escapeXml(post.metadata.summary || "")}</summary>
-    <content type="html">${escapeXml(post.source)}</content>
+    <content type="html">${escapeXml(post.html)}</content>
   </entry>`;
     })
     .join("")}

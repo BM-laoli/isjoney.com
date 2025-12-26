@@ -1,9 +1,9 @@
 import Link from "next/link";
 
-import Brief from "@/components/portfolio/brief";
-import SocialLinks from "@/components/portfolio/socallinks";
-import { CustomReactMarkdown } from "@/components/react-markdown";
-import { BlurFade } from "@/components/ui/blur-fade";
+import Brief from "@/components/portfolio/Brief";
+import SocialLinks from "@/components/portfolio/Socallinks";
+import { CustomReactMarkdown } from "@/components/ReactMarkdown";
+import { BlurFade } from "@/components/ui/BlurFade";
 import { BLUR_FADE_DELAY, DATA } from "@/data";
 
 export default function ChinesePage() {

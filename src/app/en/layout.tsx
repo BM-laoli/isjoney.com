@@ -9,9 +9,9 @@ import {
   generatePersonJsonLd,
   generateWebsiteJsonLd,
 } from "@/app/jsonld";
-import Footer from "@/components/blocks/footer";
-import Navbar from "@/components/blocks/navbar/navbar";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import Footer from "@/components/blocks/Footer";
+import Navbar from "@/components/blocks/Navbar/Navbar";
+import { TooltipProvider } from "@/components/ui/Tooltip";
 import { DATA } from "@/data";
 import { cn, jsonldScript } from "@/lib/utils";
 
