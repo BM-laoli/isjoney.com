@@ -1,0 +1,1115 @@
+---
+title: "React Native 开发规范与项目文档"
+date: "2024-12-19"
+summary: "包含 RN 项目模板说明、开发规范、工作流程、模块设计、单元测试和发布流程的完整文档"
+status: "completed"
+tech: ["React Native", "TypeScript", "Jest"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "App"
+---
+
+> 这里是nggf-cli v1.0 项目模板 和脚手架的官方文档。目前仅包含了一些template项目模板说明 和开发文档 git流程说明和研发流程规范梳理
+>
+
+
+
+## 一、关于开发手册和规范
+> 这里描述的主要是编码层面的规则
+>
+
+### 1. 文件夹结构（RN）
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1630476496721-5eadafec-ed53-4b60-b054-e8142434facc.png)
+
+如果您有好的建议，👏🏻再github提issues： [https://github.com/BM-laoli/TodoMaxRn/issues](https://github.com/BM-laoli/TodoMaxRn/issues)
+
+目前暂时么有找到分模块分包的方法，暂时使用一个模块，后期优化或者业务不忙得时候再来改进
+
+
+
+// 2023/10/31日修订
+
+这个地方看起来 不应该按照页面为思考模式去配置文件夹，而是应该以模块的形式去配置文件夹，比如  
+你有一个Banner金刚位，那么每一个都应该是 一个单独的模块，这个模块里有很多其它的Screen 注意不要用page为概念了，做App/H5/小程序 应该以 模块module为概念。MianSite或许有很多路由名字 可以用来很好的做模块区分
+
+
+
+### 2. FC.Component 和Class.Component
+
+
+函数组件和class组件的写法 这里分别放了两个例子方便您查阅
+
+```jsx
+import React from 'react';
+import {Text, View} from 'react-native';
+
+export interface  InterTuisonDemoeProps {}
+export interface  InterTuisonDemoeState {}
+
+class TuisonDemoe extends React.Component<InterTuisonDemoeProps, InterTuisonDemoeState> {
+  constructor(props: InterTuisonDemoeProps | Readonly<InterTuisonDemoeProps>){
+    super(props)
+    this.state={
+      name:'joney'
+    }
+  }
+
+  componentDidMount = ()=>{
+    // init
+  }
+  
+  render() {
+    return (
+      <View>
+        <Text>测试一下推送服务</Text>
+      </View>
+    );
+  }
+}
+
+export default TuisonDemoe;
+
+```
+
+FC组件的写法，若使用函数组价，请再合适的时机考虑 useMemo或者useCallback
+
+```jsx
+import {useNavigation, useRoute} from '@react-navigation/native';
+import React, {useEffect, useState, Component} from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  ImageBackground,
+  LogBox,
+} from 'react-native';
+import {DebugManager} from '../../../../core/react-native-debug-tool';
+import {Button, Image} from 'react-native-elements';
+import Swiper from 'react-native-swiper';
+import {getAppData, getData, storeAppData} from '../../../storage';
+import DeviceInfo from 'react-native-device-info';
+import {Alert} from 'react-native';
+import RootSiblingsManager from 'react-native-root-siblings';
+const image1 = require('../../../assets/images/Agreements.png');
+const image2 = require('../../../assets/images/CashFlow.png');
+const image3 = require('../../../assets/images/CustomerResearch.png');
+const image4 = require('../../../assets/images/Meditation.png');
+
+// 这里想当与是一个Main 必须要 一些地方的集成的东西都在这里了
+export interface  InterTest1Props{}
+export interface  InterTest1State {}
+
+const Test1: React.FC<InterTest1Props, InterTest1State> = props => {
+
+  const [loading, setLoading] = useState(true);
+  const [state, setState] = useState(0); // 0 第一次使用app 1 没有登录  2登录了
+  const navigation = useNavigation();
+  const route = useRoute();
+
+  const initSync = async () => {
+    let serverUrlMap = new Map();
+    serverUrlMap.set('Online', '192.168.124.16:3000');
+    for (let i = 1; i < 4; i++) {
+      serverUrlMap.set('test00' + i, `https://domain-00${i}.net`);
+    }
+    DebugManager.initDeviceInfo(DeviceInfo).initServerUrlMap(
+      serverUrlMap,
+      'Online',
+      baseUrl => {
+        setTimeout(
+          () => Alert.alert('环境切换', '服务器环境已经切换至' + baseUrl),
+          1000,
+        );
+      },
+    );
+    DebugManager.showFloat(RootSiblingsManager);
+  };
+
+  const checkFrIstAndLogin = async () => {
+    const value = await getAppData();
+    const userInfo = await getData();
+    setLoading(false);
+    if (!value?.isFirst) {
+      setState(0);
+      return;
+    }
+    console.log(value);
+    if (!userInfo?.access_token?.length) {
+      setState(1);
+      navigation.replace('Test2');
+      return;
+    }
+
+    setState(2);
+    navigation.replace('DrawerStackNavigator');
+  };
+
+  useEffect(() => {
+    try {
+      LogBox.ignoreAllLogs();
+      initSync();
+
+      checkFrIstAndLogin();
+      // setLoading(false);
+    } catch (error) {
+      console.log(error);
+    }
+  }, []);
+
+  const ViewLoading = () => {
+    return (
+      <View style={styles.slide1}>
+        <ImageBackground
+          source={image4}
+          resizeMethod="scale"
+          style={styles.image}></ImageBackground>
+        <Text style={styles.text}>loading....</Text>
+      </View>
+    );
+  };
+
+  return (
+    <View style={{flex: 1}}>
+      {loading ? (
+        <ViewLoading />
+      ) : !state ? (
+        <Swiper style={styles.wrapper} loop autoplay showsButtons={false}>
+          <View style={styles.slide1}>
+            <ImageBackground
+              source={image1}
+              resizeMethod="scale"
+              style={styles.image}></ImageBackground>
+            <Text style={styles.text}>欢迎使用TodoMax</Text>
+          </View>
+          <View style={styles.slide2}>
+            <ImageBackground
+              source={image2}
+              resizeMethod="scale"
+              style={styles.image}></ImageBackground>
+            <Text style={styles.text}>在这里遇见更好的自己</Text>
+          </View>
+          <View style={styles.slide3}>
+            <ImageBackground
+              source={image3}
+              resizeMethod="scale"
+              style={styles.image}></ImageBackground>
+            <View>
+              <Button
+                title="开始使用"
+                onPress={() => {
+                  storeAppData({isFirst: true});
+                  navigation.replace('Test2');
+                }}></Button>
+
+              <Button
+                title="去WebView"
+                onPress={() => {
+                  navigation.push('WebView');
+                }}></Button>
+              <Button
+                title="去极光"
+                onPress={() => {
+                  navigation.push('JpushDemo');
+                }}></Button>
+            </View>
+          </View>
+        </Swiper>
+      ) : state == 1 ? (
+        <ViewLoading />
+      ) : null}
+    </View>
+  );
+};
+
+export default Test1;
+
+const styles = StyleSheet.create({
+  wrapper: {},
+  slide1: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFF',
+  },
+  slide2: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFF',
+  },
+  slide3: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFF',
+  },
+  text: {
+    color: 'rgba(0,0,0, .65)',
+    fontSize: 30,
+    fontWeight: 'bold',
+  },
+
+  image: {
+    width: 250,
+    height: 255,
+  },
+});
+
+```
+
+### 3. 命名、 变量常量 、 枚举
+    - [x] 变量：
+        1. 不要写令人费解的缩写 如果确定这个缩写可以列举那么允许使用	
+        2. 多单词组合使用 “小驼峰” 如：getName, loginUserMessage等
+        3. 方法一律“小驼峰”，除非你有特殊的理由
+        4. linux对大小写敏感，windows比较宽松，因此这里规范： 目录组织完成后commit到git之后不要随意的更改文件夹/文件名称 ，更改之后请确定 此更改 不影响 功能运行
+        5. 页面级文件夹一律大写，components，page，store，common ，core等关键词已经具备特殊含义的通用模块 单词 允许使用小写 多单词遵循：“大驼峰”规范
+    - [x] 命名：
+        1. 自建业务组件使用 “大驼峰”规则
+        2. 方法使用：“小驼峰”规则
+        3. class 一律使用小写和短横线格式不要整大写，RN中使用小驼峰原则
+        4. 如果你使用了Hoc封装，请是Hoc + "大驼峰"规则
+
+
+
+    - [x] 常量和枚举
+        1. 常量一律要求大写，多单词使用_分割 DEFAULT_NAME      => (default_name )
+        2. 不允许出现魔法数字，请一律使用 枚举emu来定义哪怕是0 和1 都要给存一下一个枚举
+
+
+
+### 4. Ts规则
+1. 除非你有非常必要的需求，否则请不要使用函数重载，因为这看上去可读性不高，复杂性增强
+2. 尽可能的复用你的type和interface 你可以从这篇文章找到一些高级语法 去实现 从现有的interface 和type中剥离出一些熟悉 或者使得一些属性变成可选的 [工具类型](https://www.typescriptlang.org/docs/handbook/utility-types.html#omittype-keys)
+3. 在类型不确定的时候使用泛型是一个好的选择
+4. 禁止使用any
+
+
+
+### 5. React书写建议✍🏻
+    - [x] 强制性约定
+
+
+
+类组件 -> 类组价 ✔
+
+函数组件 -> 函数组件 ✔
+
+类组件 -> 函数组件 ✔
+
+函数组件 ->   类组件 ❌
+
+不要出现 传递 匿名函数的情况
+
+```jsx
+	render(){
+  	return (<div onClick={ ()=> { /** do something **/ } } >me</div>)
+  }
+```
+
+
+
+    - [x] 建议性约定
+
+hooks中的hook执行是有顺序的！这一点一定要谨记！谨记！谨记!,别的规范在官方文档中写得非常详细了
+
+### 6.Mobx使用规范
+    - [x] 最重要的只有一点！ 不要直接改Mobx的值，请使用set它的方法 通过action去改值，
+    - [x] 不要！套用！不要套用！不要套用！
+
+
+
+ 详情的使用可以去查看Template或者git上的todomax仓库
+
+```jsx
+import {makeAutoObservable} from 'mobx';
+import logisticsApi from '@/service/apis/logistics';
+import {go} from '@/common/utils';
+// go 是从 @美团 涛哥那里学习来的
+
+// 包装 Promise 减少不必要的try catch代码块
+const go = <T>(promiseFn: Promise<T>): Promise<[InterResError | undefined, T | undefined]> => {
+  // eslint-disable-next-line sonarjs/no-unused-collection
+  let res: [InterResError | undefined, T | undefined] = [undefined, undefined];
+  return promiseFn
+    .then((data: T) => {
+      res = [undefined, data];
+      return res;
+    })
+    .catch((err: InterResError) => {
+      res = [err, undefined];
+      return res;
+    });
+};
+  
+import userStore from './userStore';
+export interface packageItem {
+  packageId: string;
+  shippingCarrier: string;
+  shippingService: number;
+  trackingNumber: number;
+  shipStatus: string;
+  deliveryTime: string;
+  shipDate: string;
+  items: Array<{
+    itemTitle: string;
+    primaryImage: string;
+    sellerPartNumber: string;
+  }>;
+}
+interface Logistics {
+  orderNumber: number | undefined;
+  packageItemList: Array<packageItem> | undefined;
+}
+class LogisticsStore {
+  constructor() {
+    makeAutoObservable(this);
+  }
+
+  logisticsDetails: Record<string, any> = {};
+
+  setLogisticsDetails = (details: Record<string, any> = {}) => {
+    this.logisticsDetails = details;
+  };
+  // 获取物流信息
+  requestLogisticsDetails = async (orderNumber: string) => {
+    const params = {
+      orderNumber: orderNumber,
+      sellerId: userStore.getCurrentSellerInfo.sellerId,
+    };
+    const [err, res] = await go(logisticsApi.requestLogisticsDetails(params));
+    // @ts-ignore
+    const data: Logistics = res;
+    this.setLogisticsDetails(data?.packageItemList || []);
+  };
+}
+
+const logisticsStore = new LogisticsStore();
+
+export default logisticsStore;
+
+// 统一导出
+export default {
+  logisticsStore
+}
+
+// 使用
+const Logistics = () => {
+  //++++++
+  const {logisticsDetails, requestLogisticsDetails, setLogisticsDetails} = useLocalObservable(
+    () => store.logisticsStore,
+  );
+  const {setOriginOrderShipService} = useLocalObservable(() => store.shipmentsStore);
+  //++++++
+}
+export default observer(Logistics);
+```
+
+
+
+### 7.关于字体 需要做的
+> 我们一般都是固定设置好字体，以保证很UI设计的尺寸一致，下面是我们的一个工具方法，其实原理很简单 就是进行缩放 不care大小
+>
+
+```tsx
+//
+import {StyleSheet, Dimensions, Platform} from 'react-native';
+import {ImageStyle, TextStyle, ViewStyle} from 'react-native';
+import {isTablet} from 'react-native-device-info';
+
+export interface CustomNamedRenderStyles {
+  [key: string]: ViewStyle & TextStyle & ImageStyle;
+}
+// 可用于直接转化的属性，
+const translateProps = [
+  'width',
+  'height',
+  'lineHeight',
+  'minWidth',
+  'minHeight',
+  'maxWidth',
+  'maxHeight',
+  'marginTop',
+  'marginBottom',
+  'marginLeft',
+  'marginRight',
+  'marginVertical',
+  'marginHorizontal',
+  'paddingTop',
+  'paddingBottom',
+  'paddingLeft',
+  'paddingRight',
+  'paddingVertical',
+  'paddingHorizontal',
+  'top',
+  'bottom',
+  'left',
+  'right',
+  'lineHeight',
+  'borderRadius',
+  'borderTopWidth',
+];
+// 可用于字体的转化属性
+const translateFontProps = ['fontSize', 'lineHeight'];
+
+const translateOnWidth = (value: number) => {
+  if (isNaN(value)) {
+    return value;
+  }
+  if (isTablet()) {
+    if (value === STANDARD_WIDTH) {
+      return DEVICE_WIDTH;
+    }
+    return value;
+  }
+  return Math.round((value / STANDARD_WIDTH) * DEVICE_WIDTH);
+};
+
+// 设计搞尺寸以及，横竖屏切换
+const STANDARD_WIDTH = 375;
+const STANDARD_HEIGHT = 812;
+const FONT_SIZE_SCALER: number = 1;
+const DEVICE_WIDTH =
+  Dimensions.get('window').width > Dimensions.get('window').height
+    ? Dimensions.get('window').height
+    : Dimensions.get('window').width;
+const DEVICE_HEIGHT =
+  Dimensions.get('window').width > Dimensions.get('window').height
+    ? Dimensions.get('window').width
+    : Dimensions.get('window').height;
+
+const GLOBALWIDTH = Dimensions.get('window').width;
+const GLOBALHEIGHT = Dimensions.get('window').height;
+
+// 横竖屏切换 + 屏幕适配换算
+const getTranslateWidthWithDevice = (originWidth: number): number => {
+  if (isNaN(originWidth)) {
+    return originWidth;
+  }
+  if (isTablet()) {
+    if (originWidth === STANDARD_WIDTH) {
+      return DEVICE_WIDTH;
+    }
+
+    return originWidth;
+  }
+  return Math.round((originWidth / STANDARD_WIDTH) * DEVICE_WIDTH);
+};
+
+const getTranslateHeightWithDevice = (originHeight: number): number => {
+  if (isNaN(originHeight)) {
+    return originHeight;
+  }
+
+  if (isTablet()) {
+    return originHeight;
+  }
+  return Math.ceil((originHeight / STANDARD_HEIGHT) * DEVICE_HEIGHT);
+};
+
+// 设置 字体
+const FonStyle = (value: Pick<TextStyle, 'fontSize' | 'lineHeight'>) => {
+  const {fontSize, lineHeight} = value;
+  return {
+    ...(fontSize && {fontSize: getTranslateFontSize(fontSize)}),
+    ...(lineHeight && {lineHeight: getTranslateLineHeight(lineHeight)}),
+  };
+};
+
+// 字体缩放
+const getTranslateFontSize = (originFontsize: number) => {
+  return Platform.OS === 'android'
+    ? getTranslateWidthWithDevice(originFontsize) * FONT_SIZE_SCALER
+    : getTranslateWidthWithDevice(originFontsize);
+};
+
+// 字体Line缩放
+const getTranslateLineHeight = (originLineHeight: number) => {
+  return Platform.OS === 'android'
+    ? parseInt((getTranslateWidthWithDevice(originLineHeight) * FONT_SIZE_SCALER).toString())
+    : getTranslateWidthWithDevice(originLineHeight);
+};
+
+// 主函数
+const createNeweggStyles = (styles: CustomNamedRenderStyles) => {
+  const tmpStyles: CustomNamedRenderStyles = {...styles};
+  for (const key in styles) {
+    if (Array.isArray(styles[key])) {
+      const flattenValue = Object.assign({}, styles[key]);
+      styles[key] = flattenValue;
+    }
+    tmpStyles[key] = getTranslatePropertyWithWidth(styles[key]);
+  }
+  return StyleSheet.create(tmpStyles);
+};
+
+// 转换副函数
+const getTranslatePropertyWithWidth = (style: {[x: string]: any; hasOwnProperty: (arg0: string) => any}) => {
+  let tmpStyles: {[x: string]: any} = {...style};
+
+  translateProps.forEach((property) => {
+    if (style.hasOwnProperty(property)) {
+      tmpStyles[property] = getTranslateWidthWithDevice(style[property]);
+    }
+  });
+
+  translateFontProps.forEach((property) => {
+    if (style.hasOwnProperty(property)) {
+      tmpStyles = {
+        ...tmpStyles,
+        ...FonStyle(style[property]),
+      };
+    }
+  });
+  return tmpStyles;
+};
+
+export {
+  getTranslateWidthWithDevice,
+  getTranslateHeightWithDevice,
+  FonStyle,
+  getTranslateFontSize,
+  getTranslateLineHeight,
+  createNeweggStyles,
+  GLOBALWIDTH,
+  GLOBALHEIGHT,
+  translateOnWidth,
+};
+
+
+// 使用起来也很简单
+import {createNeweggStyles} from '@/common/utils/style';
+
+const styles = createNeweggStyles({
+  showContainer: {
+    flex: 1,
+    width: '100%',
+    display: 'flex',
+  },
+  hiddenContainer: {
+    height: 0,
+    width: 0,
+    display: 'none',
+  },
+  container: {
+    width: '100%',
+    flex: 1,
+  },
+  hiddenList: {
+    height: '0%',
+  },
+  showList: {
+    height: '93%',
+  },
+  tabWarp: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    paddingHorizontal: 16,
+  },
+  tabItemWarp: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
+  },
+  tabItemWarpTouch: {
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    borderBottomWidth: 0,
+    marginRight: 16,
+  },
+  tabActiveTouch: {
+    paddingBottom: 4,
+    borderBottomWidth: 2,
+    borderColor: '#F06C00',
+  },
+  tabActiveText: {
+    color: '#000',
+    fontWeight: 'bold',
+  },
+  itemOrderButton: {
+    height: 32,
+    borderRadius: 22,
+    marginLeft: 8,
+    marginTop: 12,
+  },
+  itemOrderButtonText: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#6E6E6E',
+    marginRight: 4,
+  },
+  itemOrderButtonFilterText: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#6E6E6E',
+    marginLeft: 8,
+  },
+  goToTop: {
+    width: 40,
+    height: 40,
+    position: 'absolute',
+    right: 30,
+    borderRadius: 50,
+  },
+  isLoadingNext: {
+    width: '100%',
+    height: 30,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noMoreWrap: {
+    height: 50,
+    alignItems: 'center',
+  },
+  noMoreWrapText: {
+    color: '#999999',
+    fontSize: 14,
+    marginTop: 5,
+    marginBottom: 5,
+  },
+
+  mb120: {
+    marginBottom: 160,
+  },
+  changeTypeWrap: {
+    justifyContent: 'space-between',
+    flexDirection: 'row',
+    backgroundColor: 'rgb(240, 241, 247)',
+    paddingBottom: -12,
+    paddingHorizontal: 16,
+    flexWrap: 'wrap',
+    alignItems: 'center',
+  },
+  activeButtonWrap: {
+    backgroundColor: '#4C85E6',
+    borderColor: 'rgba(0, 0, 0, 0.0)',
+  },
+  activeButtonText: {
+    color: '#fff',
+  },
+  mt12: {
+    marginTop: 12,
+  },
+  listWrap: {
+    height: '100%',
+  },
+  mt50: {
+    marginTop: 50,
+  },
+  mtF50: {
+    marginTop: -50,
+  },
+  // ---------------------------------------------------
+  wrapContainer: {
+    backgroundColor: 'rgb(240, 241, 247)',
+  },
+  FlatListStyle: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+});
+export default styles;
+
+```
+
+### 
+### 8.关于Android的反套壳
+> 这个就很简单了 原理就是 在运行时检测 当前的签名MD5 是否一致 ，不一致就直接给他闪退
+>
+
+```java
+package com.ngmsellerapp;
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.Signature;
+import android.util.Log;
+
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
+public class SignatureCheck {
+
+//   APP_SIGNATURE到底是什么
+//   private static final String APP_SIGNATURE = "///";    // debug_key
+     private static final String APP_SIGNATURE = "///";   // release_key
+//   自己独立发布 apk 可以使用 上面的签名。
+//   发到 google play 上的包使用了 google 的签名，所以签名密钥key 是下面的 而不是自己的key了，google 自己的签名
+//    查看方式就是 keytool -v -list -keystore ./my-release-key.keystore ，注意debug 和release 是不一样的哈 密码你应该有
+//   private static final String APP_SIGNATURE = "///";   // release_key
+  public SignatureCheck() {}
+
+    public void checkSignature(Context context) {
+        try {
+            if (!validateAppSignature(context)) {
+                killProcess(context);
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.e("SignatureCheck", "SignatureCheck exception:" + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void killProcess(Context context) {
+        if (context instanceof Activity){
+            ((Activity) context).finish();
+            System.exit(0);
+        }
+    }
+
+    private boolean validateAppSignature(Context context) throws PackageManager.NameNotFoundException {
+
+        PackageInfo packageInfo = context.getPackageManager().getPackageInfo(
+                context.getPackageName(), PackageManager.GET_SIGNATURES);
+        //note sample just checks the first signature
+        for (Signature signature : packageInfo.signatures) {
+            // SHA1 the signature
+            String sha1 = getSHA1(signature.toByteArray());
+            Log.d("MainActivity",  "sha1:" + sha1);
+            Log.d("MainActivity", APP_SIGNATURE.equals(sha1) ? "sha1: true" : "sha1: false");
+            // check is matches hardcoded value
+            return APP_SIGNATURE.equals(sha1);
+        }
+
+        return false;
+    }
+
+    //computed the sha1 hash of the signature
+    public static String getSHA1(byte[] sig) {
+        MessageDigest digest = null;
+        try {
+            digest = MessageDigest.getInstance("SHA1");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        digest.update(sig);
+        byte[] hashtext = digest.digest();
+        return bytesToHex(hashtext);
+    }
+
+    //util method to convert byte array to hex string
+    public static String bytesToHex(byte[] bytes) {
+        final char[] hexArray = { '0', '1', '2', '3', '4', '5', '6', '7', '8',
+                '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+        char[] hexChars = new char[bytes.length * 2];
+        int v;
+        for (int j = 0; j < bytes.length; j++) {
+            v = bytes[j] & 0xFF;
+            hexChars[j * 2] = hexArray[v >>> 4];
+            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+        }
+        return new String(hexChars);
+    }
+}
+
+
+public class MainActivity extends ReactActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        SplashScreen.show(this);  // here
+        super.onCreate(null);
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+
+        if (!BuildConfig.DEBUG) {
+            SignatureCheck check = new SignatureCheck();
+            check.checkSignature(this);
+        }
+
+    }
+// +++==
+}
+```
+
+## 二、关于工作流和RE
+> 这里主要是描述工作流 和RE，目前先这样写，后面与PM商量 看看如何做更好
+>
+
+### 1.git流程和发布节奏
+> 为了保证项目的节奏可控 质量可控目前 流程和发版节奏需要控制
+>
+
+画图了....
+
+
+
+### 2. commit规范
+commit规范要求如下：
+
+        * feature:   xxxx
+        * fix:   xxxxx
+        * hotfix:   xxxx
+
+### 3.re原则
+进行轮班制度，根据约定好的check清单进行RE，主要是两个主要的re工作 ：“**<font style="color:#F5222D;">依据check清单进行check</font>**”
+
++ re需要轮班人每天在有commit的时候都需要执行check 
++ 根据项目进度 或者 每次发版本的时候 ，需要开会总结，总计这个阶段 遇到的问题和以及建议，为团队执行更好的效率更高的RE提出建设性意见
+
+### 4. 开发流程梳理
+画图->
+
+
+
+## 三、关于文档和模块设计说明
+> 主要描述，文档和知识库如何建设 。项目知识库和文档如何管理和收集
+>
+
+在项目文档下建议分三块内容
+
+### 1. 需求文档
+### 2. 项目会议记录（包括需求评审等）
+> 会议记录 
+>
+
+### 3. 需求UI.UX设计
+> 希望有UI 和UX的链接地址，或者资源， 每次迭代都在这里进行， 后期的UI验收子这里进行也在这里回复 记录也在这里
+>
+
+### 4. 项目进度安排
+> 如果有现有的完整工作流可以先不记录，但是换个人建议 还是在项目文件夹中方这样的一个标题 并附带一个连接出去 方便各方查阅
+>
+
+### 5. 模块设计文档（开发）
+> 要求对每一个模块都有详细的设计！
+>
+
+### 6. 测试（测试写）
+### 7. 正式发版记录
+### 8. 积极发版记录
+### 9. 知识沉淀
+> 用来记录一些知识沉淀，PM 和开发测试UI都可以在此编辑
+>
+
+
+
+[https://github.com/hackiftekhar/IQKeyboardManager/issues/1905](https://github.com/hackiftekhar/IQKeyboardManager/issues/1905)
+
+这个Issues 是 当Xcode 升级到 Xcode14 之后发现的一个问题，这里是修复方法，简单来说就是把 +init...方法换掉就好了，只需要改一个文件 <font style="color:rgb(31, 35, 40);">UIView+Hierarchy.m </font>
+
+## 四、关于单元测试说明
+### 集成 Jest
+> 主要是用 指标和技术手段，来回答：“你写的代码到底有没有问题”的一种方式，这里写单元测试 主要以 “快照” ”浅层渲染“ ， ”异步测试为主“，”事件“，最终产出报告，用来衡量你的这次测试质量。当然如果你手头上有具体的测试用例，那么你应该参考它来编写你的单元测试, 这里有一个 模拟 Native 环境的参考文档 [https://www.jianshu.com/p/d5913ae3bd5c](https://www.jianshu.com/p/d5913ae3bd5c) 有问题可以去寻求解决方案 github 地址：[https://github.com/ferrannp/react-native-testing-example/blob/master/package.json](https://github.com/ferrannp/react-native-testing-example/blob/master/package.json)
+>
+
+
+
+### 单测流程
+> 每一次往 主干功能/版本 上合并代码时 都要求有报告 并且做相关的记录
+>
+
++ 拿到测试用例
++ 编写测试代码
++ 进行测试 得到测试报告 做一次记录 📝
+
+
+
+### 详细说明 Jest 基础语法和 APi
+#### 1.全局 globals
++ describe(name, fn)：描述块，讲一组功能相关的测试用例组合在一起 （注意每一个都描述快都可以使用四个周期 hook）
++ it(name, fn, timeout)：别名 test，用来放测试用例
++ afterAll(fn, timeout)：所有测试用例跑完以后执行的方法
++ beforeAll(fn, timeout)：所有测试用例执行之前执行的方法
++ afterEach(fn)：在每个测试用例执行完后执行的方法
++ beforeEach(fn)：在每个测试用例执行之前需要执行的方法
+
+
+
+#### 2. Jest 对象
+
+
++ jest.fn(implementation)：返回一个全新没有使用过的 mock function，这个- function 在被调用的时候会记录很多和函数调用有关的信息
++ jest.mock(moduleName, factory, options)：用来 mock 一些模块或者文件
++ jest.spyOn(object, methodName)：返回一个 mock function，和 jest.fn 相似，但是- 能够追踪 object[methodName]的调用信息，类似 Sinon
+
+
+
+#### 3. Mock Function 这很重要
+
+
+使用 mock 函数可以轻松的模拟代码之间的依赖，可以通过 fn 或 spyOn 来 mock 某个具体的函数；通过 mock 来模拟某个模块。
+
+
+
+#### 4. 快照
+
+
+所谓快照就是 ，渲染出来的一个 UI 结构，我们拿他去对比一下 和我们预期结果一直就通过
+
+
+
+#### 5. 异步测试
+
+
+Jest 支持对异步的测试，支持 Promise 和 Async/Await 两种方式的异步测试。
+
+
+
+#### 6. 常见断言
++ expect(value)：要测试一个值进行断言的时候，要使用 expect 对值进行包裹
++ toBe(value)：使用 Object.is 来进行比较，如果进行浮点数的比较，要使用 toBeCloseTo
++ not：用来取反
++ toEqual(value)：用于对象的深比较
++ toMatch(regexpOrString)：用来检查字符串是否匹配，可以是正则表达式或者字符串
++ toContain(item)：用来判断 item 是否在一个数组中，也可以用于字符串的判断
++ toBeNull(value)：只匹配 null
++ toBeUndefined(value)：只匹配 undefined
++ toBeDefined(value)：与 toBeUndefined 相反
++ toBeTruthy(value)：匹配任何使 if 语句为真的值
++ toBeFalsy(value)：匹配任何使 if 语句为假的值
++ toBeGreaterThan(number)： 大于
++ toBeGreaterThanOrEqual(number)：大于等于
++ toBeLessThan(number)：小于
++ toBeLessThanOrEqual(number)：小于等于
++ toBeInstanceOf(class)：判断是不是 class 的实例
++ anything(value)：匹配除了 null 和 undefined 以外的所有值
++ resolves：用来取出 promise 为 fulfilled 时包裹的值，支持链式调用
++ rejects：用来取出 promise 为 rejected 时包裹的值，支持链式调用
++ toHaveBeenCalled()：用来判断 mock function 是否被调用过
++ toHaveBeenCalledTimes(number)：用来判断 mock function 被调用的次数
++ assertions(number)：验证在一个测试用例中有 number 个断言被调用
++ extend(matchers)：自定义一些断言
+
+
+
+### 编写测试用例 （示例代码）
+
+
++ 要被测试的组件
+
+
+
+```jsx
+// Intro.tsx
+import React, {Component} from 'react';
+import {StyleSheet, Text, View} from 'react-native';
+
+class Intro extends Component {
+  render() {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.welcome}>Welcome to React Native!</Text>
+        <Text style={styles.instructions}>
+          This is a React Native snapshot test.
+        </Text>
+      </View>
+    );
+  }
+}
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    backgroundColor: '#F5FCFF',
+    flex: 1,
+    justifyContent: 'center',
+  },
+  instructions: {
+    color: '#333333',
+    marginBottom: 5,
+    textAlign: 'center',
+  },
+  welcome: {
+    fontSize: 20,
+    margin: 10,
+    textAlign: 'center',
+  },
+});
+
+export default Intro;
+```
+
+
+
++ **tests**/Intro-test.tsx 测试文件
+
+
+
+```jsx
+// __tests__/Intro-test.js
+import React from 'react';
+import renderer from 'react-test-renderer';
+import Intro from '../Intro';
+
+test('renders correctly', () => {
+  const tree = renderer.create(<Intro />).toJSON();
+  expect(tree).toMatchSnapshot();
+});
+```
+
+
+
++ 执行 测试
+
+
+
+```shell
+yarn run test --coverage
+```
+
+
+
+###  度量你的测试结果
+
+
++ 行覆盖率(line coverage)：是否测试用例的每一行都执行了
++ 函数覆盖率(function coverage)：是否测试用例的每一个函数都调用了
++ 分支覆盖率(branch coverage)：是否测试用例的每个 if 代码块都执行了
++ 语句覆盖率(statement coverage)：是否测试用例的每个语句都执行了
++ 出最终的测试报告 加一个参数 --coverage
+
+
+
+设置一个全局配置阈值 ，为了简便起见，统一使用全局配置 packge.json 中
+
+
+
+```json
+....
+"jest": {
+    "preset": "react-native",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ],
+    "coverageThreshold":{
+        "global": {
+          "branches": 50,
+          "functions": 50,
+          "lines": 50,
+          "statements": 50
+      }
+    }
+  }
+```
+
+## 五、关于发布说明
+> 这里主要讲的是 ，App的dev包 st包 和发行版本 如何发布的详细说明
+>
+
+
+
+
+
+## 六、关于基础设施建设说明
+> 欢迎👏🏻各位大佬。一起来共建。G5前端开发者平台（文档wiki编写 工具，App打包构建平台，H5发布平台 ）
+>
+
+
+
+做了一个大概的demo 可以看 项目
+
+
+
+
+

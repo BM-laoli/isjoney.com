@@ -274,3 +274,5 @@ code[data-line-numbers-max-digits="3"] > [data-line]::before {
 .drawio-container svg {
   @apply max-w-full h-auto;
 }
+
+/* Code Snippet Styling */

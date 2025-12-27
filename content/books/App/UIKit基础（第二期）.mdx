@@ -1,0 +1,479 @@
+---
+title: "iOS UIKit 组件详解：UIScrollView、UILabel、UIImage、UIButton 与手势识别"
+date: "2024-12-19"
+summary: "深入讲解 iOS UIKit 核心组件的使用方法，包括 UIScrollView 滚动视图、UILabel 文本标签、UIImage 图片显示、UIButton 按钮交互以及 UIGestureRecognizer 手势识别的实现原理和实战案例。"
+status: "completed"
+tech: ["iOS", "UIKit", "Objective-C"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "App"
+---
+
+### 
+# UIScrollerView
+> UIView是最基础的展示，UITabVIew 和UICollectionVIew 都是继承UIScrlloVIew逻辑，所以我们来看看它
+>
+
+## 创建一个
+### 理论知识
+
+
+通过本次课的学习我们要求掌握如下的技能：创建横向滚动，创建一个滚动条效果（涉及到的点：循环，数组）
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1634994906027-b6452b7f-d0f5-423c-b69d-9293e1f39d3e.png)
+
+### 实践指南
+我们有下面的几个步骤要做，
+
+1. 把tabBarItem3 独立出来，
+2. 创建一个基础的UIScrollVIew
+3. 实现一个翻页效果
+
+```objectivec
+
+//  CGZxViewController.m
+//  SimpelApp
+//
+//  Created by 李仕增 on 2021/10/23.
+//
+
+#import "CGZxViewController.h"
+
+@interface CGZxViewController ()
+
+@end
+
+@implementation CGZxViewController
+
+
+- (instancetype) init {
+    self = [super init];
+    if (self) {
+        self.view.backgroundColor = [UIColor orangeColor];
+        self.tabBarItem.title =@"资讯";
+        self.tabBarItem.image = [UIImage imageNamed:@"icon.bundle/video.png"];
+        self.tabBarItem.selectedImage = [UIImage imageNamed:@"icon.bundle/videoActive.png"];
+    }
+    return  self;
+};
+
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.view.backgroundColor = [UIColor whiteColor];
+    
+    UIScrollView *scrollerView = [[UIScrollView alloc] initWithFrame:self.view.bounds];
+    scrollerView.backgroundColor = [UIColor lightGrayColor];
+    // 设置中心点让他 路由滚动
+    scrollerView.contentSize = CGSizeMake(self.view.bounds.size.width * 5, self.view.bounds.size.height);
+    
+    // 循环创建view 添加到ScrollView中去
+    NSArray *colorArray = @[[UIColor redColor], [UIColor systemPinkColor], [UIColor yellowColor], [UIColor greenColor], [UIColor grayColor]];
+    
+    for (int i = 0; i < 5; i++) {
+        [scrollerView addSubview:({
+            UIView *view = [ [UIView alloc] initWithFrame:CGRectMake(scrollerView.bounds.size.width, 0, scrollerView.bounds.size.width, scrollerView.bounds.size.height) ];
+            view.backgroundColor = [colorArray objectAtIndex:i];
+            view;
+        })];
+    }
+    
+    // 父容器开启滚动特效
+    scrollerView.pagingEnabled =YES;
+    [self.view addSubview:scrollerView];
+    
+    
+}
+
+@end
+
+```
+
+## 我们看看一些骚操作
+和其他的delegate模式一样，我们也是这样的用以下是UIScollerVIew上的一些delegate
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1634997558342-5f743f3c-af16-4311-88b0-feda5ac84853.png)
+
+```objectivec
+@interface CGZxViewController ()<UIScrollViewDelegate>
+
+//+++++
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.view.backgroundColor = [UIColor whiteColor];
+
+    UIScrollView *scrollerView = [[UIScrollView alloc] initWithFrame:self.view.bounds];
+    scrollerView.backgroundColor = [UIColor lightGrayColor];
+    // 设置中心点让他 路由滚动
+    scrollerView.contentSize = CGSizeMake(self.view.bounds.size.width * 5, self.view.bounds.size.height);
+    scrollerView.delegate = self;
+    
+//+++++
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    NSLog(@"scroll start ....");
+};
+
+- (void)scrollViewWillBeginDecelerating:(UIScrollView *)scrollView {
+    NSLog(@"scroll end ....");
+};
+
+- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
+    NSLog(@"Drag start ....");
+};
+
+- (void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView {
+    NSLog(@"Drag edn ....");
+};
+```
+
+
+
+## 总结归纳一下目前学习到的视图
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1634998410156-23faf701-7ad5-433c-a1e2-b1e1da759d30.png) 	从继承的类图上来看，我们可以猜测一下，子的UITabViewDelegate能否响应 父类的 UIScllorDelegate呢？答案是可以的，这样的操作相当于重写
+
+
+
+# UILabel
+## 理论知识
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1634999250617-db41370e-5dd5-4d0b-b26b-36747519e906.png)
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1634999269901-723f93bb-86a2-4b01-bde7-7836d781970a.png)![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1634999287467-51b484e3-a04d-4d89-baae-94eb5c6534ae.png)
+
+## 实战指南
+这节课我们主要的目的是实现上诉的UIlabel-1 这个蓝色的图片的效果,主要的实现有下面的几个步骤
+
+    - [x]  把原来的首页的UITabViewCell迁移出去独立成文件（注意不要选错了集成的类哈你要选的是cell而不是其他）
+    - [x]  自定义实现一个类 ，定义我们的私有@peorty属性 用于承载我们需要的四个文字Lablea
+    - [x]  细微的调整整个布局和样式
+
+```objectivec
+// 1. 新建的文件完成迁移工作
+// 首页viewController.m
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    
+    CGPtTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"id"];
+    if ( !cell ) {
+        cell = [[CGPtTableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"id"];
+    }
+    
+//    cell.textLabel.text =  [NSString stringWithFormat:@"主标题 - %@",@(indexPath.row)];
+//    cell.detailTextLabel.text = @"副标题";
+//    cell.imageView.image = [UIImage imageNamed:@"icon.bundle/video.png"];
+    return cell;
+};
+
+
+// 2. 定义属性Lable 和重写 cell默认的Lable
+ //
+//  CGPtTableViewCell.m
+
+#import "CGPtTableViewCell.h"
+
+@interface CGPtTableViewCell ()
+
+@property(nonatomic, strong, readwrite) UILabel *titleLabel;
+@property(nonatomic, strong, readwrite) UILabel *sourceLabel;
+@property(nonatomic, strong, readwrite) UILabel *commentLabel;
+@property(nonatomic, strong, readwrite) UILabel *timeLabel;
+
+@end
+
+@implementation CGPtTableViewCell
+
+- (instancetype) initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(nullable NSString *)reuseIdentifier {
+    
+    self=[super initWithStyle:style reuseIdentifier:reuseIdentifier];
+    
+    if(self){
+        // 创建自己的cell
+        [self.contentView addSubview:({
+            self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, 15, 300, 50)];
+            self.titleLabel.backgroundColor = [UIColor redColor];
+            self.titleLabel.font = [UIFont systemFontOfSize:16];
+            self.titleLabel.textColor = [UIColor blackColor];
+            self.titleLabel;
+        })];
+        
+        [self.contentView addSubview:({
+            self.sourceLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, 80, 50, 20)];
+            self.sourceLabel.backgroundColor = [UIColor redColor];
+            self.sourceLabel.font = [UIFont systemFontOfSize:12];
+            self.sourceLabel.textColor = [UIColor grayColor];
+            self.sourceLabel;
+        })];
+        
+        [self.contentView addSubview:({
+            self.commentLabel = [[UILabel alloc] initWithFrame:CGRectMake(100, 80, 50, 20)];
+            self.commentLabel.backgroundColor = [UIColor redColor];
+            self.commentLabel.font = [UIFont systemFontOfSize:12];
+            self.commentLabel.textColor = [UIColor grayColor];
+            self.commentLabel;
+        })];
+        
+        [self.contentView addSubview:({
+            self.timeLabel = [[UILabel alloc] initWithFrame:CGRectMake(160, 80, 50, 20)];
+            self.timeLabel.backgroundColor = [UIColor redColor];
+            self.timeLabel.font = [UIFont systemFontOfSize:12];
+            self.timeLabel.textColor = [UIColor grayColor];
+            self.timeLabel;
+        })];
+        
+        
+    }
+    return  self;
+}
+
+@end
+
+
+// 3. 设置一个方法给外部调用 每次布局的时候会自动去掉初始化它
+
+- (void) layoutInitCell {
+    self.titleLabel.text = @"老李的博客";
+    self.sourceLabel.text = @"老李的博客";
+    self.commentLabel.text = @"老李的博客";
+    self.timeLabel.text = @"老李的博客";
+}
+
+
+// 不要忘记去暴露出去
+@interface CGPtTableViewCell : UITableViewCell
+
+- (void) layoutInitCell
+@end
+
+// 外部调用的时候
+
+
+// 4. 开始细微的调整样式 我们之前理论学习的时候有详细的说国 Label的自适应规则 可以自己回顾一下 看看
+- (void) layoutInitCell {
+    self.titleLabel.text = @"老李发表的一片博客老李发表的一片博客老李发表的一片博客老李发表的一片博客老李发表的一片博客";
+    self.sourceLabel.text = @"极客时间极";
+    
+    self.commentLabel.text = @"1988条评论";
+    [self.commentLabel sizeToFit];
+    self.commentLabel.frame = CGRectMake(self.sourceLabel.frame.origin.x + self.sourceLabel.frame.size.width + 15,  self.commentLabel.frame.origin.y , self.commentLabel.frame.size.width,self.commentLabel.frame.size.height);
+    
+    self.timeLabel.text = @"三分钟前";
+    [self.timeLabel sizeToFit];
+    self.timeLabel.frame = CGRectMake(self.commentLabel.frame.origin.x + self.commentLabel.frame.size.width + 15,  self.timeLabel.frame.origin.y , self.timeLabel.frame.size.width,self.timeLabel.frame.size.height);
+}
+
+
+```
+
+# UIImage
+## 理论知识
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1635519432438-a6156962-2edb-40d1-bab2-e64bf47adf04.png)
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1635519676095-681416e0-2317-4160-8897-9f872720457f.png)
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1635519687653-3a0f19a8-0842-4984-86b0-08ba5fb0eae3.png)
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1635519818956-883a89e0-0f8f-41d9-b99c-70008ecf0ccc.png)
+
+## 实战指南
+我们需要加入一个UIImageView,实际上这也非常的简单 只需要在我们上一节的基础上添加一个UIVIew就行了，说白了UIImgView 也是一种UIVIew只不过它是拿来承载 Img的而已
+
+```objectivec
+#import "CGPtTableViewCell.h"
+
+@interface CGPtTableViewCell ()
+
+@property(nonatomic, strong, readwrite) UIImageView *rightImageView;
+
+@end
+
+@implementation CGPtTableViewCell
+
+- (instancetype) initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(nullable NSString *)reuseIdentifier {
+    
+    self=[super initWithStyle:style reuseIdentifier:reuseIdentifier];
+    
+    if(self){
+      +++++
+//        这里我们来加一个UIImageVIew
+        [self.contentView addSubview:({
+            self.rightImageView = [[UIImageView alloc] initWithFrame:CGRectMake(260, 25, 100, 60)];
+            self.rightImageView.backgroundColor = [UIColor redColor];
+//          先给一个图片的自适应模式
+            self.rightImageView.contentMode =UIViewContentModeScaleAspectFit;
+            self.rightImageView;
+        })];
+        
+        
+        
+    }
+    return  self;
+}
+
+- (void) layoutInitCell {
+	+++++
+    
+    //  这个会返回一个UIImage类
+    self.rightImageView.image = [UIImage imageNamed:@"icon.bundle/home.png"];
+}
+
+@end
+
+```
+
+# 按钮、点击、手势识别UIButton
+## 从展示的角度看UIButton
+### 理论知识
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1635521487934-00a73e9c-ccf1-48f7-af15-c7bae469979e.png)
+
+对于UIButton来说有两个部分 一个展示 和交互，我们可以先来看看 UIButton的展示
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1635521582481-892c1465-6363-4048-a970-6c8efb434063.png)
+
+上面我们讲解了UIButton的展示，我们可以再看看作为交互的时候
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1635864037127-dca4782a-44a5-4e65-8aca-13cdb8d7b031.png)
+
+### 代码实战
+我们的目标是基于原来的项目 Item 加一个Button
+
+```objectivec
+ ++++
+     //        这里我们来加一个UIButton
+     [self.contentView addSubview:({
+         self.myButton = [[UIButton alloc] initWithFrame:CGRectMake(260, 35, 30, 30)];
+         [self.myButton setTitle:@"X" forState:UIControlStateNormal];  // 普通点击的时候
+         [self.myButton setTitle:@"V" forState:UIControlStateHighlighted];
+         // 点击选中的时候
+         
+         self.myButton.backgroundColor = [UIColor systemBlueColor];
+         self.myButton;
+     })];
+```
+
+## 从交互角度看UIButton
+### 理论知识
+我们看看这里有个另一个 设计模式：**<font style="color:#E8323C;">Target-action（类似于JS中的事件监听缺点就是不好传值）</font>**
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1635865084805-7cab8c7f-e24a-44a0-8745-2eda9d0dbfd0.png)
+
+如果是换做React来说就像Props传递 方法，下面的事件都是UIkit提供的系统级的事件
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1635865451182-0bfc61e7-3f45-487d-a7a4-dde4f4795d07.png)
+
+在交互层面主要是UIContorl这个父类
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1635865785450-e8e6cda7-c037-4894-a5c0-10c8bcbde1e0.png)
+
+### 实战指南
+```objectivec
+//        这里我们来加一个UIButton
+        [self.contentView addSubview:({
+            self.myButton = [[UIButton alloc] initWithFrame:CGRectMake(260, 35, 30, 30)];
+            [self.myButton setTitle:@"X" forState:UIControlStateNormal];
+            [self.myButton setTitle:@"V" forState:UIControlStateHighlighted];
+            self.myButton.backgroundColor = [UIColor systemBlueColor];
+//            添加一个事件
+            [self.myButton addTarget:self action:@selector(myButtonClick) forControlEvents:UIControlEventTouchUpInside];
+            self.myButton;
+        })];
+++++
+
+- (void) myButtonClick {
+    NSLog(@"点击我了");
+}
+
+```
+
+# 识别手势 UIGestureRecongnizer
+## 理论知识
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1635866051475-ea005b80-699a-4d53-814f-6bad66a9432c.png)![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1635866415848-d0d00891-49e3-499e-919e-13dd8a396817.png)Delegate模式又来了 你需要搞搞看看Delegate哈，复习复习
+
+## 实战指南
+我们主要是先搞了一个手势识别功能，然后使用Delegate设计模式，实现几个协议
+
+
+
+```objectivec
++++++
+//
+//  MimeViewController.m
+//  SimpelApp
+//
+//  Created by 李仕增 on 2021/11/2.
+//
+
+#import "MimeViewController.h"
+
+@interface MimeViewController ()<UIGestureRecognizerDelegate>
+
+@end
+
+@implementation MimeViewController
+
+- (instancetype) init {
+    self = [super init];
+    if(self) {
+        self.view.backgroundColor = [UIColor orangeColor];
+        self.tabBarItem.title =@"我的";
+        self.tabBarItem.image = [UIImage imageNamed:@"icon.bundle/Customer.png"];
+        self.tabBarItem.selectedImage = [UIImage imageNamed:@"icon.bundle/CustomerActive.png"];
+    }
+    return  self;
+};
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.view.backgroundColor = [UIColor whiteColor];
+        
+    UIView *view = [[UIView alloc] initWithFrame:CGRectMake(100, 200, 100, 100)];
+    view.backgroundColor = [UIColor systemPinkColor];
+//    设置手势
+    UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(viewClck)];
+    
+//    绑定手势
+    [view addGestureRecognizer:tapGesture];
+    
+//    实现Delegate协议 自定义的控制 手势的各项参数
+    tapGesture.delegate = self;
+    
+    [self.view addSubview:view];
+}
+
+- (void) viewClck {
+    NSLog(@"888");
+}
+
+- (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer {
+    return  NO; // 放回fals就是书不需要这个手势的
+};
+
+@end
+
+```
+
+# 展示一个弹窗（最后一个UIkit组件）选学哈
+这个东西 已经被 官方废弃了哈，但是封装比较好，我们需要学习：”如何应对一个负责组件的设计从0到1“
+
+## 理论知识
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1635868215295-830b4d19-2a5b-4d04-b5a9-37e732afc101.png)
+
+这个封装主要需求是如下： 
+
+1. 需要浮层展示
+2. 需要用户传递参数
+3. 需要事件和传参
+
+设计模式如下
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1635868310284-cac3b3b3-3ad1-4a05-a224-d44cddbec4e5.png)
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1635868535075-1fc83c8a-a812-4276-8fe8-3776caba0826.png)
+
+## 走挖源码去
+```在Xcode里点击UIAleartView就好了，这里不多介绍了
+
+
+
+**<font style="color:#FA541C;">总结散花，以上就是师傅领进门，UIKit完全解读</font>**
+
+
+

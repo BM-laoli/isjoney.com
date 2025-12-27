@@ -1,0 +1,410 @@
+---
+title: "iOS 开发实践：文件管理与多线程处理"
+date: "2024-12-19"
+summary: "深入讲解 iOS 沙盒文件管理机制、序列化存储、NSUserDefaults 使用，以及 NSThread 和 GCD 多线程编程实践。"
+status: "completed"
+tech: ["iOS", "FileManager", "GCD", "Multithreading"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "App"
+---
+
+
+
+# IOS中的文件管理
+## IOS中的文件管理（1）
+### 理论知识
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1637850250853-8ac65203-c5b2-494d-9188-3a2369da534f.png)
+
+由于IOS 的安全比较特殊，我们的每个App都有每一个固定的文件夹，我们的App的存储空间是独立的并且和其他App是不同的，每个App的空间又分两类 非Bundles（不用管） 和Datas（重要），下面就是Datas下常用的文件夹结构
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1637850367624-447be435-2248-4bd9-b5d5-7d44391ae02f.png)
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1637850498993-baee388c-ce5e-43d5-9791-db7e49ea2430.png)
+
+下面的这个获取方式，实际上就是一个“宏”
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1637850660077-1350353d-a1a8-49ef-a712-e1347f58a4ee.png)
+
+
+
+
+
+
+
+### 实践指南
+> 下面的代码就说在IOS模拟器中 通过上面讲的方法来获取对应的沙盒地址
+>
+
+
+
+```objectivec
+//
+//  GTListLoader.m
+//  SimpelApp
+//
+//  Created by 李仕增 on 2021/11/12.
+//
+
+#import "GTListLoader.h"
+#import "AFNetworking.h"
+#import "GTListItem.h"
+@implementation GTListLoader
+
+- (void)loadListDataWithFinishBlock: (GTLisrLoaderFinishBlock)finishBlock {
++++++
+    
+    // 调试沙盒系统
+    [self _getSanBoxPath];
+};
+
+- (void) _getSanBoxPath {
+    NSArray *NsArray= NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSLog(@"");
+ // 在这里打一个断点 获取道文件夹路径📁 然后回到电脑的桌面，点击“前往” -> "前往文件夹" 输入获取道的地址就
+  能前往了，比如我这里的是
+    
+    
+}
+@end
+ 
+
+```
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1638889117881-a63d2af9-c565-4747-a5c5-ae1e05a65c47.png)
+
+然后你就能看前往这个App的沙盒文件夹了
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1638889153885-f2c28991-4358-46d4-a1f0-db686e9e9533.png)
+
+## IOS中的文件管理（2）
+> 上面我们只是通过简单的学习获取到了 沙盒地址，下面我们来 操作一下这些文件
+>
+
+
+
+### 理论知识
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1637851226294-29aa003a-6b91-471d-a13f-ef43e1ce8780.png)
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1637851245633-3e580352-adf5-42c7-9860-9a2166bb2796.png)
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1637851385065-dbc5794a-3cff-41d0-b9a0-6a99d38f35ac.png)
+
+FileManager 是一个单例
+
+
+
+### 实践指南
+> 下面的就是 使用上面的两个类  保存我们的原来List的数据道cache中去
+>
+
+```objectivec
++++++ 
+NSArray *path= NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+    NSString *cachePath = [path firstObject];
+    
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    
+//    cahche文件夹下创建一个目录
+    NSString *dataPath = [cachePath stringByAppendingPathComponent:@"GTDAta"];
+    NSError *createError;
+    [fileManager createDirectoryAtPath:dataPath withIntermediateDirectories:YES attributes:nil error:&createError];
+    
+//    然后我们去创建一个文件的地址
+    NSString *listDataPath = [dataPath stringByAppendingPathComponent:@"list"];
+//    最后我们把数据写入这个二进制文件
+    NSData *listData = [@"abccccccc000111" dataUsingEncoding:NSUTF8StringEncoding]; // 文字什么的都是UTF8编码格式
+    [fileManager createFileAtPath:listDataPath contents:listData attributes:nil]; // 创建一个二进制数据
+++++
+```
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1638890490940-cf76b7b0-742f-417e-86c9-d76bd20decf2.png)
+
+下面呢我们来看看更多的操作，比如删除 或者判断是否存在，和追加文件内容到已经存在的文件中去。
+
+
+
+```objectivec
++++++
+    NSArray *path= NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+    NSString *cachePath = [path firstObject];
+    
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    
+//    cahche文件夹下创建一个目录
+    NSString *dataPath = [cachePath stringByAppendingPathComponent:@"GTDAta"];
+    NSError *createError;
+    [fileManager createDirectoryAtPath:dataPath withIntermediateDirectories:YES attributes:nil error:&createError];
+    
+//    然后我们去创建一个文件的地址
+    NSString *listDataPath = [dataPath stringByAppendingPathComponent:@"list"];
+//    最后我们把数据写入这个二进制文件
+    NSData *listData = [@"abccccccc000111" dataUsingEncoding:NSUTF8StringEncoding]; // 文字什么的都是UTF8编码格式
+    [fileManager createFileAtPath:listDataPath contents:listData attributes:nil]; // 创建一个二进制数据
+
+//    查询文件呢？
+    BOOL fileExist = [fileManager fileExistsAtPath:listDataPath]; // 是否存在这个file路径地址
+    
+//    删除也是一样的
+//    if(fileExist){
+//        [fileManager removeItemAtPath:listDataPath error:nil];
+//    }
+    
+//    上述的都是fileManger相关的 我们来看看 fileHandler如何往前面的数据中 追加数据；
+    NSFileHandle *filerHander = [NSFileHandle fileHandleForUpdatingAtPath:listDataPath];
+    
+    [filerHander seekToEndOfFile];
+    [filerHander writeData:[@"def" dataUsingEncoding:NSUTF8StringEncoding]];
+    
+    [filerHander synchronizeFile]; // 刷新一下 把追加的内容追加进去
+    [filerHander closeFile];
+    NSLog(@"");
++++++
+```
+
+## IOS中的文件管理（3）
+### 理论知识
+> 我们这里开始看看如何把一个复杂的对象 存储下来【主要就是二进制流之间的转化】
+>
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1637939860731-47c86aad-da9f-43ae-ac02-a64dd6e47a92.png)
+
+这个是IOS中序列化最更本的API 由系统提供（但是我们一般不用这个，而是用他的扩展类），实际上这个就像前端的JSON.pase和stringfy
+
+
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1637940817960-9de5acd6-08ce-4156-8704-7a5f6183a815.png)
+
+key作用类似于指针
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1637940969498-919431b7-e0a5-4fcc-b6ad-581e38908963.png)  
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1637941217926-807bdccb-b75b-4bbc-83c0-31e6d6022e34.png)
+
+大致的过程就是 使用两个函数进行序列化和反序列化函数，然后要序列的对象 需要实现NSCoding协议 【
+
+NSCoder NSKeyedArciver NScoding协议】
+
+### 实践指南
+> 下面的例子就是把 一个“对象”存进去，( 注意我们这里由于有点BUG没有找到原因，现在我们简化处理哈 )
+>
+
+```objectivec
+# 新建了一个TestCoding 然后去实现对应的逻辑
+#import <Foundation/Foundation.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface TestCoding : NSObject<NSCoding, NSSecureCoding>
+
+@property (nonatomic, copy) NSString *cityId;
+@property (nonatomic, copy) NSString *name;
+
+@end
+
+NS_ASSUME_NONNULL_END
+
+
+#import "TestCoding.h"
+
+@implementation TestCoding
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder {
+    if (self = [super init]) {
+        self.cityId = [aDecoder decodeObjectForKey:@"cityId"];
+        self.name = [aDecoder decodeObjectForKey:@"name"];
+     }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder {
+    [aCoder encodeObject:self.cityId forKey:@"cityId"];
+    [aCoder encodeObject:self.name forKey:@"name"];
+}
+
+// 此方法必须添加
++ (BOOL)supportsSecureCoding {
+    return YES;
+}
+
+@end
+
+
+# 序列化和反序列化
+// GTListLoader.m 文件中
++++++
+- (void) _archvieListDataWithArray: (NSArray<GTLIstItem *> *)array {
++++++
+// -------测试代码
+//
+    TestCoding *cod1 = [TestCoding alloc];
+    cod1.cityId = @"cdu";
+    cod1.name = @"2Name";
+
+    TestCoding *cod2 = [TestCoding alloc];
+    cod2.cityId = @"cdu";
+    cod2.name = @"2Name";
+
+    NSArray *listValueData = @[cod1, cod2];
+    
+    NSData *data = [NSKeyedArchiver archivedDataWithRootObject:listValueData requiringSecureCoding:YES error:nil];
+
+//    [data writeToFile:listDataPath atomically:YES];
+    NSArray *historyArr1 = [NSKeyedUnarchiver unarchivedObjectOfClasses:[NSSet setWithObjects:[NSArray class], [TestCoding class], nil] fromData:data error:nil];
+
+    NSLog(@"%d",10/3);
+}
+
+```
+
+
+
+## 有没有“轮子”？
+> 这个东西当然是有的啦，这点不必担心
+>
+
+### 理论知识
+系统还提供了一个非常的简单的存储逻辑
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1638367247849-c35e8260-f7d3-41e6-aeb3-f53170ec69b5.png)
+
+
+
+这个就是所谓真正的JSONString啦在OC中和IOS开发中就是这个东西。实际上存储的底层还是一个二进制流（NSData） 实际上这个是更上层的封装
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1638367739686-f5fd7257-f60c-4b10-a40d-c11c09d7c285.png)
+
+在使用开源的时候，我们更加常用的就是FMDB、
+
+所以总结一下：
+
+![画板](https://cdn.nlark.com/yuque/0/2021/jpeg/1627571/1639059089212-402a6743-0cb4-43d4-9991-28af96d822cc.jpeg)
+
+### 实践指南🧭
+```objectivec
+// GTListLoader.m 文件中 这里我们实现的存储就存储到系统提供的key-value中
++++++
+//    [[NSUserDefaults standardUserDefaults] setObject:@"abc" forKey:@"test"];
+//    NSString *test = [[NSUserDefaults standardUserDefaults] stringForKey:@"test" ];
+//    取出来就是 abc
+//    同样的我们也可以存储二进制的东西
+    [[NSUserDefaults standardUserDefaults] setObject:data forKey:@"scalue"];
+    NSData *test2 = [[NSUserDefaults standardUserDefaults] dataForKey:@"scalue" ];
+//
+    NSArray *historyArr2 = [NSKeyedUnarchiver unarchivedObjectOfClasses:[NSSet setWithObjects:[NSArray class], [TestCoding class], nil] fromData:test2 error:nil];
+```
+
+# 
+## 我们使用KeyValue结合本地文件存储来做一次实践
+### 理论知识
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1638368035716-e1e6b430-fef9-4560-8533-e15ab0ea36a6.png)
+
+### 实践指南
+> 由于一些其它的借口限制我们就不做这次处理了，逻辑如下
+>
+
+![画板](https://cdn.nlark.com/yuque/0/2021/jpeg/1627571/1639059627103-b63e9c24-57e1-4152-bc34-ae2dc5c163f7.jpeg)
+
+
+
+# App开发重点线程管理
+## 快速入门
+### 理论知识
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1638368186386-e538e73d-b497-407b-a097-77cc13f1e252.png)
+
+> 对于	前端来说 浏览器就是的js引擎单线程的，所以我们的DOM绘制 会对UI有影响。
+>
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1638368355780-be3188bc-35ef-41ce-80a5-4eff78eb10b0.png)
+
+在IOS开发中NSThread就是一个线程，
+
+
+
+### 代码指南
+> 现在我们来看看代码如何落地 NSThread`
+>
+
+```objectivec
+  
+# --- CGPtTableViewCell.m
+++++++
+    // 我们使用网络图片的加载
+#warning 暂时这样写先  // 这样的写法会有滚动，因为“[NSData dataWithContentsOfURL:[NSURL URLWithString:item.picUrl]]];”一直在主线程运行 导致卡顿
+    
+//    现在我们来修改这个代码 把这个操作放到自己的子线程中 这里使用Block的方法 放入其中,但是会有警告说这个UI操作不在主线程中
+    NSThread *dowloadImgThread = [[NSThread alloc] initWithBlock:^{
+        UIImage *image = [UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:item.picUrl]]];
+        self.rightImageView.image = image;
+    }];
+    
+//    在控制台执行 【NSThread currentTherd】.isMain 就能看到是否说主线程
+    dowloadImgThread.name = @"dowloadImgThread";
+    [dowloadImgThread start];
+++++++
+```
+
+## GCD简单的介绍
+### 理论知识
+> 上面的内容是最简单的实现了一个 多线程 现在我们使用系统提供的API来操作，本质上GCD是对现场的“队列化”操作  Threads Pool 线程池 管理 底层就是维护一个线程池
+>
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1639060558532-ecf924f9-9298-4a1b-a0fe-dfb8f95d5923.png)
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1639060673945-fb79c701-52f3-4428-9747-bf5b5c31db18.png)
+
+> 自定义的队列可以自定为：“并发的” 还是 “串行的”
+>
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1639060873211-a595752b-d01d-420e-b191-338d09cf2b1f.png)
+
+> 同样的这些业务逻辑 也是Block 
+>
+
+### 代码指南
+> 这里的需求：“既要保证 高耗时 不在主线程 ，又保证不在非主线层 操作UI”
+>
+
+```objectivec
+# --- CGPtTableViewCell.m
++++++
+//   使用 GCD 方案解决这个问题
+    dispatch_queue_global_t doloadQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);  // 非主队列 执行高耗时操作 参数就是 执行的优先级（一共四种）
+    dispatch_queue_main_t mianQueue = dispatch_get_main_queue();  // 主线层 刷入图片
+//    多线程开始
+    dispatch_async(doloadQueue, ^{
+        UIImage *image = [UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:item.picUrl]]];
+        dispatch_async( mianQueue, ^{
+            self.rightImageView.image = image;
+        });
+    });
++++++
+```
+
+> 上面是最简单的使用，我们还有高级搞作！
+>
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1639061676980-686b970c-6b8e-4f48-b8de-475b9016b033.png)
+
+
+
+## 总结
+> 上面的CGD 没办法处理更复杂的业务 比如多线程同步 切换 中断等....，这个是一个对GCD的面向对象的封装
+>
+
+### 理论知识
+
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1639061891499-5587f839-7724-46c4-ae83-ea24dc1a57c8.png)![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1639062059358-8b1c1dc7-a371-4317-8918-323ac2b98dc7.png)
+
+上面的东西就像是js中的事件循环♻️，也是线程 底层的实现方式，下面的图是从左到右总结了一下 整个IOS中多线程的设计框架
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1639062197043-a3513ae4-9a34-418c-9eed-1a1e0a91b4b0.png)
+
+> 下面的东西就是我们刚才的图片处理 我们的 dispatch_async 就是切换线程用的
+>
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1639062293354-c8983690-476e-40ae-88f3-50969d99b825.png)
+
+### 
+
+

@@ -1,0 +1,124 @@
+---
+title: "iOS 文件压缩与解压缩：SSZipArchive 使用详解"
+date: "2024-12-19"
+summary: "详细介绍如何在 iOS 项目中使用 SSZipArchive 库进行文件的压缩和解压缩操作，包含完整的 Objective-C 实现代码。"
+status: "completed"
+tech: ["iOS", "SSZipArchive", "Objective-C"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "App"
+---
+
+## 如何进行文件的压缩解压缩？
+参考链接 [SSZipArchive的使用详解_想名真难的博客-CSDN博客_ssziparchive](https://blog.csdn.net/u014600626/article/details/104536086?spm=1001.2101.3001.6650.1&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-1-104536086-blog-24851877.pc_relevant_default&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-1-104536086-blog-24851877.pc_relevant_default&utm_relevant_index=2)
+
+实现demo: 
+
+```objectivec
+//
+//  ViewController.m
+//  ToBeOk
+//
+//  Created by administrator on 2022/11/9.
+//
+
+#import "ViewController.h"
+#import "SSZipArchive.h"
+
+@interface ViewController ()<SSZipArchiveDelegate>
+
+@end
+
+@implementation ViewController
+
+- (instancetype) init {
+    self = [super init];
+    if (self) {
+      }
+    return self;
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view.
+    UIView *view = [[UIView alloc] init];
+    view.backgroundColor = [UIColor grayColor];
+    view.frame = CGRectMake(100,100, 100, 100);
+    [self.view addSubview:view];
+
+    view.userInteractionEnabled = YES;
+    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(loadScriptWithBridge)];
+    [view addGestureRecognizer:tap];
+
+}
+
+- (void)loadScriptWithBridge {
+    NSLog(@"6666ClickME");
+
+    // 本地沙盒可以直接通过 NSBundle 获取到位
+    /* path 就是这个 file:///Users/administrator/Library/Developer/CoreSimulator/Devices/9BC4CA61-C14B-467E-BE6B-686272BB128C/data/Containers/Bundle/Application/04F4A1D8-6679-480E-8F22-11528B1EEA84/ToBeOk.app/
+*/
+    /*
+NSString *locaPath =  [[NSBundle mainBundle] resourceURL];
+NSString *pathString = [[NSBundle mainBundle] URLForResource:@"assets/abc" withExtension:@"js"].path;
+*/
+
+    [self createZipFile];
+    [self unzipFile];
+
+}
+
+//压缩
+- (void)createZipFile  {
+    NSString *targetPath = [[NSBundle mainBundle] resourcePath];
+
+    //源文件路径
+    NSString *sourceFilePath = [targetPath stringByAppendingString:@"/assets/abc.js"];
+
+    //目的路径
+    NSString *tarPath = [targetPath stringByAppendingString:@"/assets/z.zip"];
+
+    //数组里可以放多个源文件，这些文件会被同一打包成压缩包，到 destinationPath 这个路径下。
+    if ([SSZipArchive createZipFileAtPath:tarPath withFilesAtPaths:@[sourceFilePath]]) {
+        NSLog(@"压缩成功");
+    }
+    else {
+        NSLog(@"压缩失败");
+    }
+}
+
+//解压
+- (void)unzipFile {
+
+    NSString *targetPath = [[NSBundle mainBundle] resourcePath];
+
+    // 原文件路径
+    NSString *sourceFilePath = [[NSBundle mainBundle] URLForResource:@"assets/z" withExtension:@"zip"].path;
+
+    //目标路径
+    NSString *destinationPath = [targetPath stringByAppendingString:@"/uzip/"];
+
+    //把 sourceFilePath 这个路径下的zip包，解压到这个 destinationPath 路径下
+    if ([SSZipArchive unzipFileAtPath:sourceFilePath toDestination:destinationPath] ){
+        NSLog(@"解压成功");
+        // 读取数据 🤔
+        NSURL *URL = [[NSBundle mainBundle] URLForResource:@"uzip/abc" withExtension:@"js"];
+    }
+    else {
+        NSLog(@"解压失败");
+    }
+}
+
+  // SSZipArchive 需要指定的 deleget
+  #pragma mark - SSZipArchiveDelegate
+  - (void)zipArchiveWillUnzipArchiveAtPath:(NSString *)path zipInfo:(unz_global_info)zipInfo {
+    NSLog(@"将要解压。");
+}
+
+  - (void)zipArchiveDidUnzipArchiveAtPath:(NSString *)path zipInfo:(unz_global_info)zipInfo unzippedPath:(NSString *)unzippedPat uniqueId:(NSString *)uniqueId {
+    NSLog(@"解压完成！");
+}
+  @end
+
+```
+

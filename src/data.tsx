@@ -10,7 +10,7 @@ export const DATA = {
   navbar: [ // @TODO: 需要换
     { href: "/", icon: Icons.home, label: "Home" },
     { href: "/projects", icon: Icons.fileuser, label: "Projects" }, // Personal Produces
-    { href: "/blog", icon: Icons.notebook, label: "Blog" }, // blog 需要改成外联
+    { href: "/books", icon: Icons.notebook, label: "Books" }, // blog 需要改成外联
     { href: "/resume.pdf", icon: Icons.fileuser, label: "CV" },
   ],
   // Blog info
@@ -39,7 +39,7 @@ export const DATA = {
       title: "Evaluation as Creation: How AI is Redefining Human Productivity",
     },
   },
-  name:"Joney Li",
+  name: "Joney Li",
   // Generel data
   subtitle: "Game Developer(UE4) & Full Stack Architect(React)",
   description: "Crafting Immersive Worlds with Engineering Precision\n Unreal Engine C++ | React | Nodejs | .NET Core",
@@ -680,7 +680,7 @@ export const DATA = {
       url: "https://video-ocean.com/en/app",
     },
   ],
-  // Fun facts
+  // Fun facts rehype-pretty-code shiki
   aiTools: {
     description:
       "The AI models and services I use are handpicked for their performance and reliability.",
@@ -691,11 +691,362 @@ export const DATA = {
       { category: "Video", name: "Seedance-1" },
     ],
   },
-  projectInfo:{
+  projectInfo: {
     description:
       "Here are some of my notable projects that showcase my skills and expertise.",
     moreLink: "/project",
+  },
+  // 配置项 Books 列表
+  books: {
+    booksList: [
+      {
+        slug: "Interview",
+        metadata: {
+          title: "Interview",
+          summary: "An Interview book for demonstration purposes.",
+          tags: ["Life", "Career"],
+          image: "https://placehold.co/322x172/e2e8f0/1e293b.png?text=Interview",
+          status: "Mar. 2024 - Mar. 2025",
+          href: "/books/Interview/代码执行", // 都用相对链接
+          authors: "Joney",//都通用Joney
+          video: "", // 没有视频
+          links: [
+            { // 都用gitub！
+              type: "Github",
+              href: "https://github.com/BM-laoli",
+              icon: <Icons.github className="size-3" />,
+            },
+          ],
+        }
+      },
+      {
+        slug: "Nodejs",
+        metadata: {
+          title: "Node.js 全栈与云原生开发指南",
+          summary: "深入探讨 Node.js 后端应用开发，涵盖 MongoDB、NestJS 框架、GraphQL、Prisma ORM 以及 SSR 同构渲染与云原生结合的实战方案。",
+          tags: ["Node.js", "Backend", "Cloud Native"],
+          image: "https://placehold.co/322x172/e2e8f0/1e293b.png?text=Nodejs",
+          status: "Mar. 2024 - Mar. 2025",
+          href: "/books/Nodejs/偏后端的应用知识",
+          authors: "Joney",
+          video: "",
+          links: [
+            {
+              type: "Github",
+              href: "https://github.com/BM-laoli",
+              icon: <Icons.github className="size-3" />,
+            },
+          ],
+        }
+      },
+      {
+      slug: "App", // 按照要求固定为 Nodejs
+      metadata: {
+        title: "React Native 跨平台与原生客户端实战",
+        summary: "全方位解析移动端开发技术，涵盖 React Native 环境搭建、原生模块封装、自研热更新框架 HouYi 及 ToDoMax 实战。深入 iOS (OC/Swift) 与 Android 原生开发核心，从入门到大型应用架构设计。",
+        tags: ["React Native", "iOS", "Android", "Mobile"],
+        // 暖色调背景 (fff7ed - 浅橙色)，文字颜色 (ea580c - 深橙色)
+        image: "https://placehold.co/322x172/fff7ed/ea580c.png?text=App",
+        status: "Mar. 2024 - Mar. 2025",
+        href: "/books/App/环境配置",
+        authors: "Joney",
+        video: "",
+        links: [
+          {
+            type: "Github",
+            href: "https://github.com/BM-laoli",
+            icon: <Icons.github className="size-3" />,
+          },
+        ],
+      }
+    }
+    ],
+    // 配置项 Books 目录
+    booksContent: {
+      Interview: [
+        {
+          title: "代码执行",
+          slug: "Interview/代码执行",
+        },
+        {
+          title: "二、HTML+CSS相关",
+          slug: "Interview/二、HTML+CSS相关",
+        },
+        {
+          title: "极客时间 - 面试心法",
+          slug: "Interview/极客时间 - 面试心法",
+        },
+        {
+          title: "开源项目 - HelloAlgo",
+          slug: "Interview/开源项目 - HelloAlgo",
+        },
+        {
+          title: "前置知识和突击",
+          slug: "Interview/前置知识和突击",
+        },
+        {
+          title: "手写Code",
+          slug: "Interview/手写Code",
+        },
+        {
+          title: "TypeScript",
+          slug: "Interview/TypeScript",
+        },
+      ],
+      Nodejs: [
+        {
+          title: "偏后端的应用知识",
+          slug: "Nodejs/偏后端的应用知识",
+          children: [
+            {
+              title: "最简单的应用-(Node+MongoDB)",
+              slug: "Nodejs/最简单的应用-(Node+MongoDB)",
+              children: [
+                {
+                  title: "一、基础Service构建",
+                  slug: "Nodejs/一、基础Service构建"
+                },
+                {
+                  title: "二、部署和单测",
+                  slug: "Nodejs/二、部署和单测"
+                }
+              ]
+            },
+            {
+              title: "Nest",
+              slug: "Nodejs/Nest",
+              children: [
+                {
+                  title: "知识补充：自定义注解",
+                  slug: "Nodejs/知识补充：自定义注解"
+                },
+                {
+                  title: "一、基础知识准备",
+                  slug: "Nodejs/一、基础知识准备"
+                },
+                {
+                  title: "二、配置管理、日志收集、过滤器、中间价、守卫、DTO、拦截器、JWT",
+                  slug: "Nodejs/二、配置管理、日志收集、过滤器、中间价、守卫、DTO、拦截器、JWT"
+                },
+                {
+                  title: "三、文件服务、 单点登录、Job、和部署",
+                  slug: "Nodejs/三、文件服务、 单点登录、Job、和部署"
+                }
+              ]
+            },
+            {
+              title: "Graphql 从入门到实践",
+              slug: "Nodejs/Graphql 从入门到实践"
+            },
+            {
+              title: "Prisma 入门",
+              slug: "Nodejs/Prisma 入门"
+            }
+          ]
+        },
+        {
+          title: "SSR 领域的🧐",
+          slug: "Nodejs/SSR 领域的🧐",
+          children: [
+            {
+              title: "自研-SSR同构框架",
+              slug: "Nodejs/自研-SSR同构框架"
+            }
+          ]
+        },
+        {
+          title: "Nodejs与 云原生如何结合 （方案）",
+          slug: "Nodejs/Nodejs与 云原生如何结合 （方案）"
+        }
+      ],
+      App: [
+        {
+          title: "ReactNative",
+          slug: "App/ReactNative",
+          children: [
+            {
+              title: "环境配置",
+              slug: "App/环境配置"
+            },
+            {
+              title: "🌟🌟我在Newegg Seller APP开发规范🌟🌟",
+              slug: "App/🌟🌟我在Newegg Seller APP开发规范🌟🌟"
+            },
+            {
+              title: "杂七杂八的一些坑",
+              slug: "App/杂七杂八的一些坑"
+            },
+            {
+              title: "如何构建原生包? 封装RN库",
+              slug: "App/如何构建原生包? 封装RN库",
+              children: [
+                {
+                  title: "非原生包",
+                  slug: "App/非原生包"
+                },
+                {
+                  title: "IOS-RN原生包",
+                  slug: "App/IOS-RN原生包"
+                },
+                {
+                  title: "Android-RN原生包",
+                  slug: "App/Android-RN原生包"
+                }
+              ]
+            },
+            {
+              title: "分包+自己实现CodePush = 一个完整的开发框架- HouYi",
+              slug: "App/分包+自己实现CodePush = 一个完整的开发框架- HouYi",
+              children: [
+                {
+                  title: "阶段一、如何在原生应用中集成RN",
+                  slug: "App/阶段一、如何在原生应用中集成RN"
+                },
+                {
+                  title: "阶段二、分包和自研热更新",
+                  slug: "App/阶段二、分包和自研热更新"
+                },
+                {
+                  title: "阶段三、核心功能设计(一期)",
+                  slug: "App/阶段三、核心功能设计(一期)"
+                },
+                {
+                  title: "阶段三、",
+                  slug: "App/阶段三、"
+                }
+              ]
+            },
+            {
+              title: "项目实战ToDoMax",
+              slug: "App/项目实战ToDoMax",
+              children: [
+                {
+                  title: "🗓 项目进度表",
+                  slug: "App/🗓 项目进度表"
+                },
+                {
+                  title: "鉴权相关",
+                  slug: "App/鉴权相关"
+                },
+                {
+                  title: "封装路由",
+                  slug: "App/封装路由"
+                },
+                {
+                  title: "封装Http",
+                  slug: "App/封装Http"
+                },
+                {
+                  title: "基础框架",
+                  slug: "App/基础框架"
+                },
+                {
+                  title: "Design",
+                  slug: "App/Design"
+                },
+                {
+                  title: "PRD",
+                  slug: "App/PRD"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          title: "Android-Client",
+          slug: "App/Android-Client"
+        },
+        {
+          title: "IOS-Client",
+          slug: "App/IOS-Client",
+          children: [
+            {
+              title: "奇奇怪怪的需求",
+              slug: "App/奇奇怪怪的需求"
+            },
+            {
+              title: "阶段一、Objective-C语言快熟上手",
+              slug: "App/阶段一、Objective-C语言快熟上手",
+              children: [
+                {
+                  title: "(第二期) Objective-C编程 第二版 ( THE BIG NERD RANCH GUIDE 出版)",
+                  slug: "App/(第二期) Objective-C编程 第二版 ( THE BIG NERD RANCH GUIDE 出版)",
+                  children: [
+                    {
+                      title: "1-2 章 入门",
+                      slug: "App/1-2 章 入门"
+                    }
+                  ]
+                },
+                {
+                  title: "(第一期) 快速入门(一览而过)",
+                  slug: "App/(第一期) 快速入门(一览而过)"
+                }
+              ]
+            },
+            {
+              title: "阶段二、实战-从零开发一个款类似今日头条的App-完结",
+              slug: "App/阶段二、实战-从零开发一个款类似今日头条的App-完结",
+              children: [
+                {
+                  title: "UIKit基础（第一期）",
+                  slug: "App/UIKit基础（第一期）"
+                },
+                {
+                  title: "UIKit基础（第二期）",
+                  slug: "App/UIKit基础（第二期）"
+                },
+                {
+                  title: "系统API( 第三期-1 )",
+                  slug: "App/系统API( 第三期-1 )"
+                },
+                {
+                  title: "系统API( 第三期-2 )",
+                  slug: "App/系统API( 第三期-2 )"
+                },
+                {
+                  title: "系统API( 第三期-3 )",
+                  slug: "App/系统API( 第三期-3 )"
+                },
+                {
+                  title: "高级操作 （第四期-1)",
+                  slug: "App/高级操作 （第四期-1)"
+                },
+                {
+                  title: "高级操作 （第四期-2)",
+                  slug: "App/高级操作 （第四期-2)"
+                },
+                {
+                  title: "最终操作 证书和上架（第五期）",
+                  slug: "App/最终操作 证书和上架（第五期）"
+                }
+              ]
+            },
+            {
+              title: "阶段三、Swift语法快速上手",
+              slug: "App/阶段三、Swift语法快速上手",
+              children: [
+                {
+                  title: "导读说明-swiftgg教程",
+                  slug: "App/导读说明-swiftgg教程"
+                }
+              ]
+            },
+            {
+              title: "阶段四、实战-Swift在美团的应用",
+              slug: "App/阶段四、实战-Swift在美团的应用"
+            },
+            {
+              title: "阶段五、滴滴团队在IOS开发领域的骚操作",
+              slug: "App/阶段五、滴滴团队在IOS开发领域的骚操作"
+            }
+          ]
+        }
+      ]
+      //更多
+    }
   }
+
 } as const;
 
 export function getEmail(): string {

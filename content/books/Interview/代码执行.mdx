@@ -1,0 +1,172 @@
+---
+title: "JS 核心原理：任务队列、This、作用域与原型"
+date: "2025-12-27"
+summary: "深入剖析 JavaScript 异步执行机制（宏任务/微任务）、This 绑定优先级、作用域规则及原型链继承，结合经典面试题进行讲解。"
+status: "completed"
+tech: ["JavaScript", "EventLoop", "Prototype"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Interview"
+---
+
+
+## 关于任务队列
+> 只需要把js 执行的过程理清楚，基本上这些题目都是小问题，几乎来说没有任何问题
+>
+
+### 原理 和执行流程
+### ![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1660918232018-44102e16-ec6b-4e8f-8e6f-60fdce5afc8b.png)
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1660918096071-4b31a965-d0c6-4ec3-9f9e-8d2a45463d61.png)
+
+### 容易出错的误区和注意事项
+| 误区 | 结果 |
+| --- | --- |
+| 认为只要preomis 都是异步的 | ![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1661348278068-9315cb91-1e10-4ec6-a87d-a3e02c41678c.png) |
+| then 的参数都能被传递下去 | ![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1661348578945-0fcb041c-36df-4dfd-8a64-5ed98bdbb7e7.png)<br/>![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1661349075752-4c02685f-2175-48b9-b860-e45ce96b1e4a.png) |
+| then 中return error 就能到 catch | ![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1661349149327-e9fdc243-8c5d-485f-adbe-d49aadeac5f5.png)<br/>![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1661349230366-71c81bae-1cf4-4195-a6ac-d7602d140881.png) |
+| finly 接受参数 | ![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1661349351332-4f674396-bba8-424a-9ba0-f2e8987d9127.png) |
+| async/awit 的异步到底是怎么回事？ | ![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1661349528275-e9670542-9a1b-4633-a082-d2dd4c5e13a6.png) |
+| process.nextTick(function() {<br/>        console.log('3');<br/>    }) 是直接把function 加入的micro 队列去的 | 我们可以借助这样的表格来具体的分析 其中的情况<br/>![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1661349768457-fe1f70d5-e62e-4f5a-8191-3057104c92ea.png) |
+
+
+经典问题分析
+
+```javascript
+async function async1() {
+  console.log("async1 start");
+  await async2();
+  console.log("async1 end");
+}
+
+async function async2() {
+  console.log("async2");
+}
+
+console.log("script start");
+
+setTimeout(function() {
+  console.log("setTimeout");
+}, 0);
+
+async1();
+
+new Promise(resolve => {
+  console.log("promise1");
+  resolve();
+}).then(function() {
+  console.log("promise2");
+});
+console.log('script end')
+```
+
+
+
+```shell
+script start
+async1 start
+async2
+promise1
+script end
+async1 end
+promise2
+setTimeout
+```
+
+分析如下 
+
+代码执行过程如下： 
+
+1. 开头定义了async1和async2两个函数，但是并未执行，执行script中的代码，所以打印出script start；
+2. 遇到定时器Settimeout，它是一个宏任务，将其加入到宏任务队列；
+3. 之后执行函数async1，首先打印出async1 start；
+4. 遇到await，执行async2，打印出async2，并阻断后面代码的执行，将后面的代码加入到微任务队列；
+5. 然后跳出async1和async2，遇到Promise，打印出promise1；
+6. 遇到resolve，将其加入到微任务队列，然后执行后面的script代码，打印出script end；
+7. 之后就该执行微任务队列了，首先打印出async1 end，然后打印出promise2；
+8. 执行完微任务队列，就开始执行宏任务队列中的定时器，打印出setTimeout。
+
+## This问题
+### 原理
+> **this 只有在调用的时候才完成绑定****<font style="color:#E8323C;">，运行时绑定！</font>****;箭头函数没有this，他的this 是最近的作用域中的this, **
+>
+
+
+
+一般而言 关于普通函数，this 就是一句话：“谁调用指向谁”
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1661353049393-9bf1aed8-e576-4559-9ecc-6ccafbe7dbc7.png)
+
+### 
+### 注意事项
+| func1.call(null) | ![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1661353533280-7343e91a-ef67-43d2-9f67-b2e1ddf34a2a.png) |
+| --- | --- |
+| 一个非常的经典的题目         最关键的就是var x = a(5)，函数a是在全局作用域调用，所以函数内部的this指向window对象。所以 this.x = 5 就相当于：window.x = 5。之后 return this，也就是说 var x = a(5) 中的x变量的值是window，这里的x将函数内部的x的值覆盖了。然后执行console.log(x.x)， 也就是console.log(window.x)，而window对象中没有x属性，所以会输出undefined。<br/>2<br/>当指向y.x时，会给全局变量中的x赋值为6，所以会打印出6。 | ![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1661438258615-582e7b42-a764-4c17-a235-c31c50c16ecf.png) |
+| this 绑定的优先级 区分不清<br/>**<font style="color:#4D4D4D;">this绑定的优先级：</font>****new绑定 > 显式绑定 > 隐式绑定 > 默认绑定。** | ![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1661439392414-2a0b9309-e059-4547-bb55-20daea5b076b.png) |
+
+
+## 作用域
+### 原理
+### 注意事项
+| 经典题目 | ![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1661440456897-a5c279ca-22bc-4777-a76b-d97b53a93d91.png) |
+| --- | --- |
+| 经典题目 | ![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1661441153758-020e1e77-e7f8-4b1a-8814-90d5c9c37bb4.png) |
+
+
+## 原型 
+### 原理图
+> 下面的两张图是非常重要的 图
+>
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1661139956088-54908bb0-ee24-4fef-872b-56190791edb0.png)
+
+```javascript
+function SuperType(){
+    this.property = true;
+}
+
+SuperType.prototype.getSuperValue = function(){
+    return this.property;
+};
+
+function SubType(){
+    this.subproperty = false;
+}
+
+SubType.prototype = new SuperType();
+SubType.prototype.getSubValue = function (){
+    return this.subproperty;
+};
+
+var instance = new SubType();
+console.log(instance.getSuperValue());
+```
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1661258181010-7cf4a037-05f1-4796-99bb-3fb62802ad81.png)
+
+
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1661139960480-0b775b9c-9dfd-47ce-aae8-f589030a9cd3.png)
+
+### 容易出错的误区和注意事项
+
+
+
+
+```javascript
+var getName = function () {
+ console.log(4);
+}
+// e
+function getName () {
+ console.log(5);
+}
+
+// 你可以这样理解
+var getName;
+function getName(){};
+
+getName =  function () {
+ console.log(4);
+};
+
+```

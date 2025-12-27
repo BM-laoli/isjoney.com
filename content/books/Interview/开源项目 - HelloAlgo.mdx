@@ -1,0 +1,2675 @@
+---
+title: "数据结构与算法全景指南：从原理到 TS 实现"
+date: "2025-12-27"
+summary: "系统梳理算法复杂度分析、核心数据结构（数组/链表/栈/队列/哈希表/树/堆/图）及主流算法思想（排序/搜索/分治/回溯/贪心），辅以 TypeScript 代码实现与经典 LeetCode 题解。"
+status: "completed"
+tech: ["Algorithm", "DataStructure", "TypeScript"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Interview"
+---
+
+
+> 参考来自 [hello-algo](https://www.hello-algo.com/chapter_stack_and_queue/stack/#514)，[浙大数据结构课程](https://www.bilibili.com/video/BV1b7411N798?p=1&vd_source=e136cf9e83301ac4e056f1008bb36bd4)，个人实验场 [React-TS-Demo - StackBlitz](https://stackblitz.com/edit/stackblitz-starters-xdmyuv?file=src%2FApp.tsx,src%2Fhello-algo%2Farray.ts)
+>
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1704945060099-73815378-8ae8-4b1a-b7fd-cafe3fb893c3.png)
+
+# 前言
+<font style="color:rgb(29, 29, 32);">若你是算法初学者，从未接触过算法，或者已经有一些刷题经验，对数据结构与算法有模糊的认识，在会与不会之间反复横跳。</font>
+
+<font style="color:rgb(29, 29, 32);">下面的大纲内容</font>
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1704945535623-ce11d27c-7aa9-4852-baaf-a9110eddc3a1.png)
+
+主打三个方面
+
++ 前置概念 -算法的度量标准
++ 相关的数据结构
++ 具体的算法介绍和说明
+
+
+
+对于如何学习算法这件事
+
+1. **<font style="color:rgb(29, 29, 32);">阶段一：算法入门</font>**<font style="color:rgb(29, 29, 32);">。我们需要熟悉各种数据结构的特点和用法，学习不同算法的原理、流程、用途和效率等方面的内容。</font>
+2. **<font style="color:rgb(29, 29, 32);">阶段二：刷算法题</font>**<font style="color:rgb(29, 29, 32);">。建议从热门题目开刷，如“</font>[剑指 Offer](https://leetcode.cn/studyplan/coding-interviews/)<font style="color:rgb(29, 29, 32);">”和“</font>[LeetCode Hot 100](https://leetcode.cn/studyplan/top-100-liked/)<font style="color:rgb(29, 29, 32);">”，先积累至少 100 道题目，熟悉主流的算法问题。初次刷题时，“知识遗忘”可能是一个挑战，但请放心，这是很正常的。我们可以按照“艾宾浩斯遗忘曲线”来复习题目，通常在进行 3～5 轮的重复后，就能将其牢记在心。</font>
+3. **<font style="color:rgb(29, 29, 32);">阶段三：搭建知识体系</font>**<font style="color:rgb(29, 29, 32);">。在学习方面，我们可以阅读算法专栏文章、解题框架和算法教材，以不断丰富知识体系。在刷题方面，可以尝试采用进阶刷题策略，如按专题分类、一题多解、一解多题等，相关的刷题心得可以在各个社区找到。</font>
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1704945679861-54db8f77-96c7-465b-a572-358210be9ed7.png)
+
+# 初识算法
+算法无处不在 比如：
+
++ 查字典的二分查找
++ 扑克牌的排序
++ 货币找零
+
+
+
+算法和数据结构：
+
+算法是指能够在有限时间内解决特定问题的一系列步骤，特征如下
+
++ <font style="color:rgb(29, 29, 32);">问题是明确的，包含清晰的输入和输出定义。</font>
++ <font style="color:rgb(29, 29, 32);">具有可行性，能够在有限步骤、时间和内存空间下完成。</font>
++ <font style="color:rgb(29, 29, 32);">各步骤都有确定的含义，在相同的输入和运行条件下，输出始终相同。</font>
+
+<font style="color:rgb(29, 29, 32);"></font>
+
+<font style="color:rgb(29, 29, 32);">数据结构：</font>
+
+<font style="color:rgb(29, 29, 32);">是计算机中存储数据的方式，具有如下的设计目标</font>
+
++ <font style="color:rgb(29, 29, 32);">空间占用尽量少，以节省计算机内存。</font>
++ <font style="color:rgb(29, 29, 32);">数据操作尽可能快速，涵盖数据访问、添加、删除、更新等。</font>
++ <font style="color:rgb(29, 29, 32);">提供简洁的数据表示和逻辑信息，以便算法高效运行。</font>
+
+<font style="color:rgb(29, 29, 32);"></font>
+
+**<font style="color:rgb(29, 29, 32);">数据结构设计是一个充满权衡的过程</font>**<font style="color:rgb(29, 29, 32);">。如果想在某方面取得提升，往往需要在另一方面作出妥协。平衡 是关键</font>
+
+
+
+算法和数据结构的关系：
+
++ <font style="color:rgb(29, 29, 32);">数据结构是算法的基石。</font>
++ <font style="color:rgb(29, 29, 32);">算法是数据结构发挥作用的舞台。</font>
++ <font style="color:rgb(29, 29, 32);">算法通常可以基于不同的数据结构实现，但执行效率可能相差很大，选择合适的数据结构是关键。</font>
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1704946300041-01ec45db-1827-4e46-bbbe-8e51ef7e4305.png)
+
+# 关于算法的度量
+我们先后追求两个重要目标：
+
++ 找到问题的解法
++ 找到问题的最优解法（效率）
+    - 时间效率（运行时间）
+    - 空间效率（占用内存）
+
+我们用实际的运行来看，容易受到各种条件的限制 比如设备性能什么的。所以我们采取 理论估算的方式来描述算法的效率。
+
+它有两个概念：时间复杂度 & 空间复杂度
+
+## 循环和递归
+循环有两个for 和while ，for易用与 条件已知的循环，while更加的灵活。它们与输入的数据的量 n 在时间上成线性关系。
+
+递归 包含两个阶段 递/归。
+
++ 递：<font style="color:rgb(29, 29, 32);">程序不断深入地调用自身，通常传入更小或更简化的参数，直到达到“终止条件”</font>
++ 归：<font style="color:rgb(29, 29, 32);">触发“终止条件”后，程序从最深层的递归函数开始逐层返回，汇聚每一层的结果。</font>
+
+<font style="color:rgb(29, 29, 32);">三个要素：终止条件，递归调用，返回结果。</font>
+
+<font style="color:rgb(29, 29, 32);">除此外 递归算法还有分类</font>
+
++ 普通递归 比如说递归求和 求和的是在 归的过程中完成的 ，每层都要执行一次求和操作
++ 尾递归 比如说递归求和 求和的过程是在 递 中完成的，归只需要返回。
+
+下面是一个最简单的斐波那契额算法
+
+<font style="color:rgb(29, 29, 32);">给定一个斐波那契数列 </font><font style="color:rgb(29, 29, 32);">0,1,1,2,3,5,8,13,…</font><font style="color:rgb(29, 29, 32);"> ，求该数列的第 </font><font style="color:rgb(29, 29, 32);">n </font><font style="color:rgb(29, 29, 32);">个数字。</font>
+
+```typescript
+斐波那契
+/* 斐波那契数列：递归 */
+function fib(n: number): number {
+    // 终止条件 f(1) = 0, f(2) = 1
+    if (n === 1 || n === 2) return n - 1;
+    // 递归调用 f(n) = f(n-1) + f(n-2)
+    const res = fib(n - 1) + fib(n - 2);
+    // 返回结果 f(n)
+    return res;
+}
+```
+
+
+
+
+
+## 具体的时间复杂度
+> 下面给出了常见的时间复杂度
+>
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1705378991200-302fffd9-eda6-42ef-a408-1fb744bac3e6.png)
+
+## 具体的空间复杂度
+> 下面给出了具体的空间浮渣度
+>
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1705379044974-2e5bca1b-0d2c-4cdc-b228-30dbf648ad83.png)
+
+## 相关的问题
+Q: 尾递归空间复杂度是 O(1) ?   
+A: 理论上是可以优化到 O(1) ,但是大部分编程语言 不支持自动优化尾递归，我们认为它是 O(n)  
+
+
+# 数据结构
+## 分类
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1705379294105-f46d238a-e337-4c88-b45c-2ed2d4a2a249.png)
+
+然后说物理学上的分类：连续存储空间和 非连续存储空间
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1705379355056-3e304c9d-236f-429c-ab0f-201e36f169fe.png)
+
+---
+
+<font style="color:#DF2A3F;">数据结构分析开始</font>
+
+# 数组和链表
+
+
+## 对于Array
+对于Array来说，它是存储在一片连续的存储空间中的
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1705471068797-d6d4de8f-825e-4bbf-b262-dc1b3b12cc87.png)
+
+由于语言基本上是对Array 提供默认的操作，所以我们不需要额外的实现它。
+
+需要了解的是Array在算法上的一些特性：
+
+对于删除和插入元素而言 ：插入和删除的时间复杂度为 **<font style="color:#DF2A3F;">O(n)</font>** <font style="color:rgb(29, 29, 32);">其中 </font><font style="color:rgb(29, 29, 32);">n</font><font style="color:rgb(29, 29, 32);"> 为数组长度。</font>
+
+<font style="color:rgb(29, 29, 32);">由于数组的长度不可变，因此在插入元素后，超出数组长度范围的元素会丢失。</font>
+
+<font style="color:rgb(29, 29, 32);">我们可以初始化一个比较长的数组，只用前面一部分，这样在插入数据时，丢失的末尾元素都是“无意义”的，但这样做会造成部分内存空间浪费。</font>
+
+在大多数的语言实现中 array多数的可变长的。但是要注意的是它的扩容 时间复杂度也是 **<font style="color:#DF2A3F;">O(n)</font>**
+
+不过呢 它的元素访问的时间复杂度却是高效的 O(1),
+
+Array这种结构经常用在下面额几种算法场景  
+
+
++ 元素的随机访问
++ 排序和搜索
++ 查找表
++ 机器学习，矩阵运算什么的用它
++ 其它数据结构的实现，stack，queue hashtabe，map都可以基于它实现
+
+## 链表
+链表的重要属性：当前的值value 和指向下一个node 的指针。它在内存空间的存储是非连续性的。在相同数据量的情况下：**<font style="color:rgb(29, 29, 32);">链表比数组占用更多的内存空间</font>**<font style="color:rgb(29, 29, 32);">。</font>
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1705472246337-29c87b2b-a841-45cc-b35b-921d4a61cc0b.png)
+
+```typescript
+// 一个链表 ListNode节点
+class ListNode {
+  val: number;
+  next: ListNode | null;
+
+  constructor(val?: number, next?: ListNode | null) {
+    this.val = val || 0;
+    this.next = next || null;
+  }
+}
+
+// 一个双向链表Class (具备前后指针)
+class ListNodeS {
+  val: number;
+  next: ListNodeS | null;
+  pre: ListNodeS | null;
+
+  constructor(val?: number, next?: ListNodeS | null, pre?: ListNodeS | null) {
+    this.val = val || 0;
+    this.next = next || null;
+    this.pre = pre || null;
+  }
+}
+
+const run = () => {
+  // 创建一个list 1 -> 3 -> 2 -> 5 -> 4 */
+  const n0 = new ListNode(1);
+  const n1 = new ListNode(3);
+  const n2 = new ListNode(2);
+  const n3 = new ListNode(5);
+  const n4 = new ListNode(4);
+
+  n0.next = n1;
+  n1.next = n2;
+  n2.next = n3;
+  n3.next = n4;
+  console.log(n0);
+
+  // 插入一个节点 就是改变其指针 (在n0 后插入 p)
+  const insert = (n0: ListNode, P: ListNode): void => {
+    const n1 = n0.next;
+    P.next = n1;
+    n0.next = P;
+  };
+
+  // 删除 就是吧某个指针设置为null
+  const remove = (n0: ListNode): void => {
+    if (!n0.next) return;
+
+    const P = n0.next;
+    const n1 = P.next;
+    n0.next = n1;
+  };
+
+  // 访问索引 为index的节点
+  const access = (head: ListNode | null, index: number): ListNode | null => {
+    for (let i = 0; i < index; i++) {
+      if (!head) return null;
+      head = head.next;
+    }
+    return head;
+  };
+
+  // 查找某个元素
+  const find = (head: ListNode | null, target: number): number => {
+    let idx = 0;
+    while (head != null) {
+      if (head.val === target) {
+        return idx;
+      }
+      head = head.next;
+      idx += 1;
+    }
+    return -1;
+  };
+
+  console.log('find--->', find(n0, 4));
+};
+
+export { run };
+
+
+```
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1705472360494-c586a9be-a8ff-4487-bdd9-383b3319df78.png)
+
+
+
+链表还有三种类型：单向（最后一个节点指针指向None），环形（任意节点都可以视作头），双向（这个类型的比较吊）.
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1705472488658-9f99162f-3c9e-4f1d-af4a-51bf54dacb2d.png)
+
+我们可以重点关注一下 双向链表： <font style="color:rgb(29, 29, 32);">它更具灵活性，可以朝两个方向遍历链表，但相应地也需要占用更多的内存空间。</font>
+
+```typescript
+/* 双向链表节点类 */
+class ListNode {
+    val: number;
+    next: ListNode | null;
+    prev: ListNode | null;
+    constructor(val?: number, next?: ListNode | null, prev?: ListNode | null) {
+        this.val = val  ===  undefined ? 0 : val;        // 节点值
+        this.next = next  ===  undefined ? null : next;  // 指向后继节点的引用
+        this.prev = prev  ===  undefined ? null : prev;  // 指向前驱节点的引用
+    }
+}
+```
+
+通常链表可以有下面的应用
+
+| <font style="color:#FFFFFF;">当向链表</font> | <font style="color:#FFFFFF;">双向链表</font> | 环形链表 |
+| --- | --- | --- |
+| **<font style="color:rgb(29, 29, 32);">栈与队列，哈希表(hash冲突的链表解决方案)，图实现</font>** | 红黑树，B+树，浏览器历史 | 缓冲区实现，时间片的轮训调度(CPU) |
+| | | |
+
+
+一个小型列表的实现
+
+```typescript
+/* 列表类 */
+class MyList {
+    private arr: Array<number>; // 数组（存储列表元素）
+    private _capacity: number = 10; // 列表容量
+    private _size: number = 0; // 列表长度（当前元素数量）
+    private extendRatio: number = 2; // 每次列表扩容的倍数
+
+    /* 构造方法 */
+    constructor() {
+        this.arr = new Array(this._capacity);
+    }
+
+    /* 获取列表长度（当前元素数量）*/
+    public size(): number {
+        return this._size;
+    }
+
+    /* 获取列表容量 */
+    public capacity(): number {
+        return this._capacity;
+    }
+
+    /* 访问元素 */
+    public get(index: number): number {
+        // 索引如果越界，则抛出异常，下同
+        if (index < 0 || index >= this._size) throw new Error('索引越界');
+        return this.arr[index];
+    }
+
+    /* 更新元素 */
+    public set(index: number, num: number): void {
+        if (index < 0 || index >= this._size) throw new Error('索引越界');
+        this.arr[index] = num;
+    }
+
+    /* 在尾部添加元素 */
+    public add(num: number): void {
+        // 如果长度等于容量，则需要扩容
+        if (this._size === this._capacity) this.extendCapacity();
+        // 将新元素添加到列表尾部
+        this.arr[this._size] = num;
+        this._size++;
+    }
+
+    /* 在中间插入元素 */
+    public insert(index: number, num: number): void {
+        if (index < 0 || index >= this._size) throw new Error('索引越界');
+        // 元素数量超出容量时，触发扩容机制
+        if (this._size === this._capacity) {
+            this.extendCapacity();
+        }
+        // 将索引 index 以及之后的元素都向后移动一位
+        for (let j = this._size - 1; j >= index; j--) {
+            this.arr[j + 1] = this.arr[j];
+        }
+        // 更新元素数量
+        this.arr[index] = num;
+        this._size++;
+    }
+
+    /* 删除元素 */
+    public remove(index: number): number {
+        if (index < 0 || index >= this._size) throw new Error('索引越界');
+        let num = this.arr[index];
+        // 将索引 index 之后的元素都向前移动一位
+        for (let j = index; j < this._size - 1; j++) {
+            this.arr[j] = this.arr[j + 1];
+        }
+        // 更新元素数量
+        this._size--;
+        // 返回被删除的元素
+        return num;
+    }
+
+    /* 列表扩容 */
+    public extendCapacity(): void {
+        // 新建一个长度为 size 的数组，并将原数组复制到新数组
+        this.arr = this.arr.concat(
+            new Array(this.capacity() * (this.extendRatio - 1))
+        );
+        // 更新列表容量
+        this._capacity = this.arr.length;
+    }
+
+    /* 将列表转换为数组 */
+    public toArray(): number[] {
+        let size = this.size();
+        // 仅转换有效长度范围内的列表元素
+        const arr = new Array(size);
+        for (let i = 0; i < size; i++) {
+            arr[i] = this.get(i);
+        }
+        return arr;
+    }
+}
+```
+
+它的一些算法上的特性：
+
+元素的访问由于基于Array实现它的时间复杂度为O(1), 插入删除效率为O(n) 同Array
+
+# 栈与队列
+## stack 
+先进后出的策略；概念：入栈 ，出栈，栈顶/底。其算法上的特征
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1705550137442-9d273079-62bd-43f4-b7db-caa9d8ab9cfd.png)
+
+栈 可以基于两种数据结构实现 （链表/数组）。
+
+```typescript
+
+class LinkedListStatck {
+  private stackPeek: ListNode | null; // 栈顶
+  private stkSize: number = 0;
+
+  constructor() {
+    this.stackPeek = null;
+  }
+
+  get size(): number {
+    return this.stkSize;
+  }
+
+  isEmpty(): boolean {
+    return this.size === 0;
+  }
+
+  push(val: number): void {
+    const node = new ListNode(val);
+    node.next = this.stackPeek;
+    this.stackPeek = node; // 环形
+    this.stkSize++;
+  }
+
+  pop(): number {
+    const val = this.peek();
+    this.stackPeek = this.stackPeek.next;
+    this.stkSize--;
+    return val;
+  }
+
+  // 访问栈顶
+  peek(): number {
+    return this.stackPeek.val;
+  }
+
+  // 转Arry
+  toArray(): Array<number> {
+    let node = this.stackPeek;
+    const res = new Array<number>(this.size);
+    for (let i = res.length - 1; i >= 0; i--) {
+      res[i] = node.val;
+      node = node.next;
+    }
+    return res;
+  }
+}
+
+```
+
+```typescript
+
+// 基于Array的实现 这个就非常的简单了 Arrry本身就具备Stack的部分特征
+class ArrayStack {
+  private stack: Array<number>;
+
+  constructor() {
+    this.stack = [];
+  }
+
+  get size(): number {
+    return this.stack.length;
+  }
+
+  isEmpyt() {
+    return this.stack.length === 0;
+  }
+
+  push(val: number) {
+    this.stack.push(val);
+  }
+
+  pop() {
+    this.stack.pop();
+  }
+
+  peek() {
+    return this.stack[this.stack.length - 1];
+  }
+
+  toArray() {
+    return this.stack;
+  }
+}
+
+```
+
+两种不同的实现的特效对比（时间/空间）
+
++ <font style="color:rgb(29, 29, 32);">基于数组实现的栈在触发扩容时效率会降低，但由于扩容是低频操作，因此平均效率更高。</font>
++ <font style="color:rgb(29, 29, 32);">基于链表实现的栈可以提供更加稳定的效率表现。</font>
+
+**<font style="color:rgb(29, 29, 32);">链表节点占用的空间相对较大</font>**<font style="color:rgb(29, 29, 32);">。</font>
+
+
+
+
+
+## queue
+先进先出，轮流来 就像水一样。它也是可以基于两种情况来实现：链表/数组。
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1705551223645-2a474b62-19c2-43b8-a2a7-ede096ba976e.png)
+
+基于链表的实现还是简单的些的，但是基于Array的还是有点困难的 见下面的代码
+
+```typescript
+// 基于链表实现的queue
+class LinkedListQueue {
+  private front: ListNode|null; // 头尾节点
+  private rear:ListNode|null; 
+  private queSize:number=0;
+
+  constructor(){
+    this.front = null;
+    this.rear = null;
+  }
+
+  get size(){
+    return this.size;
+  }
+
+  isEmpty(){
+    return this.size === 0;
+  }
+
+  push(val:number){
+    const node = new ListNode(val);
+    // 如果为空
+    if(!this.front){
+      this.front = node;
+      this.rear=node;
+    }else{
+      this.rear!.next = node;
+      this.rear = node;
+    }
+    // 否则
+    this.queSize++
+  }
+
+  pop(){
+    const val = this.peek();
+
+    // 直接移动指针
+    this.front = this.front.next;
+    this.queSize--
+
+    return val;
+  }
+
+  peek(){
+    return this.front!.val
+  }
+
+  toArrray(){
+    let node = this.front
+    const res = new Array(this.size)
+    for( let i = 0; i< res.length; i++ ){
+      res[i] = node.val;
+      node = node.next;
+    }
+    return res
+  }
+
+}
+
+```
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1705552991434-b0ff32a5-544b-48f7-a22f-6e3e77f661c1.png)
+
+
+
+```typescript
+
+这里为什么要做复杂设计呢？主要是由于Array的删除首元素的时间复杂度是O(n), 我们要想办法优化它
+
+/* 基于环形数组实现的队列 */
+class ArrayQueue {
+    private nums: number[]; // 用于存储队列元素的数组
+    private front: number; // 队首指针，指向队首元素
+    private queSize: number; // 队列长度
+
+    constructor(capacity: number) {
+        this.nums = new Array(capacity);
+        this.front = this.queSize = 0;
+    }
+
+    /* 获取队列的容量 */
+    get capacity(): number {
+        return this.nums.length;
+    }
+
+    /* 获取队列的长度 */
+    get size(): number {
+        return this.queSize;
+    }
+
+    /* 判断队列是否为空 */
+    isEmpty(): boolean {
+        return this.queSize === 0;
+    }
+
+    /* 入队 */
+    push(num: number): void {
+        if (this.size === this.capacity) {
+            console.log('队列已满');
+            return;
+        }
+        // 计算队尾指针，指向队尾索引 + 1
+        // 通过取余操作实现 rear 越过数组尾部后回到头部
+        const rear = (this.front + this.queSize) % this.capacity;
+        // 将 num 添加至队尾
+        this.nums[rear] = num;
+        this.queSize++;
+    }
+
+    /* 出队 */
+    pop(): number {
+        const num = this.peek();
+        // 队首指针向后移动一位，若越过尾部，则返回到数组头部
+        this.front = (this.front + 1) % this.capacity;
+        this.queSize--;
+        return num;
+    }
+
+    /* 访问队首元素 */
+    peek(): number {
+        if (this.isEmpty()) throw new Error('队列为空');
+        return this.nums[this.front];
+    }
+
+    /* 返回 Array */
+    toArray(): number[] {
+        // 仅转换有效长度范围内的列表元素
+        const arr = new Array(this.size);
+        for (let i = 0, j = this.front; i < this.size; i++, j++) {
+            arr[i] = this.nums[j % this.capacity];
+        }
+        return arr;
+    }
+}
+```
+
+## (<font style="color:rgb(29, 29, 32);">double-ended queue</font>)双向队列
+这种数据结构 ，可以可以通过 双向链表/环形数组 来实现。
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1705554219841-5f7ea794-f250-4b2f-9f22-eb60bd036214.png)
+
+它的算法复杂度特征如下：
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1705554246833-064d675a-5ac7-4f9e-aa94-868768ad4a53.png)
+
+
+
+实际上我们可以直接用Array 来做这类数据结构
+
+```typescript
+const deque  = []
+
+// 入队
+deque.push(2)
+deque.push(5)
+deque.push(4)
+deque.unshift(3) // 注意这个方法的时间复杂度为 O(n)
+
+// 获取
+deque[0]
+deque[deque.length-1]
+
+// 出队 shift 的时间复杂为 O(n)
+const popFront = deque.shift()
+const popBack = deque.pop()
+
+```
+
+这两种实现方案中，对于Array的实现方法它简单些。
+
+```typescript
+class ListNodeV2 {
+  pre: ListNodeV2;
+  next: ListNodeV2;
+  val: number;
+  constructor(val: number) {
+    this.val = val;
+    this.pre = null;
+    this.next = null;
+  }
+}
+
+class LinkedListDeque {
+  private front: ListNodeV2; // 头和尾节点
+  private rear: ListNodeV2;
+  private queSize: number;
+
+  constructor() {
+    this.front = null;
+    this.rear = null;
+    this.queSize = 0;
+  }
+
+  // push 的两个方向
+  pushLast(val: number) {
+    const node = new ListNodeV2(val);
+    if (this.queSize === 0) {
+      this.front = node;
+      this.rear = node;
+    } else {
+      // 注意环操作！
+      this.rear.next = node;
+      node.pre = this.rear;
+      this.rear = node;
+    }
+    this.queSize++;
+  }
+
+  pushFirst(val: number) {
+    const node = new ListNodeV2(val);
+    if (this.queSize == 0) {
+      this.front = node;
+      this.rear = node;
+    } else {
+      this.front.pre = node;
+      node.next = this.front;
+      this.front = node;
+    }
+
+    this.queSize++;
+  }
+
+  // pop的两个方向
+  popLast() {
+    const value = this.rear.val;
+
+    let temp = this.rear.pre;
+    if (temp) {
+      temp.next = null;
+      this.rear.pre = null;
+    }
+
+    // 尾处理
+    this.rear = temp;
+    this.queSize--;
+    return value;
+  }
+
+  popFirts() {
+    const value = this.front.val;
+
+    let temp = this.front.next;
+    if (temp) {
+      temp.next = null;
+      this.front.next = null;
+    }
+
+    // 尾处理
+    this.front = temp;
+    this.queSize--;
+    return value;
+  }
+}
+```
+
+```typescript
+/* 基于环形数组实现的双向队列 */
+class ArrayDeque {
+    private nums: number[]; // 用于存储双向队列元素的数组
+    private front: number; // 队首指针，指向队首元素
+    private queSize: number; // 双向队列长度
+
+    /* 构造方法 */
+    constructor(capacity: number) {
+        this.nums = new Array(capacity);
+        this.front = 0;
+        this.queSize = 0;
+    }
+
+    /* 获取双向队列的容量 */
+    capacity(): number {
+        return this.nums.length;
+    }
+
+    /* 获取双向队列的长度 */
+    size(): number {
+        return this.queSize;
+    }
+
+    /* 判断双向队列是否为空 */
+    isEmpty(): boolean {
+        return this.queSize === 0;
+    }
+
+    /* 计算环形数组索引 */
+    index(i: number): number {
+        // 通过取余操作实现数组首尾相连
+        // 当 i 越过数组尾部后，回到头部
+        // 当 i 越过数组头部后，回到尾部
+        return (i + this.capacity()) % this.capacity();
+    }
+
+    /* 队首入队 */
+    pushFirst(num: number): void {
+        if (this.queSize === this.capacity()) {
+            console.log('双向队列已满');
+            return;
+        }
+        // 队首指针向左移动一位
+        // 通过取余操作实现 front 越过数组头部后回到尾部
+        this.front = this.index(this.front - 1);
+        // 将 num 添加至队首
+        this.nums[this.front] = num;
+        this.queSize++;
+    }
+
+    /* 队尾入队 */
+    pushLast(num: number): void {
+        if (this.queSize === this.capacity()) {
+            console.log('双向队列已满');
+            return;
+        }
+        // 计算队尾指针，指向队尾索引 + 1
+        const rear: number = this.index(this.front + this.queSize);
+        // 将 num 添加至队尾
+        this.nums[rear] = num;
+        this.queSize++;
+    }
+
+    /* 队首出队 */
+    popFirst(): number {
+        const num: number = this.peekFirst();
+        // 队首指针向后移动一位
+        this.front = this.index(this.front + 1);
+        this.queSize--;
+        return num;
+    }
+
+    /* 队尾出队 */
+    popLast(): number {
+        const num: number = this.peekLast();
+        this.queSize--;
+        return num;
+    }
+
+    /* 访问队首元素 */
+    peekFirst(): number {
+        if (this.isEmpty()) throw new Error('The Deque Is Empty.');
+        return this.nums[this.front];
+    }
+
+    /* 访问队尾元素 */
+    peekLast(): number {
+        if (this.isEmpty()) throw new Error('The Deque Is Empty.');
+        // 计算尾元素索引
+        const last = this.index(this.front + this.queSize - 1);
+        return this.nums[last];
+    }
+
+    /* 返回数组用于打印 */
+    toArray(): number[] {
+        // 仅转换有效长度范围内的列表元素
+        const res: number[] = [];
+        for (let i = 0, j = this.front; i < this.queSize; i++, j++) {
+            res[i] = this.nums[this.index(j)];
+        }
+        return res;
+    }
+}
+```
+
+<font style="color:rgb(29, 29, 32);">双向队列兼具栈与队列的逻辑，</font>**<font style="color:rgb(29, 29, 32);">因此它可以实现这两者的所有应用场景，同时提供更高的自由度</font>**<font style="color:rgb(29, 29, 32);">。</font>
+
+<font style="color:rgb(29, 29, 32);"></font>
+
+# <font style="color:rgb(29, 29, 32);">哈希表</font>
+## 概述
+hash表，是一种通过建立key value之间的联系 ，以实现高校存储的一种数据结构。**<font style="color:rgb(29, 29, 32);">在哈希表中进行增删查改的时间复杂度都是 n(1) 非常高效</font>**
+
+这种数据结构的算法特征如下：  
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1705907266695-900af63d-bba9-450c-b7ef-e7c42b3a8057.png)
+
+**<font style="color:rgb(29, 29, 32);">在js中内置了 这样的数据结构：Map</font>**
+
+**<font style="color:rgb(29, 29, 32);">如果模拟 那么hash表的实现比较的简单，我们可以使用array进行一个模拟。核心的重点是两个地方</font>**
+
+1. <font style="color:rgb(29, 29, 32);">通过某种哈希算法</font><font style="color:rgb(29, 29, 32);"> </font>hash()<font style="color:rgb(29, 29, 32);"> </font><font style="color:rgb(29, 29, 32);">计算得到哈希值。</font>
+2. <font style="color:rgb(29, 29, 32);">将哈希值对桶数量（数组长度）</font>capacity<font style="color:rgb(29, 29, 32);"> 取模，从而获取该 </font>key<font style="color:rgb(29, 29, 32);"> 对应的数组索引 </font>index<font style="color:rgb(29, 29, 32);"> 。</font>
+
+<font style="color:rgb(29, 29, 32);">上述的公式如下：</font>
+
+```typescript
+const index = hash(key) % capacity
+```
+
+<font style="color:rgb(29, 29, 32);"></font>
+
+<font style="color:rgb(29, 29, 32);">下面是一个简单的示意图 ：  
+</font><font style="color:rgb(29, 29, 32);">数组长度capacity=100，has(key) = key, has functon = k %100,key value 存储了学生学号和姓名</font>
+
+<font style="color:rgb(29, 29, 32);"></font>
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1705907784998-b871084a-6250-4156-863b-0d850f4141ea.png)
+
+<font style="color:rgb(29, 29, 32);">模拟hash表</font>
+
+```typescript
+// 对所有的number -> string
+
+class Pair {
+  public key: number;
+  public val: number;
+  constructor(key: number, val: string){
+    this.key = key;
+    this.val = val;
+  }
+}
+
+// 基于Array的实现
+class ArrayHashMap {
+	private readyonly buckets:(Pari|null)[];
+
+  constructor(){
+    this.buckets = new Array(100).fill(null);
+  }
+
+  private hasFunc(key: number):number{
+    return key % 100;
+  }
+    /* 查询操作 */
+    public get(key: number): string | null {
+        let index = this.hashFunc(key);
+        let pair = this.buckets[index];
+        if (pair === null) return null;
+        return pair.val;
+    }
+
+    /* 添加操作 */
+    public set(key: number, val: string) {
+        let index = this.hashFunc(key);
+        this.buckets[index] = new Pair(key, val);
+    }
+
+    /* 删除操作 */
+    public delete(key: number) {
+        let index = this.hashFunc(key);
+        // 置为 null ，代表删除
+        this.buckets[index] = null;
+    }
+  public entries(){
+    let arr;
+
+    for( let i = 0; i < this.buckets.length; i++ ){
+      if(this.bukest[i]){
+        arr.push(this.this.bukest[i])
+      }
+    }
+    return arr;
+  } 
+  
+ 	public keys(): (number | undefined)[] {
+    let arr: (number | undefined)[] = [];
+    for (let i = 0; i < this.buckets.length; i++) {
+        if (this.buckets[i]) {
+            arr.push(this.buckets[i].key);
+        }
+    }
+    return arr;
+}
+  
+  public values() {
+    let arr: (string)[] = [];
+    for( let i = 0; i < this.buckets.length; i++ ){
+      if(this.buckets[i]) {
+        arr.push( this.buckets[i].val );
+      }
+      return arr;
+    }
+  }
+
+  public print(){
+    let pairSet = this.entries();
+    for( const pair of pairSet ) {
+      console.log(`${pair.key} -> ${pair.value}`)
+    }
+  }
+  
+}
+```
+
+<font style="color:rgb(29, 29, 32);">理论上 </font>**<font style="color:rgb(29, 29, 32);">理论上一定存在“多个输入对应相同输出”的情况</font>**<font style="color:rgb(29, 29, 32);">。</font>
+
+12836<font style="color:rgb(29, 29, 32);background-color:rgb(245, 245, 245);">%</font>100=36
+
+20336<font style="color:rgb(29, 29, 32);background-color:rgb(245, 245, 245);">%</font>100=36
+
+**<font style="color:rgb(29, 29, 32);">我们可以通过扩容哈希表来减少哈希冲突</font>**<font style="color:rgb(29, 29, 32);">。</font>
+
+<font style="color:rgb(29, 29, 32);">还有一个概念 叫做：“负载因子 load factor”其定义为哈希表的元素数量除以桶数量，用于衡量哈希冲突的严重程度，</font>**<font style="color:rgb(29, 29, 32);">也常作为哈希表扩容的触发条件</font>**<font style="color:rgb(29, 29, 32);">。例如在 Java 中，当负载因子超过 </font><font style="color:rgb(29, 29, 32);">0.75</font><font style="color:rgb(29, 29, 32);"> 时，系统会将哈希表扩容至原先的 </font><font style="color:rgb(29, 29, 32);">2</font><font style="color:rgb(29, 29, 32);"> 倍</font>
+
+<font style="color:rgb(29, 29, 32);"></font>
+
+## <font style="color:rgb(29, 29, 32);">hash冲突</font>
+**<font style="color:rgb(29, 29, 32);">保证哈希表可以在发生冲突时正常工作, 是它要解决的问题。</font>**
+
+由于 **<font style="color:rgb(29, 29, 32);">通常情况下哈希函数的输入空间远大于输出空间</font>**<font style="color:rgb(29, 29, 32);">，因此理论上哈希冲突是不可避免的，所以我们找到了两种方式来优化hash 结构</font>
+
+1. <font style="color:rgb(29, 29, 32);">改良哈希表数据结构，</font>**<font style="color:rgb(29, 29, 32);">使得哈希表可以在出现哈希冲突时正常工作</font>**<font style="color:rgb(29, 29, 32);">。</font>
+2. <font style="color:rgb(29, 29, 32);">仅在必要时，即当哈希冲突比较严重时，才执行扩容操作。</font>
+
+主要就是两种方法：链式地址 / 开发寻址
+
+
+
+链式寻址
+
+<font style="color:rgb(29, 29, 32);">它将单个元素转换为链表，将键值对作为链表节点，将所有发生冲突的键值对都存储在同一链表中。类似下面的图</font>
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1705913824197-cf206894-10a0-4e6d-ba35-f55e6625a798.png)
+
+它是有局限性的：
+
++ **<font style="color:rgb(29, 29, 32);">占用空间增大</font>**<font style="color:rgb(29, 29, 32);">：链表包含节点指针，它相比数组更加耗费内存空间。</font>
++ **<font style="color:rgb(29, 29, 32);">查询效率降低</font>**<font style="color:rgb(29, 29, 32);">：因为需要线性遍历链表来查找对应元素。</font>
+
+<font style="color:rgb(29, 29, 32);"></font>
+
+<font style="color:rgb(29, 29, 32);">下面我们看看实现:  
+</font><font style="color:rgb(29, 29, 32);">使用列表（动态数组）代替链表; 达到2/3时扩容2倍</font>
+
+```typescript
+class Pair {
+  public key: number;
+  public val: number;
+  constructor(key: number, val: string){
+    this.key = key;
+    this.val = val;
+  }
+}
+
+
+/* 链式地址哈希表 */
+class HashMapChaining {
+    #size: number; // 键值对数量
+    #capacity: number; // 哈希表容量
+    #loadThres: number; // 触发扩容的负载因子阈值
+    #extendRatio: number; // 扩容倍数
+    #buckets: Pair[][]; // 桶数组
+
+    /* 构造方法 */
+    constructor() {
+        this.#size = 0;
+        this.#capacity = 4;
+        this.#loadThres = 2.0 / 3.0;
+        this.#extendRatio = 2;
+        this.#buckets = new Array(this.#capacity).fill(null).map((x) => []);
+    }
+
+    /* 哈希函数 */
+    #hashFunc(key: number): number {
+        return key % this.#capacity;
+    }
+
+    /* 负载因子 */
+    #loadFactor(): number {
+        return this.#size / this.#capacity;
+    }
+
+    /* 查询操作 */
+    get(key: number): string | null {
+        const index = this.#hashFunc(key);
+        const bucket = this.#buckets[index];
+        // 遍历桶，若找到 key ，则返回对应 val
+        for (const pair of bucket) {
+            if (pair.key === key) {
+                return pair.val;
+            }
+        }
+        // 若未找到 key ，则返回 null
+        return null;
+    }
+
+    /* 添加操作 */
+    put(key: number, val: string): void {
+        // 当负载因子超过阈值时，执行扩容
+        if (this.#loadFactor() > this.#loadThres) {
+            this.#extend();
+        }
+        const index = this.#hashFunc(key);
+        const bucket = this.#buckets[index];
+        // 遍历桶，若遇到指定 key ，则更新对应 val 并返回
+        for (const pair of bucket) {
+            if (pair.key === key) {
+                pair.val = val;
+                return;
+            }
+        }
+        // 若无该 key ，则将键值对添加至尾部
+        const pair = new Pair(key, val);
+        bucket.push(pair);
+        this.#size++;
+    }
+
+    /* 删除操作 */
+    remove(key: number): void {
+        const index = this.#hashFunc(key);
+        let bucket = this.#buckets[index];
+        // 遍历桶，从中删除键值对
+        for (let i = 0; i < bucket.length; i++) {
+            if (bucket[i].key === key) {
+                bucket.splice(i, 1);
+                this.#size--;
+                break;
+            }
+        }
+    }
+
+    /* 扩容哈希表 */
+    #extend(): void {
+        // 暂存原哈希表
+        const bucketsTmp = this.#buckets;
+        // 初始化扩容后的新哈希表
+        this.#capacity *= this.#extendRatio;
+        this.#buckets = new Array(this.#capacity).fill(null).map((x) => []);
+        this.#size = 0;
+        // 将键值对从原哈希表搬运至新哈希表
+        for (const bucket of bucketsTmp) {
+            for (const pair of bucket) {
+                this.put(pair.key, pair.val);
+            }
+        }
+    }
+
+    /* 打印哈希表 */
+    print(): void {
+        for (const bucket of this.#buckets) {
+            let res = [];
+            for (const pair of bucket) {
+                res.push(pair.key + ' -> ' + pair.val);
+            }
+            console.log(res);
+        }
+    }
+}
+```
+
+
+
+开放寻址
+
+开放寻址，通过多次试探 来解决冲突（<font style="color:rgb(29, 29, 32);">线性探测、平方探测和多次哈希等</font>），
+
+<font style="color:rgb(29, 29, 32);">线性探测</font>
+
+<font style="color:rgb(29, 29, 32);">用固定步长的线性搜索来进行探测，在插入元素的时候，如果发现桶有元素了就向后遍历（通常遍历的步长为1），直到发现空桶。</font>
+
+<font style="color:rgb(29, 29, 32);">但是吧会有问题，容易发生聚集，而且不能删除元素(会导致遍历不到就返回none)，其优化方式如下：  
+</font>
+
+<font style="color:rgb(29, 29, 32);">懒删除 lazy deletion」机制：它不直接从哈希表中移除元素，</font>**<font style="color:rgb(29, 29, 32);">而是利用一个常量 </font>****TOMBSTONE****<font style="color:rgb(29, 29, 32);"> 来标记这个桶</font>**<font style="color:rgb(29, 29, 32);">。但是 ，</font>**<font style="color:rgb(29, 29, 32);">懒删除可能会加速哈希表的性能退化</font>**<font style="color:rgb(29, 29, 32);">。</font>
+
+<font style="color:rgb(29, 29, 32);">不过我们有解决方法：考虑在线性探测中记录遇到的首个 TOMBSTONE 的索引，并将搜索到的目标元素与该 TOMBSTONE 交换位置。这样做的好处是当每次查询或添加元素时，元素会被移动至距离理想位置（探测起始点）更近的桶，从而优化查询效率。  
+</font><font style="color:rgb(29, 29, 32);">	具体实现如下：</font>
+
+```typescript
+/* 开放寻址哈希表 */
+class HashMapOpenAddressing {
+    private size: number; // 键值对数量
+    private capacity: number; // 哈希表容量
+    private loadThres: number; // 触发扩容的负载因子阈值
+    private extendRatio: number; // 扩容倍数
+    private buckets: Array<Pair | null>; // 桶数组
+    private TOMBSTONE: Pair; // 删除标记
+
+    /* 构造方法 */
+    constructor() {
+        this.size = 0; // 键值对数量
+        this.capacity = 4; // 哈希表容量
+        this.loadThres = 2.0 / 3.0; // 触发扩容的负载因子阈值
+        this.extendRatio = 2; // 扩容倍数
+        this.buckets = Array(this.capacity).fill(null); // 桶数组
+        this.TOMBSTONE = new Pair(-1, '-1'); // 删除标记
+    }
+
+    /* 哈希函数 */
+    private hashFunc(key: number): number {
+        return key % this.capacity;
+    }
+
+    /* 负载因子 */
+    private loadFactor(): number {
+        return this.size / this.capacity;
+    }
+
+    /* 搜索 key 对应的桶索引 */
+    private findBucket(key: number): number {
+        let index = this.hashFunc(key);
+        let firstTombstone = -1;
+        // 线性探测，当遇到空桶时跳出
+        while (this.buckets[index] !== null) {
+            // 若遇到 key ，返回对应的桶索引
+            if (this.buckets[index]!.key === key) {
+                // 若之前遇到了删除标记，则将键值对移动至该索引处
+                if (firstTombstone !== -1) {
+                    this.buckets[firstTombstone] = this.buckets[index];
+                    this.buckets[index] = this.TOMBSTONE;
+                    return firstTombstone; // 返回移动后的桶索引
+                }
+                return index; // 返回桶索引
+            }
+            // 记录遇到的首个删除标记
+            if (
+                firstTombstone === -1 &&
+                this.buckets[index] === this.TOMBSTONE
+            ) {
+                firstTombstone = index;
+            }
+            // 计算桶索引，越过尾部则返回头部
+            index = (index + 1) % this.capacity;
+        }
+        // 若 key 不存在，则返回添加点的索引
+        return firstTombstone === -1 ? index : firstTombstone;
+    }
+
+    /* 查询操作 */
+    get(key: number): string | null {
+        // 搜索 key 对应的桶索引
+        const index = this.findBucket(key);
+        // 若找到键值对，则返回对应 val
+        if (
+            this.buckets[index] !== null &&
+            this.buckets[index] !== this.TOMBSTONE
+        ) {
+            return this.buckets[index]!.val;
+        }
+        // 若键值对不存在，则返回 null
+        return null;
+    }
+
+    /* 添加操作 */
+    put(key: number, val: string): void {
+        // 当负载因子超过阈值时，执行扩容
+        if (this.loadFactor() > this.loadThres) {
+            this.extend();
+        }
+        // 搜索 key 对应的桶索引
+        const index = this.findBucket(key);
+        // 若找到键值对，则覆盖 val 并返回
+        if (
+            this.buckets[index] !== null &&
+            this.buckets[index] !== this.TOMBSTONE
+        ) {
+            this.buckets[index]!.val = val;
+            return;
+        }
+        // 若键值对不存在，则添加该键值对
+        this.buckets[index] = new Pair(key, val);
+        this.size++;
+    }
+
+    /* 删除操作 */
+    remove(key: number): void {
+        // 搜索 key 对应的桶索引
+        const index = this.findBucket(key);
+        // 若找到键值对，则用删除标记覆盖它
+        if (
+            this.buckets[index] !== null &&
+            this.buckets[index] !== this.TOMBSTONE
+        ) {
+            this.buckets[index] = this.TOMBSTONE;
+            this.size--;
+        }
+    }
+
+    /* 扩容哈希表 */
+    private extend(): void {
+        // 暂存原哈希表
+        const bucketsTmp = this.buckets;
+        // 初始化扩容后的新哈希表
+        this.capacity *= this.extendRatio;
+        this.buckets = Array(this.capacity).fill(null);
+        this.size = 0;
+        // 将键值对从原哈希表搬运至新哈希表
+        for (const pair of bucketsTmp) {
+            if (pair !== null && pair !== this.TOMBSTONE) {
+                this.put(pair.key, pair.val);
+            }
+        }
+    }
+
+    /* 打印哈希表 */
+    print(): void {
+        for (const pair of this.buckets) {
+            if (pair === null) {
+                console.log('null');
+            } else if (pair === this.TOMBSTONE) {
+                console.log('TOMBSTONE');
+            } else {
+                console.log(pair.key + ' -> ' + pair.val);
+            }
+        }
+    }
+}
+```
+
+平方测探
+
+与线性探测类似，但是又有一些区别比如：遍历的步长是“<font style="color:rgb(29, 29, 32);">探测次数的平方”的步数 比如1，4,9,16。其优缺点列举一下，首先是优点</font>
+
++ <font style="color:rgb(29, 29, 32);">平方探测通过跳过探测次数平方的距离，试图缓解线性探测的聚集效应。</font>
++ <font style="color:rgb(29, 29, 32);">平方探测会跳过更大的距离来寻找空位置，有助于数据分布得更加均匀。</font>
+
+<font style="color:rgb(29, 29, 32);">然后是缺点：</font>
+
++ <font style="color:rgb(29, 29, 32);">仍然存在聚集现象</font>
++ <font style="color:rgb(29, 29, 32);">由于平方的增长，平方探测可能不会探测整个哈希表</font>
+
+多次哈希
+
+看名字就懂了，就是一次hash不行就换其他hashFN 进行尝试 
+
+
+
+目前主流语言都使用那种方式去优化hashtab？
+
+在JDK1.8 之后 HashMap 内容长度>=64&&链表长度>8 时。链表转化为红黑树。
+
+GO采取链式地址，每个桶最多存储8个键值对，超出时进行扩容
+
+## hash算法
+前面的hash解决只是保证了 ，在异常的时候 HashTabel 能够正常运行。却无法解决根本的hash冲突问题。
+
+还记得前面说过的公式：
+
+index = hash(key) % capacity
+
+现在我们就详细的看看 hash 这个function 如何设计，
+
+它需要达到的目标：
+
+1. **<font style="color:rgb(29, 29, 32);">确定性</font>**
+2. **<font style="color:rgb(29, 29, 32);">效率性</font>**
+3. **<font style="color:rgb(29, 29, 32);">均匀分布</font>**
+
+实际上Hash算法 还可以运用在密码学 和数据验证其他方面
+
+1. 密码存储
+2. 数据完整性检查：<font style="color:rgb(29, 29, 32);">数据发送方可以计算数据的哈希值并将其一同发送；接收方可以重新计算接收到的数据的哈希值，并与接收到的哈希值进行比较。如果两者匹配，那么数据就被视为完整。</font>
+
+<font style="color:rgb(29, 29, 32);"></font>
+
+<font style="color:rgb(29, 29, 32);">对于某些要求不高的场景，我们可以运用下面的 hah算法</font>
+
+```typescript
+
+/* 加法哈希 */
+function addHash(key: string): number {
+    let hash = 0;
+    const MODULUS = 1000000007;
+    for (const c of key) {
+        hash = (hash + c.charCodeAt(0)) % MODULUS;
+    }
+    return hash;
+}
+
+/* 乘法哈希 */
+function mulHash(key: string): number {
+    let hash = 0;
+    const MODULUS = 1000000007;
+    for (const c of key) {
+        hash = (31 * hash + c.charCodeAt(0)) % MODULUS;
+    }
+    return hash;
+}
+
+/* 异或哈希 */
+function xorHash(key: string): number {
+    let hash = 0;
+    const MODULUS = 1000000007;
+    for (const c of key) {
+        hash ^= c.charCodeAt(0);
+    }
+    return hash & MODULUS;
+}
+
+/* 旋转哈希 */
+function rotHash(key: string): number {
+    let hash = 0;
+    const MODULUS = 1000000007;
+    for (const c of key) {
+        hash = ((hash << 4) ^ (hash >> 28) ^ c.charCodeAt(0)) % MODULUS;
+    }
+    return hash;
+}
+```
+
+下面是一个 正常的hash算法 对比图
+
+|  | **<font style="color:rgb(29, 29, 32);">MD5</font>** | **<font style="color:rgb(29, 29, 32);">SHA-1</font>** | **<font style="color:rgb(29, 29, 32);">SHA-2</font>** | **<font style="color:rgb(29, 29, 32);">SHA-3</font>** |
+| --- | --- | --- | --- | --- |
+| <font style="color:rgb(29, 29, 32);">推出时间</font> | <font style="color:rgb(29, 29, 32);">1992</font> | <font style="color:rgb(29, 29, 32);">1995</font> | <font style="color:rgb(29, 29, 32);">2002</font> | <font style="color:rgb(29, 29, 32);">2008</font> |
+| <font style="color:rgb(29, 29, 32);">输出长度</font> | <font style="color:rgb(29, 29, 32);">128 bit</font> | <font style="color:rgb(29, 29, 32);">160 bit</font> | <font style="color:rgb(29, 29, 32);">256/512 bit</font> | <font style="color:rgb(29, 29, 32);">224/256/384/512 bit</font> |
+| <font style="color:rgb(29, 29, 32);">哈希冲突</font> | <font style="color:rgb(29, 29, 32);">较多</font> | <font style="color:rgb(29, 29, 32);">较多</font> | <font style="color:rgb(29, 29, 32);">很少</font> | <font style="color:rgb(29, 29, 32);">很少</font> |
+| <font style="color:rgb(29, 29, 32);">安全等级</font> | <font style="color:rgb(29, 29, 32);">低，已被成功攻击</font> | <font style="color:rgb(29, 29, 32);">低，已被成功攻击</font> | <font style="color:rgb(29, 29, 32);">高</font> | <font style="color:rgb(29, 29, 32);">高</font> |
+| <font style="color:rgb(29, 29, 32);">应用</font> | <font style="color:rgb(29, 29, 32);">已被弃用，仍用于数据完整性检查</font> | <font style="color:rgb(29, 29, 32);">已被弃用</font> | <font style="color:rgb(29, 29, 32);">加密货币交易验证、数字签名等</font> | <font style="color:rgb(29, 29, 32);">可用于替代 SHA-2</font> |
+
+
+
+
+
+
+# Tree
+从前有两棵树 红色的 黑色的 ，还有一颗 二叉歪脖子树 ，还有一只程序猿在上面。
+
+## 二叉树
+主要就是左右子树构成。**<font style="color:rgb(29, 29, 32);">在二叉树中，除叶节点外，其他所有节点都包含子节点和非空子树</font>**
+
+常见属于的掌握和了解。
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1704940329394-d349ff17-8f22-4649-b62a-ebda10071b7e.png)
+
+二叉树的结构模拟TS版本。以及它的删除和初始化操作。具体实现如下
+
+```typescript
+
+class TreeNode {
+  val: number;
+  left: TreeNode|null;
+  right: TreeNode|null;
+
+  constructor(val:number, left:TreeNode, right:TreeNode ){
+    this.val = val;
+    this.left = left;
+    this.right = right;
+  }
+}
+```
+
+下面是需要掌握的一些术语
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1706625594578-2d0ab09f-f985-4dc0-bab6-df383679aa9c.png)
+
+
+
+下面是对tree数据结构的操作（主要关注一下）
+
+```javascript
+// 初始化 节点
+let n1 = new TreeNode(1);
+let n2 = new TreeNode(2);
+let n3 = new TreeNode(3);
+let n4 = new TreeNode(4);
+let n5 = new TreeNode(5);
+
+n1.left = n2;
+n1.right = n3;
+n2.left = n4;
+n2.right = n5;
+
+// 删除节点
+const P = new TreeNode(0);
+// n1 ->  n2 插入P
+n1.left = P;
+P.left = n2;
+
+// 删除节点p
+n1.left = n2;
+
+```
+
+常见的二叉树的类型有下面几种。
+
+1. 完美二叉树(满二叉树  
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1704940403250-e11de59f-4b97-49c3-8fc0-42e4e91a6a02.png)
+2. <font style="color:rgb(29, 29, 32);">完全二叉树 complete binary tree  
+</font>![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1704940409749-5471ed45-6fc5-47ce-8bbf-ccf2fcf6ba1a.png)
+3. <font style="color:rgb(29, 29, 32);">完满二叉树 full binary tree  
+</font>![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1704940415878-816c81df-87e2-41e9-b2dd-58d36f638339.png)
+4. <font style="color:rgb(29, 29, 32);">平衡二叉树 balanced binary tree  
+</font>![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1704940422893-47f492ca-78e5-412b-8851-53f7cb267141.png)
+
+二叉树的退化就变成了一个链表了
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1704940456334-871d45a2-2123-4c0a-a54d-a3305c4db251.png)
+
+关于二叉树的遍历方式，有两种：广度优先/深度优先
+
+<font style="color:rgb(29, 29, 32);">层序遍历 level-order traversal，层序遍历本质上属于「广度优先遍历 breadth-first traversal」，也称「广度优先搜索 breadth-first search, BFS」，它体现了一种“一圈一圈向外扩展”的逐层遍历方式。</font>
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1704941017900-cd8544ec-a2ca-4d7d-975f-ea9b7c9561e6.png)
+
+下面是它的代码实现
+
+```typescript
+// 广度优先遍历
+function levelOrder( root: TreeNode|null ):number[] {
+  const queue = [root]
+  const list = [];
+
+  while( queue.length ){
+    let node = queue.shift();
+    if(node.left){
+      queue.push(node.left)
+    }
+    
+    if(node.right){
+      queue.push(node.right)
+    }
+  }
+
+  return list
+}
+```
+
+<font style="color:rgb(29, 29, 32);">它的复杂度是：</font>
+
+<font style="color:rgb(29, 29, 32);">时间复杂度O(n), 空间复杂度O(n)</font>
+
+<font style="color:rgb(29, 29, 32);"></font>
+
+<font style="color:rgb(29, 29, 32);">深度优先搜索 depth-first search, DFS，</font>**<font style="color:rgb(29, 29, 32);">深度优先遍历就像是绕着整棵二叉树的外围“走”一圈</font>**<font style="color:rgb(29, 29, 32);">，在每个节点都会遇到三个位置，分别对应前序遍历、中序遍历和后序遍历。，它体现了一种“先走到尽头，再回溯继续”的遍历方式。</font>
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1704941027341-e1e2668d-1345-4edc-971e-3105a613e67f.png)
+
+它的遍历代码实现如下：
+
+```typescript
+// 深度优先 核心实现依旧是 递归， 有三种方式 区别在于 先到底的是 左 中 右,
+
+let list = []
+// 前序
+function preOrder(root: TreeNode | null){
+  if(root === null) return;
+
+  // 跟 -> 左 -> 右
+  list.push(root.val)
+  preOrder(root.left)
+  preOrder(root.right)
+}
+
+// 中序
+function inOrder(root: TreeNode | null){
+  if(root === null) return;
+
+  // 左 -> 跟 -> 右
+  inOrder(root.left)
+  list.push(root.val)
+  inOrder(root.right)
+}
+
+// 后序
+function postOrder(root: TreeNode | null){
+  if(root === null) return;
+
+  // 左 -> 右 -> 根
+  postOrder(root.left)
+  postOrder(root.right)
+  list.push(root.val)
+}
+```
+
+我们可以使用 Array 来表示和存储 二叉树，当然这有利有弊哈。表示完美二叉树也可以，表示其他的种类的二叉树也可以关键是：“tree的索引和值得映射” 。如果为空的话就用None 值来表示 ， 示意图就像下面这样:
+
+这种表示方法中 我们设定这样的一个前置条件 ![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1706675143593-2bb3babe-9e0c-44c5-94b9-5c08c502651e.png)
+
+于是我们就有了完全的 索引 和 val的对应关系
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1706675098117-bb89e0f8-aa86-468e-baa1-733aac747f19.png)
+
+代码实现如下
+
+```typescript
+/* 二叉树的数组表示 */
+// 使用 null 来表示空位
+let tree: (number | null)[] = 
+  [1, 2, 3, 4, null, 6, 7, 8, 9, null, null, 12, null, null, 15];
+```
+
+它的一些数据访问操作如下:
+
+```typescript
+
+// 基于数组的数据
+/* 数组表示下的二叉树类 */
+class ArrayBinaryTree {
+  #tree: (number | null)[];
+
+  /* 构造方法 */
+  constructor(arr: (number | null)[]) {
+    this.#tree = arr;
+  }
+
+  /* 列表容量 */
+  size(): number {
+    return this.#tree.length;
+  }
+
+  /* 获取索引为 i 节点的值 */
+  val(i: number): number | null {
+    // 若索引越界，则返回 null ，代表空位
+    if (i < 0 || i >= this.size()) return null;
+    return this.#tree[i];
+  }
+
+  /* 获取索引为 i 节点的左子节点的索引 */
+  left(i: number): number {
+    return 2 * i + 1;
+  }
+
+  /* 获取索引为 i 节点的右子节点的索引 */
+  right(i: number): number {
+    return 2 * i + 2;
+  }
+
+  /* 获取索引为 i 节点的父节点的索引 */
+  parent(i: number): number {
+    return Math.floor((i - 1) / 2); // 向下整除
+  }
+
+  /* 层序遍历 */
+  levelOrder(): number[] {
+    let res = [];
+    // 直接遍历数组
+    for (let i = 0; i < this.size(); i++) {
+      if (this.val(i) !== null) res.push(this.val(i));
+    }
+    return res;
+  }
+
+  // 深度优先遍历 有三种方式  
+  /* 深度优先遍历 */
+  #dfs(i: number, order: string, res: (number | null)[]): void {
+    // 若为空位，则返回
+    if (this.val(i) === null) return;
+    // 前序遍历
+    if (order === 'pre') {
+      res.push(this.val(i));
+    }
+    this.#dfs(this.left(i), order, res);
+    // 中序遍历
+    if (order === 'in') {
+      res.push(this.val(i));
+    }
+    this.#dfs(this.right(i), order, res);
+    // 后序遍历
+    if (order === 'post') {
+      res.push(this.val(i));
+    }
+  }
+
+  /* 前序遍历 */
+  preOrder(): (number | null)[] {
+    const res = [];
+    this.#dfs(0, 'pre', res);
+    return res;
+  }
+
+  /* 中序遍历 */
+  inOrder(): (number | null)[] {
+    const res = [];
+    this.#dfs(0, 'in', res);
+    return res;
+  }
+
+  /* 后序遍历 */
+  postOrder(): (number | null)[] {
+    const res = [];
+    this.#dfs(0, 'post', res);
+    return res;
+  }
+}
+
+```
+
+
+
+二叉搜索树是啥？<font style="color:rgb(29, 29, 32);">二叉搜索树的查找操作与二分查找算法的工作原理一致</font>
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1704941491832-33537ab6-baf2-4ffb-9e96-e503683a7751.png)
+
+它是一些特性：如何加入节点 ， 删除节点，遍历节点，它的效率和应用。（基本上这种类型的Tree是一种高效的Tree结构）
+
+```typescript
+
+/* 二叉搜索树 */
+class BinarySearchTree {
+    private root: TreeNode | null;
+
+    /* 构造方法 */
+    constructor() {
+        // 初始化空树
+        this.root = null;
+    }
+
+    /* 获取二叉树根节点 */
+    getRoot(): TreeNode | null {
+        return this.root;
+    }
+
+    /* 查找节点 */
+    search(num: number): TreeNode | null {
+        let cur = this.root;
+        // 循环查找，越过叶节点后跳出
+        while (cur !== null) {
+            // 目标节点在 cur 的右子树中
+            if (cur.val < num) cur = cur.right;
+            // 目标节点在 cur 的左子树中
+            else if (cur.val > num) cur = cur.left;
+            // 找到目标节点，跳出循环
+            else break;
+        }
+        // 返回目标节点
+        return cur;
+    }
+
+    /* 插入节点 */
+    insert(num: number): void {
+        // 若树为空，则初始化根节点
+        if (this.root === null) {
+            this.root = new TreeNode(num);
+            return;
+        }
+        let cur: TreeNode | null = this.root,
+            pre: TreeNode | null = null;
+        // 循环查找，越过叶节点后跳出
+        while (cur !== null) {
+            // 找到重复节点，直接返回
+            if (cur.val === num) return;
+            pre = cur;
+            // 插入位置在 cur 的右子树中
+            if (cur.val < num) cur = cur.right;
+            // 插入位置在 cur 的左子树中
+            else cur = cur.left;
+        }
+        // 插入节点
+        const node = new TreeNode(num);
+        if (pre!.val < num) pre!.right = node;
+        else pre!.left = node;
+    }
+
+    /* 删除节点 */
+    remove(num: number): void {
+        // 若树为空，直接提前返回
+        if (this.root === null) return;
+        let cur: TreeNode | null = this.root,
+            pre: TreeNode | null = null;
+        // 循环查找，越过叶节点后跳出
+        while (cur !== null) {
+            // 找到待删除节点，跳出循环
+            if (cur.val === num) break;
+            pre = cur;
+            // 待删除节点在 cur 的右子树中
+            if (cur.val < num) cur = cur.right;
+            // 待删除节点在 cur 的左子树中
+            else cur = cur.left;
+        }
+        // 若无待删除节点，则直接返回
+        if (cur === null) return;
+        // 子节点数量 = 0 or 1
+        if (cur.left === null || cur.right === null) {
+            // 当子节点数量 = 0 / 1 时， child = null / 该子节点
+            const child: TreeNode | null =
+                cur.left !== null ? cur.left : cur.right;
+            // 删除节点 cur
+            if (cur !== this.root) {
+                if (pre!.left === cur) pre!.left = child;
+                else pre!.right = child;
+            } else {
+                // 若删除节点为根节点，则重新指定根节点
+                this.root = child;
+            }
+        }
+        // 子节点数量 = 2
+        else {
+            // 获取中序遍历中 cur 的下一个节点
+            let tmp: TreeNode | null = cur.right;
+            while (tmp!.left !== null) {
+                tmp = tmp!.left;
+            }
+            // 递归删除节点 tmp
+            this.remove(tmp!.val);
+            // 用 tmp 覆盖 cur
+            cur.val = tmp!.val;
+        }
+    }
+}
+
+/* Driver Code */
+/* 初始化二叉搜索树 */
+const bst = new BinarySearchTree();
+// 请注意，不同的插入顺序会生成不同的二叉树，该序列可以生成一个完美二叉树
+const nums = [8, 4, 12, 2, 6, 10, 14, 1, 3, 5, 7, 9, 11, 13, 15];
+for (const num of nums) {
+    bst.insert(num);
+}
+console.log('\n初始化的二叉树为\n');
+printTree(bst.getRoot());
+
+/* 查找节点 */
+const node = bst.search(7);
+console.log(
+    '\n查找到的节点对象为 ' + node + '，节点值 = ' + (node ? node.val : 'null')
+);
+
+/* 插入节点 */
+bst.insert(16);
+console.log('\n插入节点 16 后，二叉树为\n');
+printTree(bst.getRoot());
+
+/* 删除节点 */
+bst.remove(1);
+console.log('\n删除节点 1 后，二叉树为\n');
+printTree(bst.getRoot());
+bst.remove(2);
+console.log('\n删除节点 2 后，二叉树为\n');
+printTree(bst.getRoot());
+bst.remove(4);
+console.log('\n删除节点 4 后，二叉树为\n');
+printTree(bst.getRoot());
+
+export {};
+```
+
+## AVL树（选学）
+这是一种特殊的tree 它能够保证 tree不会退化成 链表类型的tree ，导致效率下落到O(n)，AVL树 能够让tree的操作效率一直在O(longN). 现在我们深入理解一下 操作的过程和实现的过程。
+
+**<font style="color:rgb(29, 29, 32);">旋转操作既能保持“二叉搜索树”的性质，也能使树重新变为“平衡二叉树”</font>**<font style="color:rgb(29, 29, 32);">。</font>
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1706689432748-b77e8a2c-2561-40ab-9386-d7f4de1b1b36.png)
+
+简而言之" 当tree达到一定程度之后，如果发现这个是不平衡的 那么久旋转 以达到操作效率最高化 "
+
+
+
+为了实现AVL tree我们需要新增一个 higt 属性 它就是我们这tree的高度
+
+```typescript
+/* AVL 树节点类 */
+class TreeNode {
+    val; // 节点值
+    height; //节点高度
+    left; // 左子节点指针
+    right; // 右子节点指针
+    constructor(val, left, right, height) {
+        this.val = val === undefined ? 0 : val;
+        this.height = height === undefined ? 0 : height;
+        this.left = left === undefined ? null : left;
+        this.right = right === undefined ? null : right;
+    }
+
+  /* 获取节点高度 */
+  height(node) {
+      // 空节点高度为 -1 ，叶节点高度为 0
+      return node === null ? -1 : node.height;
+  }
+  
+  /* 更新节点高度 */
+  #updateHeight(node) {
+      // 节点高度等于最高子树高度 + 1
+      node.height =
+          Math.max(this.height(node.left), this.height(node.right)) + 1;
+  }
+
+  // 节点的「平衡因子 balance factor」定义为节点左子树的高度减去右子树的高度
+  /* 获取平衡因子 */
+  balanceFactor(node) {
+      // 空节点平衡因子为 0
+      if (node === null) return 0;
+      // 节点平衡因子 = 左子树高度 - 右子树高度
+      return this.height(node.left) - this.height(node.right);
+  }
+
+  // 下面是左右旋转的过程
+  /* 右旋操作 */
+  #rightRotate(node) {
+      const child = node.left;
+      const grandChild = child.right;
+      // 以 child 为原点，将 node 向右旋转
+      child.right = node;
+      node.left = grandChild;
+      // 更新节点高度
+      this.#updateHeight(node);
+      this.#updateHeight(child);
+      // 返回旋转后子树的根节点
+      return child;
+  }
+
+  /* 左旋操作 */
+  #leftRotate(node) {
+      const child = node.right;
+      const grandChild = child.left;
+      // 以 child 为原点，将 node 向左旋转
+      child.left = node;
+      node.right = grandChild;
+      // 更新节点高度
+      this.#updateHeight(node);
+      this.#updateHeight(child);
+      // 返回旋转后子树的根节点
+      return child;
+  }
+
+  /* 执行旋转操作，使该子树重新恢复平衡 */
+  #rotate(node) {
+      // 获取节点 node 的平衡因子
+      const balanceFactor = this.balanceFactor(node);
+      // 左偏树
+      if (balanceFactor > 1) {
+          if (this.balanceFactor(node.left) >= 0) {
+              // 右旋
+              return this.#rightRotate(node);
+          } else {
+              // 先左旋后右旋
+              node.left = this.#leftRotate(node.left);
+              return this.#rightRotate(node);
+          }
+      }
+      // 右偏树
+      if (balanceFactor < -1) {
+          if (this.balanceFactor(node.right) <= 0) {
+              // 左旋
+              return this.#leftRotate(node);
+          } else {
+              // 先右旋后左旋
+              node.right = this.#rightRotate(node.right);
+              return this.#leftRotate(node);
+          }
+      }
+      // 平衡树，无须旋转，直接返回
+      return node;
+  }
+
+  // 接下来是它的插入操作
+  /* 插入节点 */
+  insert(val) {
+      this.root = this.#insertHelper(this.root, val);
+  }
+  
+  /* 递归插入节点（辅助方法） */
+  #insertHelper(node, val) {
+      if (node === null) return new TreeNode(val);
+      /* 1. 查找插入位置并插入节点 */
+      if (val < node.val) node.left = this.#insertHelper(node.left, val);
+      else if (val > node.val)
+          node.right = this.#insertHelper(node.right, val);
+      else return node; // 重复节点不插入，直接返回
+      this.#updateHeight(node); // 更新节点高度
+      /* 2. 执行旋转操作，使该子树重新恢复平衡 */
+      node = this.#rotate(node);
+      // 返回子树的根节点
+      return node;
+  }
+  
+  // 然后是它的删除节点操作
+  /* 删除节点 */
+  remove(val) {
+      this.root = this.#removeHelper(this.root, val);
+  }
+  
+  /* 递归删除节点（辅助方法） */
+  #removeHelper(node, val) {
+      if (node === null) return null;
+      /* 1. 查找节点并删除 */
+      if (val < node.val) node.left = this.#removeHelper(node.left, val);
+      else if (val > node.val)
+          node.right = this.#removeHelper(node.right, val);
+      else {
+          if (node.left === null || node.right === null) {
+              const child = node.left !== null ? node.left : node.right;
+              // 子节点数量 = 0 ，直接删除 node 并返回
+              if (child === null) return null;
+              // 子节点数量 = 1 ，直接删除 node
+              else node = child;
+          } else {
+              // 子节点数量 = 2 ，则将中序遍历的下个节点删除，并用该节点替换当前节点
+              let temp = node.right;
+              while (temp.left !== null) {
+                  temp = temp.left;
+              }
+              node.right = this.#removeHelper(node.right, temp.val);
+              node.val = temp.val;
+          }
+      }
+      this.#updateHeight(node); // 更新节点高度
+      /* 2. 执行旋转操作，使该子树重新恢复平衡 */
+      node = this.#rotate(node);
+      // 返回子树的根节点
+      return node;
+  }
+}
+
+
+```
+
+# 堆heap
+**<font style="color:#DF2A3F;">堆 heap」是一种满足特定条件的完全二叉树</font>**<font style="color:rgb(29, 29, 32);">，主要可分为两种类型.</font>
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1704942228145-f76a5d61-8a25-4edf-b63a-a150af3c9d6a.png)
+
+<font style="color:rgb(29, 29, 32);">他有一些特性:</font>
+
+1. 上层节点会 被填满，底层节点 以此向左填
+
+
+
+<font style="color:rgb(29, 29, 32);">很多语言有内置的 “优先队列数据结构”，实际上</font><font style="color:#DF2A3F;"> </font>**<font style="color:#DF2A3F;">堆通常用于实现优先队列，大顶堆相当于元素按从大到小的顺序出队的优先队列</font>**<font style="color:#DF2A3F;">。</font><font style="color:rgb(29, 29, 32);">从使用角度来看，我们可以将“优先队列”和“堆”看作等价的数据结构。</font>
+
+<font style="color:rgb(29, 29, 32);">堆的简单实现，堆顶元素的访问，元素入堆，堆顶元素出堆，“堆化”操作。</font>
+
+```typescript
+
+```
+
+<font style="color:rgb(29, 29, 32);">通常它的效率是：</font>
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1706690242422-96630d35-e9da-4c25-98a0-69d14114ceb7.png)
+
+由于 堆就是 完满二叉树的一种，所以我们使用array 来表示，并且给索引设计一套规则
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1706690948529-b7c34ac0-dd00-4d77-9702-1cf40877a210.png)
+
+
+
+```typescript
+
+/* 最大堆类 */
+class MaxHeap {
+    private maxHeap: number[];
+    constructor(nums?: number[]) {
+    }
+
+    /* 获取左子节点的索引 */
+    private left(i: number): number {
+        return 2 * i + 1;
+    }
+
+    /* 获取右子节点的索引 */
+    private right(i: number): number {
+        return 2 * i + 2;
+    }
+
+    /* 获取父节点的索引 */
+    private parent(i: number): number {
+        return Math.floor((i - 1) / 2); // 向下整除
+    }
+
+    /* 交换元素 */
+    private swap(i: number, j: number): void {
+        const tmp = this.maxHeap[i];
+        this.maxHeap[i] = this.maxHeap[j];
+        this.maxHeap[j] = tmp;
+    }
+
+    /* 获取堆大小 */
+    public size(): number {
+        return this.maxHeap.length;
+    }
+
+    /* 判断堆是否为空 */
+    public isEmpty(): boolean {
+        return this.size() === 0;
+    }
+
+    /* 访问堆顶元素 */
+    public peek(): number {
+        return this.maxHeap[0];
+    }
+
+    /* 元素入堆 */
+    public push(val: number): void {
+        // 添加节点
+        this.maxHeap.push(val);
+        // 从底至顶堆化
+        this.siftUp(this.size() - 1);
+    }
+
+    /* 从节点 i 开始，从底至顶堆化 */
+    private siftUp(i: number): void {
+        while (true) {
+            // 获取节点 i 的父节点
+            const p = this.parent(i);
+            // 当“越过根节点”或“节点无须修复”时，结束堆化
+            if (p < 0 || this.maxHeap[i] <= this.maxHeap[p]) break;
+            // 交换两节点
+            this.swap(i, p);
+            // 循环向上堆化
+            i = p;
+        }
+    }
+
+    /* 元素出堆 */
+    public pop(): number {
+        // 判空处理
+        if (this.isEmpty()) throw new RangeError('Heap is empty.');
+        // 交换根节点与最右叶节点（交换首元素与尾元素）
+        this.swap(0, this.size() - 1);
+        // 删除节点
+        const val = this.maxHeap.pop();
+        // 从顶至底堆化
+        this.siftDown(0);
+        // 返回堆顶元素
+        return val;
+    }
+
+    /* 从节点 i 开始，从顶至底堆化 */
+    private siftDown(i: number): void {
+        while (true) {
+            // 判断节点 i, l, r 中值最大的节点，记为 ma
+            const l = this.left(i),
+                r = this.right(i);
+            let ma = i;
+            if (l < this.size() && this.maxHeap[l] > this.maxHeap[ma]) ma = l;
+            if (r < this.size() && this.maxHeap[r] > this.maxHeap[ma]) ma = r;
+            // 若节点 i 最大或索引 l, r 越界，则无须继续堆化，跳出
+            if (ma === i) break;
+            // 交换两节点
+            this.swap(i, ma);
+            // 循环向下堆化
+            i = ma;
+        }
+    }
+
+    /* 打印堆（二叉树） */
+    public print(): void {
+        printHeap(this.maxHeap);
+    }
+
+    /* 取出堆中元素 */
+    public getMaxHeap(): number[] {
+        return this.maxHeap;
+    }
+}
+
+/* Driver Code */
+if (require.main === module) {
+    /* 初始化大顶堆 */
+    const maxHeap = new MaxHeap([9, 8, 6, 6, 7, 5, 2, 1, 4, 3, 6, 2]);
+    console.log('\n输入列表并建堆后');
+    maxHeap.print();
+
+    /* 获取堆顶元素 */
+    let peek = maxHeap.peek();
+    console.log(`\n堆顶元素为 ${peek}`);
+
+    /* 元素入堆 */
+    const val = 7;
+    maxHeap.push(val);
+    console.log(`\n元素 ${val} 入堆后`);
+    maxHeap.print();
+
+    /* 堆顶元素出堆 */
+    peek = maxHeap.pop();
+    console.log(`\n堆顶元素 ${peek} 出堆后`);
+    maxHeap.print();
+
+    /* 获取堆大小 */
+    const size = maxHeap.size();
+    console.log(`\n堆元素数量为 ${size}`);
+
+    /* 判断堆是否为空 */
+    const isEmpty = maxHeap.isEmpty();
+    console.log(`\n堆是否为空 ${isEmpty}`);
+}
+```
+
+
+
+<font style="color:rgb(29, 29, 32);">堆的常见应用</font>
+
++ **<font style="color:rgb(29, 29, 32);">优先队列</font>**<font style="color:rgb(29, 29, 32);">：堆通常作为实现优先队列的首选数据结构，其入队和出队操作的时间复杂度均为 n(longN) 这些操作都非常高效。</font>
++ **<font style="color:rgb(29, 29, 32);">堆排序</font>**<font style="color:rgb(29, 29, 32);">：给定一组数据，我们可以用它们建立一个堆，然后不断地执行元素出堆操作，从而得到有序数据。然而，我们通常会使用一种更优雅的方式实现堆排序，详见“堆排序”章节。</font>
++ **<font style="color:rgb(29, 29, 32);">获取最大的 </font>****<font style="color:rgb(29, 29, 32);">k </font>****<font style="color:rgb(29, 29, 32);">个元素</font>**<font style="color:rgb(29, 29, 32);">：这是一个经典的算法问题，同时也是一种典型应用，例如选择热度前 10 的新闻作为微博热搜，选取销量前 10 的商品等。</font>
+
+
+
+什么是建堆操作？意思是把一个list中的数据拿出来，建立一个堆的过程的称呼. 它的时间复杂度为 O(n) 算是比较高效的了
+
+具体而言就是 ，先把array 原封不动的加入到 heap中。然后再倒叙进行“从顶到底的堆化”操作；每次堆化一个节点之后，以该节点为跟节点的子树就会形成一个合法的子堆。底层的叶子节点由于没有子节点所以它不需要堆化。
+
+下面是完整的代码 补全上文中的 class constructor
+
+```typescript
+/* 构造方法，建立空堆或根据输入列表建堆 */
+constructor(nums) {
+    // 将列表元素原封不动添加进堆
+    this.#maxHeap = nums === undefined ? [] : [...nums];
+    // 堆化除叶节点以外的其他所有节点
+    for (let i = this.#parent(this.size() - 1); i >= 0; i--) {
+        this.#siftDown(i);
+    }
+}
+```
+
+## Top-k问题
+<font style="color:rgb(29, 29, 32);">给定一个长度为 </font><font style="color:rgb(29, 29, 32);">n</font><font style="color:rgb(29, 29, 32);"> 的无序数组 </font><font style="color:rgb(29, 29, 32);">nums</font><font style="color:rgb(29, 29, 32);"> ，请返回数组中最大的 </font><font style="color:rgb(29, 29, 32);">k </font><font style="color:rgb(29, 29, 32);">个元素。</font>
+
+<font style="color:rgb(29, 29, 32);">我们可以通过堆 来解决此类问题。下面我们来看看 题目和题解</font>
+
+<font style="color:rgb(29, 29, 32);"></font>
+
+<font style="color:rgb(29, 29, 32);">Q: 给定一个 长度为n 的array ，请找出其中的最大的k 个元素</font>
+
+<font style="color:rgb(29, 29, 32);">我们又许多种解决方案</font>
+
+1. 直接循环遍历 然后去迭代什么的，但是性能很低 O(n^2)
+2. 进行排序 然后再取  时间复杂度 O(nLogN)
+3. 如果采取 堆这种数据结构的话 时间复杂度不会超过O(nLogN), 一般在O(n) 左右
+
+
+
+堆的实现 主要是下面的逻辑: 
+
+1. 初始化一个 小顶堆
+2. 将数组的前k个 依次加入堆中去
+3. 从第k+1 个开始 如果当前元素 > 堆 顶，那么就把堆顶 移出去，然后把当前元素加入到堆中去
+4. 结束之后 堆中就保存了 结果
+
+```typescript
+
+/* 元素入堆 */
+function pushMinHeap(maxHeap: MaxHeap, val: number): void {
+    // 元素取反
+    maxHeap.push(-val);
+}
+
+/* 元素出堆 */
+function popMinHeap(maxHeap: MaxHeap): number {
+    // 元素取反
+    return -maxHeap.pop();
+}
+
+/* 访问堆顶元素 */
+function peekMinHeap(maxHeap: MaxHeap): number {
+    // 元素取反
+    return -maxHeap.peek();
+}
+
+/* 取出堆中元素 */
+function getMinHeap(maxHeap: MaxHeap): number[] {
+    // 元素取反
+    return maxHeap.getMaxHeap().map((num: number) => -num);
+}
+
+/* 基于堆查找数组中最大的 k 个元素 */
+function topKHeap(nums: number[], k: number): number[] {
+    // 初始化小顶堆
+    // 请注意：我们将堆中所有元素取反，从而用大顶堆来模拟小顶堆
+    const maxHeap = new MaxHeap([]);
+    // 将数组的前 k 个元素入堆
+    for (let i = 0; i < k; i++) {
+        pushMinHeap(maxHeap, nums[i]);
+    }
+    // 从第 k+1 个元素开始，保持堆的长度为 k
+    for (let i = k; i < nums.length; i++) {
+        // 若当前元素大于堆顶元素，则将堆顶元素出堆、当前元素入堆
+        if (nums[i] > peekMinHeap(maxHeap)) {
+            popMinHeap(maxHeap);
+            pushMinHeap(maxHeap, nums[i]);
+        }
+    }
+    // 返回堆中元素
+    return getMinHeap(maxHeap);
+}
+
+/* Driver Code */
+const nums = [1, 7, 6, 3, 2];
+const k = 3;
+const res = topKHeap(nums, k);
+console.log(`最大的 ${k} 个元素为`, res);
+```
+
+# <font style="color:rgb(29, 29, 32);">图</font>
+## 图啥？
+> 讲一些概念，术语，表示方法，和应用场景
+>
+
+什么是图：
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1705243087579-e1111d66-77c5-45f7-bd1e-2be2bec33793.png)
+
+术语和常见概念：有向/无向图，连通/飞连通 图，有权的图。
+
+图的常见术语：领接adjacency，路径path，度degree，
+
+图的表示方法：领接矩阵，领接表，
+
+常见图的应用场景：社交网络，地铁路线....
+
+
+
+## 图的基础操作
+有强度，没看懂只能过一遍了
+
+## 图的遍历
+有强度，没看懂只能过一遍了
+
+
+
+---
+
+**<font style="color:#ED740C;">接下来就是常见的算法讲解了</font>**
+
+**<font style="color:#ED740C;"></font>**
+
+# 搜索算法
+## 二分查找
+数据的有序性，每伦搜索缩短一半，双指针和区间表示方法。区间表示方法。优点和局限性。（建议实现的时候采取双闭区间的方式 这样出错的概率更小）
+
+## 二分的插入点
+这种算法 还可以实现很多问题的变种，比如“搜索元素插入的位置”。我们分两个类别来看 
+
+1. 无重复元素的情况
+2. 有重复元素的情况
+
+## 二分的边界
+查找左右的边界（寻找插入点的本质实际上是查找最左边的一个target的索引）。
+
+查找右边界 有两种取巧的方式。
+
+## 哈希优化的策略
+在算法题目中，我们通常把线性查找替换为Hash查找来降低算法的时间复杂度。
+
+线性查找：以时间换空间
+
+哈希查找：以空间换时间
+
+## 搜索算法
+主要用来在数据结构中，搜索一个/一组满足特定条件的元素。主要有两类思路
+
+1. 直接遍历
+2. 先验证数据结构 如何实现 二分 哈希 和二叉等查找
+
+
+
+暴力搜素。自适应搜素。
+
+
+
+# 排序算法
+就是对一组数据进行某种规则的排序。它的度量维度有哪些。最理想的排序算法的要求是。
+
+## 选择排序
+<font style="color:rgb(29, 29, 32);">选择排序 selection sort，开启一个循环 每伦把最小的找出来放到已排的区间的末尾。此种算法的特性。</font>
+
+## 冒泡排序
+bubble sort，连续的交换相邻元素实现排序。说白了就是先把最大的冒出来，然后不断的冒 直到结束。此种算法的特性。
+
+## 插入排序
+<font style="color:rgb(29, 29, 32);">insertion sort，主要的做法是选择一个基准元素 然后再把未排序的与比较，从而实现的算法。此种算法的特性。</font>
+
+## 快速排序
+这是一种基于分治策略的排序算法。此算法的特性。
+
+## 归并排序
+这也是一种基于分治策略的排序算法。此算法的特性。
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1705374179896-bbc0a468-2d5f-4b6c-82df-ebfa89037c2a.png)
+
+## 堆排序
+这是一种基于 “堆”数据结构实现的高效排序算法，通过建堆和出堆 完成高效的排序工作。
+
+## 桶排序
+前面提到的几类算法 基本上都是属于“基于比较的排序”，但是桶 这类算法是不属于的。
+
+桶排序的要点是：设置一些有大小顺序的桶 然后分别排序最后合并。
+
+## 计数排序
+<font style="color:rgb(29, 29, 32);">通过统计元素数量来实现排序，通常应用于整数数组。此算法的特性。关于计数中的前缀和的含义。</font>
+
+## 基数排序
+<font style="color:rgb(29, 29, 32);">「基数排序 radix sort」的核心思想与计数排序一致，也通过统计个数来实现排序。在此基础上，基数排序利用数字各位之间的递进关系，依次对每一位进行排序，从而得到最终的排序结果。</font>
+
+
+
+# 分治
+分而治之的算法思想，一般常用在递归的实现中。它分成了 分 和治 两个阶段。
+
+一个问题是否适合使用分治解决 的判断标准  
+**<font style="color:rgb(29, 29, 32);">问题可以分解，子问题是独立的，子问题的解可以合并。</font>**
+
+它的常见应用。
+
+分支算法和核心在于选取合适的：“分治策略”
+
+
+
+## 分治搜索策略
+二分查找实际上就是一个 运用分治思想的典型。下面给出了具体的实现。
+
+## 构建树问题
+有强度，没看明白，仅仅知道使用这种算法可以构建 已知前序/中序 遍历的 树。
+
+## 汉塔问题
+这是一个典型的算法题目
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1705462896093-ecbffb8a-9664-4955-adf1-dcb96be9eb1a.png)
+
+如何运用分治的思想去求解这个问题？
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1705463202575-aed9852f-bb3e-4df3-bfaf-f2c48ed4be98.png)
+
+
+
+# 回溯
+他是一种通过 穷举的方式 来解决问题的方法。通常用在“深度优先搜素”中。
+
+一个简单的例子。
+
+算法的策略：尝试 和 回退。
+
+优化方法：剪枝 ，和启发式搜索
+
+算法特性：大规模复杂问题 算法效率非常的低。
+
+典型的应用
+
+
+
+## 全排列问题
+这是一个非常典型的问题：‘<font style="color:rgb(29, 29, 32);">输入一个整数数组，其中不包含重复元素，返回所有可能的排列“。对于它我们就需要用到回溯算法。</font>
+
+<font style="color:rgb(29, 29, 32);"></font>
+
+<font style="color:rgb(29, 29, 32);">解决问题的关键在于：选择合适的剪枝策略。</font>
+
+<font style="color:rgb(29, 29, 32);"></font>
+
+<font style="color:rgb(29, 29, 32);">其算法的复杂度分析</font>
+
+## 子集问题
+着也是一个非常经典的算法问题：
+
+<font style="color:rgb(29, 29, 32);">给定一个正整数数组 </font><font style="color:rgb(29, 29, 32);">nums</font><font style="color:rgb(29, 29, 32);"> 和一个目标正整数 </font><font style="color:rgb(29, 29, 32);">target</font><font style="color:rgb(29, 29, 32);"> ，请找出所有可能的组合，使得组合中的元素和等于 </font><font style="color:rgb(29, 29, 32);">target</font><font style="color:rgb(29, 29, 32);"> 。给定数组无重复元素，每个元素可以被选取多次。请以列表形式返回这些组合，列表中不应包含重复组合。</font>
+
+<font style="color:rgb(29, 29, 32);"></font>
+
+<font style="color:rgb(29, 29, 32);">它还有一个变体：“</font>
+
+<font style="color:rgb(29, 29, 32);">给定一个正整数数组 </font><font style="color:rgb(29, 29, 32);">nums</font><font style="color:rgb(29, 29, 32);"> 和一个目标正整数 </font><font style="color:rgb(29, 29, 32);">target</font><font style="color:rgb(29, 29, 32);"> ，请找出所有可能的组合，使得组合中的元素和等于 </font><font style="color:rgb(29, 29, 32);">target</font><font style="color:rgb(29, 29, 32);"> 。</font>**<font style="color:rgb(29, 29, 32);">给定数组可能包含重复元素，每个元素只可被选择一次</font>**<font style="color:rgb(29, 29, 32);">。请以列表形式返回这些组合，列表中不应包含重复组合。</font>
+
+<font style="color:rgb(29, 29, 32);">”</font>
+
+<font style="color:rgb(29, 29, 32);"></font>
+
+<font style="color:rgb(29, 29, 32);">解决这两个问题的关键依然是：“选择合适的剪枝策略。”</font>
+
+
+
+## N皇后问题
+这也是一个经典的问题
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1705549648074-d34db7f5-be12-445f-bd35-ed123b15d221.png)
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1705549679796-e7ca9ce2-2c12-47f9-8327-2af47b78c846.png)
+
+选择合适的剪枝策略 至关重要
+
+
+
+# 贪心算法
+## 初识
+<font style="color:rgb(29, 29, 32);">「贪心算法 greedy algorithm」是一种解决优化问题的算法，其基本思想是在问题的每个决策阶段，都选择当前看起来最优的选择，即贪心地做出局部最优的决策，以期获得全局最优解。</font>
+
+<font style="color:rgb(29, 29, 32);"></font>
+
+<font style="color:rgb(29, 29, 32);">举个例子：</font>
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1705906528623-b66b85b8-7292-468d-b892-fe179540fa76.png)
+
+我们在每轮循环中 总是选择一个最接近它的值 以期达到最优解
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1705906564735-7aa3c6e8-61d8-4dea-a592-75291d9e4a39.png)
+
+一般而言：贪心适用的情况有下面两种
+
+1. 可以保证找到最优解
+2. 可以找到近视最优解
+
+
+
+其算法特性如下：
+
+1. 贪心选择性质：只有局部最优解才能导致全局最优解。
+2. 最优子结构：原始问题的最优解 包含了子问题的最优解
+
+
+
+具体的步骤是：  
+
+
+典型的运用是：
+
+<font style="color:rgb(29, 29, 32);"></font>
+
+## 背包问题
+一个典型的算法问题
+
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1705906777957-2a540c97-dc3e-47d6-881d-f500a7d6cfd0.png)
+
+
+
+具体的解法：  
+1. 找到问题的关键：单位价值  
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1705906808867-c2910696-ef41-4545-a3b2-b2c281de02cc.png)
+
+
+
+解法：
+
+1. 拟定一个贪心策略 (**<font style="color:rgb(29, 29, 32);">本质上是最大化单位重量下的物品价值</font>**)  
+- <font style="color:rgb(29, 29, 32);">将物品按照单位价值从高到低进行排序。  
+</font><font style="color:rgb(29, 29, 32);">- 遍历所有物品，</font>**<font style="color:rgb(29, 29, 32);">每轮贪心地选择单位价值最高的物品</font>**<font style="color:rgb(29, 29, 32);">。  
+</font><font style="color:rgb(29, 29, 32);">- </font><font style="color:rgb(29, 29, 32);">若剩余背包容量不足，则使用当前物品的一部分填满背包</font>
+
+```typescript
+/* 物品 */
+class Item {
+    w: number; // 物品重量
+    v: number; // 物品价值
+
+    constructor(w: number, v: number) {
+        this.w = w;
+        this.v = v;
+    }
+}
+
+/* 分数背包：贪心 */
+function fractionalKnapsack(wgt: number[], val: number[], cap: number): number {
+    // 创建物品列表，包含两个属性：重量、价值
+    const items: Item[] = wgt.map((w, i) => new Item(w, val[i]));
+    // 按照单位价值 item.v / item.w 从高到低进行排序
+    items.sort((a, b) => b.v / b.w - a.v / a.w);
+    // 循环贪心选择
+    let res = 0;
+    for (const item of items) {
+        if (item.w <= cap) {
+            // 若剩余容量充足，则将当前物品整个装进背包
+            res += item.v;
+            cap -= item.w;
+        } else {
+            // 若剩余容量不足，则将当前物品的一部分装进背包
+            res += (item.v / item.w) * cap;
+            // 已无剩余容量，因此跳出循环
+            break;
+        }
+    }
+    return res;
+}
+```
+
+## 最大容量问题
+这样是一个在多种面试过程中的一个最常见问题  
+![](https://cdn.nlark.com/yuque/0/2024/png/1627571/1705906930570-b82c5e19-6b43-4c8a-81f8-73619bfaabdf.png)
+
+关键是拟定一个 合适的贪心策略  
+<font style="color:rgb(29, 29, 32);">: 初始化两指针，使其分列容器两端，每轮向内收缩短板对应的指针，直至两指针相遇。  
+  
+</font><font style="color:rgb(29, 29, 32);">解决此问题的过程  
+</font>
+
+1. <font style="color:rgb(29, 29, 32);">初始状态下，指针 </font><font style="color:rgb(29, 29, 32);">i</font><font style="color:rgb(29, 29, 32);"> 和 </font><font style="color:rgb(29, 29, 32);">j</font><font style="color:rgb(29, 29, 32);"> 分列数组两端。</font>
+2. <font style="color:rgb(29, 29, 32);">计算当前状态的容量 </font><font style="color:rgb(29, 29, 32);">cap[i,j ]</font><font style="color:rgb(29, 29, 32);"> ，并更新最大容量。</font>
+3. <font style="color:rgb(29, 29, 32);">比较板 </font><font style="color:rgb(29, 29, 32);">i</font><font style="color:rgb(29, 29, 32);">和 板 </font><font style="color:rgb(29, 29, 32);">j</font><font style="color:rgb(29, 29, 32);"> 的高度，并将短板向内移动一格。</font>
+4. <font style="color:rgb(29, 29, 32);">循环执行第 </font>2.<font style="color:rgb(29, 29, 32);"> 步和第 </font>3.<font style="color:rgb(29, 29, 32);"> 步，直至 </font><font style="color:rgb(29, 29, 32);">i</font><font style="color:rgb(29, 29, 32);"> 和 </font><font style="color:rgb(29, 29, 32);">j</font><font style="color:rgb(29, 29, 32);"> 相遇时结束。</font>
+
+```typescript
+/* 最大容量：贪心 */
+function maxCapacity(ht: number[]): number {
+    // 初始化 i, j，使其分列数组两端
+    let i = 0,
+        j = ht.length - 1;
+    // 初始最大容量为 0
+    let res = 0;
+    // 循环贪心选择，直至两板相遇
+    while (i < j) {
+        // 更新最大容量
+        const cap: number = Math.min(ht[i], ht[j]) * (j - i);
+        res = Math.max(res, cap);
+        // 向内移动短板
+        if (ht[i] < ht[j]) {
+            i += 1;
+        } else {
+            j -= 1;
+        }
+    }
+    return res;
+}
+```
+
+<font style="color:rgb(29, 29, 32);"></font>
+
+## 最大切分乘积问题
+此委托比较的复杂 ，需要多看看
+
+# 术语
+| **中文** | **English** | **中文** | **English** |
+| --- | --- | --- | --- |
+| 算法 | algorithm | 层序遍历 | level-order traversal |
+| 数据结构 | data structure | 广度优先遍历 | breadth-first traversal |
+| 渐近复杂度分析 | asymptotic complexity analysis | 深度优先遍历 | depth-first traversal |
+| 时间复杂度 | time complexity | 二叉搜索树 | binary search tree |
+| 空间复杂度 | space complexity | 平衡二叉搜索树 | balanced binary search tree |
+| 迭代 | iteration | 平衡因子 | balance factor |
+| 递归 | recursion | 堆 | heap |
+| 尾递归 | tail recursion | 大顶堆 | max heap |
+| 递归树 | recursion tree | 小顶堆 | min heap |
+| 大 O 记号 | big-O notation | 优先队列 | priority queue |
+| 渐近上界 | asymptotic upper bound | 堆化 | heapify |
+| 原码 | sign-magnitude | 图 | graph |
+| 反码 | 1’s complement | 顶点 | vertex |
+| 补码 | 2’s complement | 无向图 | undirected graph |
+| 数组 | array | 有向图 | directed graph |
+| 索引 | index | 连通图 | connected graph |
+| 链表 | linked list | 非连通图 | disconnected graph |
+| 链表节点 | linked list node, list node | 有权图 | weighted graph |
+| 列表 | list | 邻接 | adjacency |
+| 动态数组 | dynamic array | 路径 | path |
+| 硬盘 | hard disk | 入度 | in-degree |
+| 内存 | random-access memory (RAM) | 出度 | out-degree |
+| 缓存 | cache memory | 邻接矩阵 | adjacency matrix |
+| 缓存未命中 | cache miss | 邻接表 | adjacency list |
+| 缓存命中率 | cache hit rate | 广度优先搜索 | breadth-first search |
+| 栈 | stack | 深度优先搜索 | depth-first search |
+| 队列 | queue | 二分查找 | binary search |
+| 双向队列 | double-ended queue | 搜索算法 | searching algorithm |
+| 哈希表 | hash table | 排序算法 | sorting algorithm |
+| 桶 | bucket | 选择排序 | selection sort |
+| 哈希函数 | hash function | 冒泡排序 | bubble sort |
+| 哈希冲突 | hash collision | 插入排序 | insertion sort |
+| 负载因子 | load factor | 快速排序 | quick sort |
+| 链式地址 | separate chaining | 归并排序 | merge sort |
+| 开放寻址 | open addressing | 堆排序 | heap sort |
+| 线性探测 | linear probing | 桶排序 | bucket sort |
+| 懒删除 | lazy deletion | 计数排序 | counting sort |
+| 二叉树 | binary tree | 基数排序 | radix sort |
+| 树节点 | tree node | 分治 | divide and conquer |
+| 左子节点 | left-child node | 汉诺塔问题 | hanota problem |
+| 右子节点 | right-child node | 回溯算法 | backtracking algorithm |
+| 父节点 | parent node | 约束 | constraint |
+| 左子树 | left subtree | 解 | solution |
+| 右子树 | right subtree | 状态 | state |
+| 根节点 | root node | 剪枝 | pruning |
+| 叶节点 | leaf node | 全排列问题 | permutations problem |
+| 边 | edge | 子集和问题 | subset-sum problem |
+| 层 | level | n 皇后问题 | n-queens problem |
+| 度 | degree | 动态规划 | dynamic programming |
+| 高度 | height | 初始状态 | initial state |
+| 深度 | depth | 状态转移方程 | state-trasition equation |
+| 完美二叉树 | perfect binary tree | 背包问题 | knapsack problem |
+| 完全二叉树 | complete binary tree | 编辑距离问题 | edit distance problem |
+| 完满二叉树 | full binary tree | 贪心算法 | greedy algorithm |
+| 平衡二叉树 | balanced binary tree | | |
+| AVL 树 | AVL tree | | |
+| <font style="color:rgb(29, 29, 32);">红黑树</font> | <font style="color:rgb(29, 29, 32);">red-black tree</font> | | |
+
+

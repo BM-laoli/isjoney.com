@@ -1,0 +1,208 @@
+---
+title: "iOS高级技术整合：复杂列表、混合页面与签名证书"
+date: "2024-12-19"
+summary: "深入探讨iOS开发中的复杂列表解决方案(IGListKit)、混合内容页面处理、APP签名证书管理、设备唯一标识符及打包上架流程。"
+status: "completed"
+tech: ["iOS", "IGListKit", "HybridPageKit", "Certificate"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "App"
+---
+
+> 进入高级技术整合
+>
+
+
+
+# 复杂的列表解决方案（IGListKit）
+## 理论知识
+补充知识点：<font style="color:rgb(88, 90, 91);">adapter 是适配器是一直设计模式，之前我们也用过，说白了通过这个东西做为一个桥梁，我们可以去操作任意你想操作的calss</font>
+
+[适配器模式](http://c.biancheng.net/view/1361.html)<font style="color:rgb(88, 90, 91);"></font>
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642911995835-fd7f46ad-bdf5-4c79-8ec3-6d658e74ba35.png)
+
+同质化的数据结构，但是View展示逻辑不一样，不同数据结构不同的展示...。如果一点🤏的写 判断，会表现得非常非常的复杂
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642912180533-a880e0c7-60ea-4629-b3b6-942713270d7b.png)
+
+这里采取的方案 就是拆分代码，对于优化方面可以做一些缓存和预加载设计。以上是自己写原生的逻辑实现的大概思路，接下来我们看看社区的开源方案
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642912452006-b4ff75e4-4268-4c18-89ed-604c66ea8a5e.png)
+
+可以看到 对于一个List的Cell都是做了 多分层的设计，
+
+## 代码示例
+> 本章节无代码示例
+>
+
+# 复杂内容页面的处理方案
+## 理论知识
+> 一般来说复杂的内容页面还是尽量使用WebView 来做比较好，因为能抹平很多的差异
+>
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642913160456-0a5e4a9d-fa5b-46cf-9e76-506445471f72.png)
+
+对于一些复杂的交互可以交给Native去实现，数据可以由Native存储大自身的缓存中去，实现部分的性能优化
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642913548836-06449b64-1d7c-422e-8326-64229e033291.png)
+
+> WebView + Native 的混合页面 ，也许会有一个问题就是Native手势冲突。处理方案就是1. 放两个多个ScrollVIew分别处理不同地滚动。方案2 是 装到容器里，然后由外部的去控制里面全部进行滚动
+>
+
+
+
+这里推荐一个开源框架的实现
+
+[HybridPageKit](https://github.com/dequan1331/HybridPageKit/blob/master/README-CN.md)
+
+
+
+另外推荐可以尝试使用 [https://hippyjs.org/#/](https://hippyjs.org/#/) 腾讯的H5混合框架
+
+
+
+# APP签名和证书
+## 理论知识
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642914388892-f575d411-bcea-48d4-b6db-a5299d22c598.png)
+
+> 实际上就是保证App的签名的一致性和安全性，一般来说小规模 可以使用苹果的账户添加测试人员。大规模抗议使用TestFIlg去安装
+>
+
+本地的P12 和CSR 用来确定是  本地环境安全可信
+
+Certiface 是 保证  Profiles 安全可信，再用Xcode打包就能build 一个包出来了
+
+
+
+下面是流程：
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642914727452-17c41cb8-0810-421a-9609-6ed12acb505d.png)
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642914770333-b5be971a-d3c1-4c3a-a57c-a1686aed1135.png)
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642914790165-3e8289d0-0458-49d0-b001-e4d19caa2774.png)
+
++证书要求你上次一个本地的证书
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642914853743-22b9055e-4dbd-42c4-8d1b-4b5f86b1a7c5.png)
+
+填入信息就生成，生产之后（生产的就是CSR文件），把它上传就好了
+
+
+
+点击Profile （在网站上），进入下面的步骤
+
+1.创建一个Profile
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642914981165-ba3ca893-3d1d-433e-b4c5-bc6398d1fef3.png)
+
+2.选择你的buildID，
+
+3.选择你的证书
+
+4.选择设备
+
+5.输入名称
+
+
+
+最后生产出一个profiel （需要证书+DviecsID  = profile）
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642915127141-ed9dcf13-4632-4d7b-81a0-0a4911b20ab3.png)
+
+p12是 本机点击 证书导出的一个 . p12证书文件
+
+
+
+
+
+## 上面的是否是太复杂了？
+> 实际上，如果有钱，自己选一个团队 就然后就是权自动化的管理了
+>
+> 
+>
+> ![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642915382850-c51bf411-d9c5-4588-bffc-4401818a97ae.png)
+>
+
+## PUSH通知的证书
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642915300615-0f3afaea-c041-40fb-b29e-c48ff39b84cd.png)
+
+选择证书的服务Service就好 了。有些时候App需要特殊的功能，比如AppPalye你也需要申请对应功能的证书
+
+
+
+# IOS设备唯一标识符
+> 主要是看看唯一的用户标识符，目前就是IDFA和IDFV，用来标识唯一的设备（用户）
+>
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642915559474-88064192-5d3f-41c5-a4bb-d51cbbe55886.png)
+
+
+
+IDFV实际上 是根据Build来搞的，但是如何用户把这个开发商全删除之后哦，那么就不是唯一的 了
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642915929061-1e4f6a9c-3335-4c1c-bfba-127626b82814.png)
+
+> 你可以看到 ，实际上这些都不是唯一的，最好的方式i就是 ，用户信息比如你使用这个App你需要登录吧 😂 
+>
+
+# IOS的打包上架📦
+## 理论知识
+主要的打包流程如下
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642916080165-f64a60df-e1a3-4c62-bc09-bc37482b443b.png)
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642916104414-962b8c07-36bc-457a-b8d2-efb745eafbc4.png)
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642916122959-caa05627-5e95-4f6b-9953-2959f73e5ad5.png) 
+
+## 实践
+打包就是点击Actceve一下就好了
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642916520282-2698320d-cd8b-4a6b-a44a-04f848baf226.png)
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642916532536-073b3a46-c98c-4517-b865-3dcd5189986e.png)
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642916541711-d78eff07-2e45-4b30-b5b0-c6869f9f1ef3.png)
+
+exprot 可以使用导出一个iap包 ，然后上传到 第三方的分包平台，这里我们点击Upload ，然后让你选证书，
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642916639723-8a6e623a-5c60-4aeb-9256-599d1fce7e8d.png)
+
+选证书的时候可以选i自动的，还有手动的
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642916663445-f57e873c-2c1a-449e-b45e-aced667a445f.png)
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642916710552-4c621860-212e-4daa-adf9-c27b86857d05.png)、
+
+这样就好了。就上传到AppStroe了，然后就去AppStore进行包管理就好了
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642916764037-5ee5e9b7-c1dd-4d51-8b69-51f983ececa8.png)
+
+
+
+
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642916800290-9db53682-f40b-4152-b261-9994d58b0f71.png)
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642916821979-e6ae3367-fac0-4b0e-918a-1e5731542020.png)
+
+然后一点点的去平台点击操作就好了，最后点击上传就好了，（注意哈Https 也是一种加密功能！）
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642916970680-e437b7da-0b45-43f0-86aa-bf2fe280b905.png)
+
+
+
+一般来说，被拒的原因主要是使用了一些PUSH 和AppPalyer等设计安全的用户隐私的问题
+
+
+
+# 总结
+> 我们整体的系统性的学习了IOS开发，清楚了一些开发的边界，接下来就是持续的学习了
+>
+
+
+
+
+

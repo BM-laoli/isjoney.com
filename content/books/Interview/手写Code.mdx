@@ -1,0 +1,1262 @@
+---
+title: "JS 手写合集：千分位、深拷贝、Promise、继承、路由、双向绑定等"
+date: "2025-12-27"
+summary: "30+ 段高频面试手写代码汇总，涵盖数字格式化、深拷贝、Promise、继承、路由、双向绑定、EventEmitter、大数加法等核心实现。"
+status: "completed"
+tech: ["JavaScript", "手写源码", "面试"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Interview"
+---
+
+详细的文章来源（[https://www.yuque.com/cuggz/interview/pkg93q#kzrlR](https://www.yuque.com/cuggz/interview/pkg93q#kzrlR)）
+
+> 待更新..../2024/02/25
+>
+
+```javascript
+// 千分位 分割
+{
+  function formatNumberWithCommas(number) {
+    // 将数字转换为字符串
+    const numberString = String(number);
+
+    // 检查是否有小数部分
+    const [integerPart, decimalPart] = numberString.split('.');
+
+    // 将整数部分每三位加一个逗号
+    const integerWithCommas = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    /**
+     * \B 零宽度断言; 匹配的是非单词边界的位置，即在一个数字字符的中间位置
+     * (?= ... )：表示一个正向零宽断言，它匹配满足条件的位置，但是不会消耗字符
+     * (\d{3}) 匹配三个字符
+     * + 表示匹配前面的模式（三个数字字符）一次或多次，即匹配连续的三个数字字符的组合。
+     * (?!\d)：表示一个负向零宽断言，它匹配后面不是数字字符的位置，确保匹配的三个数字字符后面不再是数字字符。
+     */
+
+    // 如果有小数部分，则拼接整数部分和小数部分，并返回
+    if (decimalPart) {
+      return `${integerWithCommas}.${decimalPart}`;
+    } else {
+      return integerWithCommas;
+    }
+  }
+
+  // 示例
+  console.log(formatNumberWithCommas(123456789)); // 输出：123,456,789
+  console.log(formatNumberWithCommas(1234.5678)); // 输出：1,234.5678
+}
+
+// instanceOf
+function myInstanceOf(left, right) {
+  if (left === null || left === undefined) return false;
+
+  let proto = Object.getPrototypeOf(left); // 获取对象原型
+  prototype = right.prototype; // 获去 right 上的 prototype
+
+  while (true) {
+    if (!proto) return false;
+    if (proto === prototype) return false;
+
+    proto = Object.getPrototypeOf(proto); // 循环
+  }
+}
+
+// assign 实现，多种方式 我采取 es5 方式
+function myAssign(target, ...sources) {
+  if (target === null) throw new TypeError('不能是空');
+  const res = Object(target);
+  sources.forEach(function (obj) {
+    if (obj !== null) {
+      for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          // 值就重新覆盖
+          res[key] = obj[key];
+        }
+      }
+    }
+  });
+  return res;
+}
+
+// New 原理
+function myNew(constructor, ...args) {
+  // 创建一个新的空对象，并将构造函数的原型对象连接到该对象上
+  const obj = Object.create(constructor.prototype);
+
+  // 将构造函数的上下文绑定到新对象上
+  const result = constructor.apply(obj, args);
+
+  // 如果构造函数返回了一个对象，则返回该对象；否则返回新创建的对象
+  return result instanceof Object ? result : obj;
+}
+
+// 示例构造函数
+function Person(name, age) {
+  this.name = name;
+  this.age = age;
+}
+
+// 使用自定义的 myNew 来调用构造函数
+const person = myNew(Person, 'John', 30);
+console.log(person); // 输出：Person { name: 'John', age: 30 }
+
+// 手写 typeof
+function getType(value) {
+  // 判断数据是 null 的情况
+  if (value === null) {
+    return value + '';
+  }
+  // 判断数据是引用类型的情况
+  if (typeof value === 'object') {
+    return Object.prototype.toString.call(value).slice(8, -1).toLowerCase();
+  } else {
+    // 判断数据是基本数据类型的情况和函数的情况
+    return typeof value;
+  }
+}
+
+// 防抖 截流（前者描述n秒之后执行，n之内再触发不执行；
+// 后者描述 n 秒内同一个触发只能有一次 即使多次 也支持能一次生效）
+
+// 某个时间之后再执行
+function debounce(func, delay) {
+  let timeoutId;
+
+  return function (...args) {
+    clearTimeout(timeoutId);
+
+    timeoutId = setTimeout(() => {
+      func.apply(this, args);
+    }, delay);
+  };
+}
+
+// 某个时间范围内不执行！
+function throttle(func, interval) {
+  let lastTime = 0;
+
+  return function (...args) {
+    const now = Date.now();
+
+    if (now - lastTime >= interval) {
+      func.apply(this, args);
+      lastTime = now;
+    }
+  };
+}
+
+// 实现 call 方法
+Function.prototype.myCall = function (context, ...args) {
+  if (typeof this !== 'function') {
+    throw new TypeError('The "this" value must be a function');
+  }
+
+  // 使用 Symbol 避免与调用对象的属性冲突
+  const tempKey = Symbol();
+  // 将函数作为对象的属性
+  context[tempKey] = this;
+  // 在对象上调用该函数，并传入参数
+  const result = context[tempKey](...args);
+  // 删除临时属性
+  delete context[tempKey];
+  // 返回函数执行的结果
+  return result;
+};
+
+// 实现 apply 方法
+Function.prototype.myApply = function (context, argsArray) {
+  if (typeof this !== 'function') {
+    throw new TypeError('The "this" value must be a function');
+  }
+
+  // 使用 Symbol 避免与调用对象的属性冲突
+  const tempKey = Symbol();
+  // 将函数作为对象的属性
+  context[tempKey] = this;
+  // 在对象上调用该函数，并传入参数数组
+  const result = context[tempKey](...argsArray);
+  // 删除临时属性
+  delete context[tempKey];
+  // 返回函数执行的结果
+  return result;
+};
+
+// 实现 bind 方法
+Function.prototype.myBind = function (context, ...args) {
+  if (typeof this !== 'function') {
+    throw new TypeError('The "this" value must be a function');
+  }
+
+  // 缓存当前函数
+  const self = this;
+
+  // 返回一个新的函数
+  return function (...newArgs) {
+    // 将原函数绑定到指定的上下文对象上，并传入参数
+    return self.myCall(context, ...args, ...newArgs);
+  };
+};
+
+// 示例
+const person = {
+  name: 'John',
+  greet: function (greeting) {
+    return `${greeting}, ${this.name}!`;
+  },
+};
+
+const result = person.greet.myCall(person, 'Hello');
+console.log(result); // 输出：Hello, John!
+
+const result2 = person.greet.myApply(person, ['Hello']);
+console.log(result2); // 输出：Hello, John!
+
+const boundFunction = person.greet.myBind(person, 'Hello');
+const result3 = boundFunction();
+console.log(result3); // 输出：Hello, John!
+
+// 函数柯里化 这个东西比较简单 其中使用了 递归
+{
+  function curry(func) {
+    return function curried(...args) {
+      if (args.length >= func.length) {
+        return func.apply(this, args);
+      } else {
+        return function (...moreArgs) {
+          return curried.apply(this, args.concat(moreArgs));
+        };
+      }
+    };
+  }
+
+  // 示例
+  function sum(a, b, c) {
+    return a + b + c;
+  }
+
+  const curriedSum = curry(sum);
+
+  console.log(curriedSum(1)(2)(3)); // 输出：6
+  console.log(curriedSum(1, 2)(3)); // 输出：6
+
+  console.log(curriedSum(1, 2, 3)); // 输出：6
+}
+
+// 深拷贝实现 非常复杂！（来之 字节 大佬的文章）
+{
+  // 先看一个比较简单的版本的 使用 WeakMap 来解决循环引用的问题
+  function deepClone(obj, cache = new WeakMap()) {
+    // 如果是基本类型或者 null，则直接返回
+    if (obj === null || typeof obj !== 'object') {
+      return obj;
+    }
+
+    // 如果已经拷贝过该对象，则直接返回缓存的拷贝对象
+    if (cache.has(obj)) {
+      return cache.get(obj);
+    }
+
+    // 创建一个新的对象或数组
+    const clone = Array.isArray(obj) ? [] : {};
+
+    // 将当前对象添加到缓存中
+    cache.set(obj, clone);
+
+    // 递归复制每一个属性
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        clone[key] = deepClone(obj[key], cache);
+      }
+    }
+
+    return clone;
+  }
+
+  // 示例
+  const obj = {
+    a: 1,
+    b: {
+      c: 2,
+      d: [3, 4],
+    },
+  };
+
+  // 添加循环引用
+  obj.e = obj;
+
+  const clonedObj = deepClone(obj);
+  console.log(clonedObj); // 输出与 obj 结构相同的对象，包含循环引用
+  // end 结束
+
+  // 可持续遍历的
+  const mapTag = '[object Map]';
+  const setTag = '[object Set]';
+  const arrayTag = '[object Array]';
+  const objectTag = '[object Object]';
+  // 不可持续遍历的
+  const boolTag = '[object Boolean]';
+  const dateTag = '[object Date]';
+  const numberTag = '[object Number]';
+  const stringTag = '[object String]';
+  const symbolTag = '[object Symbol]';
+  const errorTag = '[object Error]';
+  const regexpTag = '[object RegExp]';
+  const funcTag = '[object Function]';
+  const deepTag = [mapTag, setTag, arrayTag, objectTag, arrayTag];
+
+  // utils 提高for 速度
+  function forEach(array, iteratee) {
+    let index = -1;
+    const length = array.length;
+    while (++index < length) {
+      iteratee(array[index], index);
+    }
+    return array;
+  }
+  // utils 看看是否是引用类型
+  function isObject(target) {
+    const type = typeof target;
+    return target !== null && (type === 'object' || type === 'function');
+  }
+  // utils 看看类型
+  function getType(target) {
+    return Object.prototype.toString.call(target);
+  }
+  // utils 初始化被克隆对象 注意这样做的目的是防止 构造函数 丢失
+  function getInit(target) {
+    const Ctor = target.constructor;
+    return new Ctor();
+  }
+  // utils 克隆 symbol
+  function cloneSymbol(targe) {
+    return Object(Symbol.prototype.valueOf.call(targe));
+  }
+  // utils 克隆 正则
+  function cloneReg(targe) {
+    const reFlags = /\w*$/;
+    const result = new targe.constructor(targe.source, reFlags.exec(targe));
+    result.lastIndex = targe.lastIndex;
+    return result;
+  }
+  // utils 克隆 function 这个非常重要！！ 面试官经常纠结这个问题
+  function cloneFunction(func) {
+    const bodyReg = /(?<={)(.|\n)+(?=})/m;
+    const paramReg = /(?<=\().+(?=\)\s+{)/;
+    // 通过正则把 函数的body 和 参数匹配出来
+    const funcString = func.toString();
+
+    // 区分一下 是 ()=> {} 还是 普通 function
+    if (func.prototype) {
+      const param = paramReg.exec(funcString);
+      const body = bodyReg.exec(funcString);
+      if (body) {
+        if (param) {
+          const paramArr = param[0].split(',');
+          return new Function(...paramArr, body[0]);
+        } else {
+          return new Function(body[0]);
+        }
+      } else {
+        return null;
+      }
+    } else {
+      // 直接 eval 生成
+      return eval(funcString);
+    }
+  }
+  // utils 克隆 不可便利
+  function cloneOtherType(targe, type) {
+    const Ctor = targe.constructor;
+    switch (type) {
+      case boolTag:
+      case numberTag:
+      case stringTag:
+      case errorTag:
+      case dateTag:
+        return new Ctor(targe);
+      case regexpTag:
+        return cloneReg(targe);
+      case symbolTag:
+        return cloneSymbol(targe);
+      case funcTag:
+        return cloneFunction(targe);
+      default:
+        return null;
+    }
+  }
+  // main 主函数
+  function clone(target, map = new Map()) {
+    // 原始数据类型 直接返回
+    if (!isObject(target)) return target;
+
+    // 如果是不可便利 类型请直接克隆 如果是 请初始化 一个 cloneTarget
+    const type = getType(target);
+    let cloneTarget;
+    if (deepTag.includes(type)) {
+      cloneTarget = getInit(target, type);
+      console.log('--', cloneTarget);
+    } else {
+      return cloneOtherType(target, type);
+    }
+
+    // 处理循环引用
+    if (map.get(target)) {
+      return target;
+    }
+    map.set(target, cloneTarget);
+
+    // 处理map 和 set
+    if (type === setTag) {
+      target.forEach((value) => {
+        cloneTarget.add(clone(value));
+      });
+      return cloneTarget;
+    }
+    if (type === mapTag) {
+      target.forEach((value, key) => {
+        cloneTarget.set(key, clone(value));
+      });
+      return cloneTarget;
+    }
+
+    // 处理对象和array
+    const keys = type === arrayTag ? undefined : Object.keys(target);
+    forEach(keys || target, (value, key) => {
+      if (keys) {
+        key = value;
+      }
+      cloneTarget[key] = clone(target[key], map);
+    });
+    return cloneTarget;
+  }
+
+  const map = new Map();
+  map.set('key', 'value');
+  map.set('ConardLi', 'code秘密花园');
+
+  const set = new Set();
+  set.add('ConardLi');
+  set.add('code秘密花园');
+  const target = {
+    field1: 1,
+    field2: undefined,
+    field3: {
+      child: 'child',
+    },
+    field4: [2, 4, 8],
+    empty: null,
+    map,
+    set,
+    bool: new Boolean(true),
+    num: new Number(2),
+    str: new String(2),
+    symbol: Object(Symbol(1)),
+    date: new Date(),
+    reg: /\d+/,
+    error: new Error(),
+    func1: () => {
+      console.log('code秘密花园');
+    },
+    func2: function (a, b) {
+      return a + b;
+    },
+  };
+  console.log('===>', clone(target));
+}
+
+// 手写Promise 非常复杂！我们实现了基础的promise
+{
+  interface Callbacks {
+    onFulfilled: (value: any) => void;
+    onRejected: (reason: any) => void;
+  }
+
+  class MyPromise {
+    state: 'pending' | 'fulfilled' | 'rejected';
+    value: any;
+    callbacks: Callbacks[];
+
+    constructor(
+      executor: (
+        resolve: (value?: any) => void,
+        reject: (reason?: any) => void,
+      ) => void,
+    ) {
+      this.state = 'pending';
+      this.value = undefined;
+      this.callbacks = [];
+
+      const resolve = (value: any) => {
+        if (this.state === 'pending') {
+          this.state = 'fulfilled';
+          this.value = value;
+          // 将执行回调的逻辑放在微任务队列中
+          queueMicrotask(() => {
+            this.callbacks.forEach((callback) => callback.onFulfilled(value));
+          });
+        }
+      };
+
+      const reject = (reason: any) => {
+        if (this.state === 'pending') {
+          this.state = 'rejected';
+          this.value = reason;
+          queueMicrotask(() => {
+            this.callbacks.forEach((callback) => callback.onRejected(reason));
+          });
+        }
+      };
+
+      try {
+        executor(resolve, reject);
+      } catch (error) {
+        reject(error);
+      }
+    }
+
+    then(
+      onFulfilled?: (value: any) => any,
+      onRejected?: (reason: any) => any,
+    ): MyPromise {
+      return new MyPromise((resolve, reject) => {
+        const onFulfilledCallback = (value: any) => {
+          try {
+            const result = onFulfilled ? onFulfilled(value) : value;
+            if (result instanceof MyPromise) {
+              result.then(resolve, reject);
+            } else {
+              resolve(result);
+            }
+          } catch (error) {
+            reject(error);
+          }
+        };
+
+        const onRejectedCallback = (reason: any) => {
+          try {
+            const result = onRejected ? onRejected(reason) : reason;
+            if (result instanceof MyPromise) {
+              result.then(resolve, reject);
+            } else {
+              resolve(result);
+            }
+          } catch (error) {
+            reject(error);
+          }
+        };
+
+        if (this.state === 'fulfilled') {
+          onFulfilledCallback(this.value);
+        } else if (this.state === 'rejected') {
+          onRejectedCallback(this.value);
+        } else {
+          this.callbacks.push({
+            onFulfilled: onFulfilledCallback,
+            onRejected: onRejectedCallback,
+          });
+        }
+      });
+    }
+
+    catch(onRejected: (reason: any) => any): MyPromise {
+      return this.then(undefined, onRejected);
+    }
+
+    static all(promises: MyPromise[]): MyPromise {
+      return new MyPromise((resolve, reject) => {
+        const results: any[] = [];
+        let counter = 0;
+
+        const checkCompletion = () => {
+          counter++;
+          if (counter === promises.length) {
+            resolve(results);
+          }
+        };
+
+        promises.forEach((promise, index) => {
+          promise
+            .then((value) => {
+              results[index] = value;
+              checkCompletion();
+            })
+            .catch((reason) => {
+              reject(reason);
+            });
+        });
+      });
+    }
+
+    static race(promises: MyPromise[]): MyPromise {
+      return new MyPromise((resolve, reject) => {
+        promises.forEach((promise) => {
+          promise.then(resolve, reject);
+        });
+      });
+    }
+  }
+
+  // 示例
+  const promise1 = new MyPromise((resolve, reject) => {
+    setTimeout(() => {
+      resolve('Promise 1 resolved');
+    }, 1000);
+  });
+
+  const promise2 = new MyPromise((resolve, reject) => {
+    setTimeout(() => {
+      reject('Promise 2 rejected');
+    }, 500);
+  });
+
+  MyPromise.race([promise1, promise2])
+    .then((value) => {
+      console.log(value); // 输出：Promise 1 resolved
+    })
+    .catch((reason) => {
+      console.error(reason); // 输出：Promise 2 rejected
+    });
+}
+
+// 实现数组的乱序输出
+{
+  const arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  for (let i = 0; i < arr.length; i++) {
+    // 核心代码 两个位置互换
+    const randomIdex = Math.round(Math.random() * (arr.length - 1 - i)) + i;
+    [arr[i], arr[randomIdex]] = [arr[randomIdex], arr[i]];
+  }
+  // console.log(arr);
+}
+
+// 扁平化 https://bigfrontend.dev/problem/implement-Array-prototype.flat/discuss
+// 上的一道题目
+{
+  function _flat(arr, depth) {
+    if (!Array.isArray(arr) || depth <= 0) {
+      return arr;
+    }
+    return arr.reduce((prev, cur) => {
+      if (Array.isArray(cur)) {
+        return prev.concat(_flat(cur, depth - 1));
+      } else {
+        return prev.concat(cur);
+      }
+    }, []);
+  }
+
+  // 缩写
+  function flat(arr, depth = 1) {
+    return depth
+      ? arr.reduce((acc, curr) => {
+          return [
+            ...acc,
+            ...(Array.isArray(curr) ? flat(curr, depth - 1) : [curr]),
+          ];
+        }, [])
+      : arr;
+  }
+}
+
+// 深浅去重 （纯数字 比较好去，如果是object 就需要条件
+{
+  // 纯数字
+  // let arr = [1, 1, 1, 1, 2, 3, 4, 4];
+  // let a = Array.from(new Set(arr));
+  // console.log(a);
+
+  // 统一Object 类型 那么就需要 cb
+  const arr = [
+    { name: 'a', id: 1 },
+    { name: 'b', id: 1 },
+    { name: 'c', id: 2 },
+  ];
+
+  // pat 作为条件存储 的是唯一匹配的条件 比如 id，如果多条件以， 分割
+  function uniqueArray(arr, pat) {
+    const map = {};
+    const res = [];
+    for (let i = 0; i < arr.length; i++) {
+      let valueString = '';
+
+      pat.split(',').forEach((item) => {
+        valueString += arr[i][item];
+      });
+
+      if (!map.hasOwnProperty(valueString)) {
+        map[valueString] = 1;
+        res.push(arr[i]);
+      }
+    }
+    return res;
+  }
+  // console.log(uniqueArray(arr, "id,name"));
+}
+
+// 实现大数整数 的加法 重点！
+{
+  function sumBigNumber(a, b) {
+    let res = '';
+    let temp = 0;
+
+    a = a.split('');
+    b = b.split('');
+
+    while (a.length || b.length || temp) {
+      temp += ~~a.pop() + ~~b.pop(); // 其实这个 ～ 一是取反 ～ 是原封不动 ，实际上这行代码就是Number()的作用
+      res = (temp % 10) + res;
+      // 注意 true 的 转化是1 false 是 0
+      temp = temp > 9;
+    }
+    return res.replace(/^0+/, '');
+  }
+  // console.log(sumBigNumber("1891", "1239"));
+}
+
+// 转Tree
+{
+  const source = [
+    {
+      id: 1,
+      pid: 0,
+      name: 'body',
+    },
+    {
+      id: 2,
+      pid: 1,
+      name: 'title',
+    },
+    {
+      id: 3,
+      pid: 2,
+      name: 'div',
+    },
+  ];
+  function jsonToTree(data) {
+    // 初始化结果数组，并判断输入数据的格式
+    const result = [];
+    if (!Array.isArray(data)) {
+      return result;
+    }
+    // 使用map，将当前对象的id与当前对象对应存储起来
+    const map = {};
+    data.forEach((item) => {
+      map[item.id] = item;
+    });
+    //
+    data.forEach((item) => {
+      const parent = map[item.pid];
+      if (parent) {
+        (parent.children || (parent.children = [])).push(item);
+      } else {
+        result.push(item);
+      }
+    });
+    return result;
+  }
+}
+
+// ULR 解析
+{
+  const url =
+    'http://www.domain.com/?user=anonymous&id=123&id=456&city=%E5%8C%97%E4%BA%AC&enabled';
+  parseParam(url);
+
+  function parseParam(url) {
+    const paramsStr = /.+\?(.+)$/.exec(url)[1]; // 将 ? 后面的字符串取出来
+    const paramsArr = paramsStr.split('&'); // 将字符串以 & 分割后存到数组中
+    const paramsObj = {};
+    // 将 params 存到对象中
+    paramsArr.forEach((param) => {
+      if (/=/.test(param)) {
+        // 处理有 value 的参数
+        let [key, val] = param.split('='); // 分割 key 和 value
+        val = decodeURIComponent(val); // 解码
+        val = /^\d+$/.test(val) ? parseFloat(val) : val; // 判断是否转为数字
+        if (paramsObj.hasOwnProperty(key)) {
+          // 如果对象有 key，则添加一个值
+          paramsObj[key] = [].concat(paramsObj[key], val);
+        } else {
+          // 如果对象没有这个 key，创建 key 并设置值
+          paramsObj[key] = val;
+        }
+      } else {
+        // 处理没有 value 的参数
+        paramsObj[param] = true;
+      }
+    });
+    return paramsObj;
+  }
+}
+
+// 手机中间四位 *
+{
+  // // split slice joni
+  // let tel = 18877776666;
+  // tel = "" + tel;
+  // var ary = tel.split("");
+  // ary.splice(3, 4, "****");
+  // var tel1 = ary.join("");
+  // console.log(tel1);
+  // // substring
+  // tel = "" + tel;
+  // var tel1 = tel.replace(tel.substring(3, 7), "****");
+  // console.log(tel1);
+}
+
+// 实现简易 发布订阅 , 核心 队列！
+{
+  class EventCenter {
+    // 1. 定义事件容器，用来装事件数组
+    handlers = {};
+
+    // 2. 添加事件方法，参数：事件名 事件方法
+    addEventListener(type, handler) {
+      // 创建新数组容器
+      if (!this.handlers[type]) {
+        this.handlers[type] = [];
+      }
+      // 存入事件
+      this.handlers[type].push(handler);
+    }
+
+    // 3. 触发事件，参数：事件名 事件参数
+    dispatchEvent(type, params) {
+      // 若没有注册该事件则抛出错误
+      if (!this.handlers[type]) {
+        return new Error('该事件未注册');
+      }
+      // 触发事件
+      this.handlers[type].forEach((handler) => {
+        handler(...params);
+      });
+    }
+
+    // 4. 事件移除，参数：事件名 要删除事件，若无第二个参数则删除该事件的订阅和发布
+    removeEventListener(type, handler) {
+      if (!this.handlers[type]) {
+        return new Error('事件无效');
+      }
+      if (!handler) {
+        // 移除事件
+        delete this.handlers[type];
+      } else {
+        const index = this.handlers[type].findIndex((el) => el === handler);
+        if (index === -1) {
+          return new Error('无该绑定事件');
+        }
+        // 移除事件
+        this.handlers[type].splice(index, 1);
+        if (this.handlers[type].length === 0) {
+          delete this.handlers[type];
+        }
+      }
+    }
+  }
+
+  const center = new EventCenter();
+
+  center.addEventListener('getName', (value) => {
+    console.log('value===>', value);
+  });
+
+  const obj2 = {
+    name: 'xj',
+    getName: function () {
+      center.dispatchEvent('getName', '66666');
+    },
+  };
+
+  // obj2.getName();/
+}
+
+// 实现 观察者 （发布订阅是基于 它进行改进之后得来的）
+{
+  // 定义一个目标对象
+  class Subject {
+    constructor() {
+      this.Observers = [];
+    }
+    add(observer) {
+      //添加
+      this.Observers.push(observer);
+    }
+    remove(observer) {
+      //移除
+      this.Observers.filter((item) => item === observer);
+    }
+    notify() {
+      //通知所有观察者
+      this.Observers.forEach((item) => {
+        item.update();
+      });
+    }
+  }
+  //定义观察者对象
+  class Observer {
+    constructor(name) {
+      this.name = name;
+    }
+    update() {
+      console.log(`my name is:${this.name}`);
+    }
+  }
+
+  // let sub = new Subject();
+  // let obs1 = new Observer("observer11");
+  // let obs2 = new Observer("observer22");
+  // sub.add(obs1);
+  // sub.add(obs2);
+  // sub.notify();
+}
+
+// 实现简易 es5 继承 介绍了 6 中OOP 实现继承 方式(https://juejin.cn/post/6844903854463516685#heading-2)
+{
+  // 原型连接(缺点传参做不到，多子类型的时候 改一个 父类实现 会全部影响)
+  {
+    function parents() {
+      this.name = 'JoseyDong';
+    }
+
+    parents.prototype.getName = function () {
+      console.log(this.name);
+    };
+
+    function child() {}
+
+    //子类的原型对象 指向 父类的实例对象 这样 子类就有了 其父类的一些熟悉了
+    child.prototype = new parents();
+
+    // 创建一个子类的实例对象，如果它有父类的属性和方法，那么就证明继承实现了
+    const child1 = new child();
+
+    // child1.getName(); // => JoseyDong
+  }
+
+  // 构造函数 （缺点，方法都在构造函数中定义，每次创建实例都会创建一遍方法。）
+  {
+    function parents(name) {
+      this.name = name;
+    }
+
+    //call方法支持传递参数
+    function child(name) {
+      // call 改变this指向
+      parents.call(this, name);
+    }
+
+    const child1 = new child('I am child1');
+
+    const child2 = new child('I am child2');
+    // console.log(child1.name); // => I am child1
+    // console.log(child2.name); // => I am child2
+  }
+
+  // 组合
+  {
+    function student(name) {
+      this.name = name;
+      this.hobbies = ['sing', 'dance', 'rap'];
+    }
+
+    function greatStudent(name, age) {
+      student.call(this, name);
+      this.age = age;
+    }
+
+    greatStudent.prototype = new student(); // 注意这个时候 greatStudent 的 constructor 跑了你需要重置
+    greatStudent.prototype.constructor = greatStudent;
+
+    // let kunkun = new greatStudent("kunkun", "18");
+    // let fakekun = new greatStudent("fakekun", "28");
+    // console.log(kunkun.name, kunkun.age, kunkun.hobbies); // => kunkun 18 ["sing", "dance", "rap"]
+    // console.log(fakekun.name, fakekun.age, fakekun.hobbies); // => fakekunkun 28 ["sing", "dance", "rap"]
+    // kunkun.hobbies.push("basketball");
+    // console.log(kunkun.name, kunkun.age, kunkun.hobbies);
+  }
+
+  // 原型 这个方式是直接在原型上挂一个对象，但是忽略了 对象是引用的问题，会导致 preson 一改全都受影响
+  {
+    function createObj(o) {
+      function F() {}
+      F.prototype = o;
+      return new F();
+    }
+
+    const person = {
+      name: 'JoseyDong',
+      hobbies: ['sing', 'dance', 'rap'],
+    };
+
+    const person1 = createObj(person);
+    const person2 = createObj(person);
+
+    // console.log(person1.name, person1.hobbies); // => JoseyDong ["sing", "dance", "rap"]
+    // console.log(person2.name, person2.hobbies); // => JoseyDong ["sing", "dance", "rap"]
+
+    // person1.name = "xixi";
+    // person1.hobbies.push("basketball");
+
+    // console.log(person1.name, person1.hobbies); //xixi ["sing", "dance", "rap", "basketball"]
+    // console.log(person2.name, person2.hobbies); //JoseyDong ["sing", "dance", "rap", "basketball"]
+  }
+
+  // 寄生 这个方式属于新建立一个对象，这个就没有问题，缺点就是 每次创建对象都会创建一遍方法。
+  {
+    function createObj(o) {
+      const clone = Object.create(o);
+      clone.sayName = function () {
+        console.log('hi');
+      };
+      return clone;
+    }
+
+    const person = {
+      name: 'JoseyDong',
+      hobbies: ['sing', 'dance', 'rap'],
+    };
+
+    const anotherPerson = createObj(person);
+    // anotherPerson.sayName(); // => hi
+  }
+
+  // 寄生组合 最佳实践
+  {
+    function student(name) {
+      this.name = name;
+      this.hobbies = ['sing', 'dance', 'rap'];
+    }
+
+    function greatStudent(name, age) {
+      student.call(this, name);
+      this.age = age;
+    }
+
+    // 这样做的缺点是 父类构造函数会调用两次 new student() 和 new greatStudent
+    // greatStudent.prototype = new student();
+    // greatStudent.prototype.constructor = greatStudent;
+    // let kunkun = new greatStudent('kunkun','18');
+
+    //关键的三步 实现继承
+    // 使用F空函数当子类和父类的媒介 是为了防止修改子类的原型对象影响到父类的原型对象
+    const F = function () {};
+    F.prototype = student.prototype; // 这样做
+    greatStudent.prototype = new F();
+
+    const kunkun = new greatStudent('kunkun', '18');
+    // console.log(kunkun);
+  }
+}
+
+// 实现简单路由 主要还是 基于hash 的实现为原理 而实现的
+{
+  class Route {
+    constructor() {
+      // 路由存储对象
+      this.routes = {};
+      // 当前hash
+      this.currentHash = '';
+      // 绑定this，避免监听时this指向改变
+      this.freshRoute = this.freshRoute.bind(this);
+      // 监听
+      window.addEventListener('load', this.freshRoute, false);
+      window.addEventListener('hashchange', this.freshRoute, false);
+    }
+    // 存储
+    storeRoute(path, cb) {
+      this.routes[path] = cb || function () {};
+    }
+    // 更新
+    freshRoute() {
+      this.currentHash = location.hash.slice(1) || '/';
+      this.routes[this.currentHash]();
+    }
+  }
+}
+
+// 实现简单 es5 和es6 双向数据绑定
+{
+  const obj = {};
+  // 数据劫持 意思就是 设置对象属性的时候可以触发 get 和set 方法
+  Object.defineProperty(obj, 'text', {
+    configurable: true,
+    enumerable: true,
+    get() {
+      console.log('获取数据了');
+    },
+    set(newVal) {
+      console.log('数据更新了', newVal);
+      // input.value = newVal;
+      // span.innerHTML = newVal;
+      return newVal;
+    },
+  });
+
+  // proxy
+  class VM {
+    constructor(options, target) {
+      this.data = options.data || {}; // 监听的数据对象
+      this.target = target;
+      this.init(); // 初始化
+    }
+
+    // 初始化
+    init() {
+      this.observer();
+    }
+
+    // 监听数据变化方法
+    observer() {
+      const handler = {
+        get: (target, propkey) => {
+          console.log(`监听到${propkey}被取啦,值为:${target[propkey]}`);
+          return target[propkey];
+        },
+        set: (target, propkey, value) => {
+          if (target[propkey] !== value) {
+            console.log(`监听到${propkey}变化啦,值变为:${value}`);
+          }
+          return true;
+        },
+      };
+      this.data = new Proxy(this.data, handler);
+    }
+  }
+
+  // // 测试一下
+  // const vm = new VM({
+  //   data: {
+  //     name: "defaultName",
+  //     test: "defaultTest",
+  //   },
+  // });
+  // vm.data.name = "changeName"; // 监听到name变化啦,值变为:changeName
+  // vm.data.test = "changeTest"; // 监听到test变化啦,值变为:changeTest
+  // vm.data.name; // 监听到name被取啦,值为:changeName
+  // vm.data.test; // 监听到test被取啦,值为:changeTest
+}
+// 实现jsonp
+{
+  // 动态的加载js文件
+  function addScript(src) {
+    const script = document.createElement('script');
+    script.src = src;
+    script.type = 'text/javascript';
+    document.body.appendChild(script);
+  }
+  // addScript("http://xxx.xxx.com/xxx.js?callback=handleRes");
+  // 设置一个全局的callback函数来接收回调结果
+  function handleRes(res) {
+    console.log(res);
+  }
+  // 接口返回的数据格式
+}
+
+// 小孩报数问题
+/**
+ * 有30个小孩儿，编号从1-30，围成一圈依此报数，1、2、3 数到 3 的小孩儿退出这个圈，
+ * 然后下一个小孩 重新报数 1、2、3，问最后剩下的那个小孩儿的编号是多少?
+ */
+{
+  function childNum(num, count) {
+    const allplayer = [];
+    for (let i = 0; i < num; i++) {
+      allplayer[i] = i + 1;
+    }
+
+    let exitCount = 0; // 离开人数
+    let counter = 0; // 记录报数
+    let curIndex = 0; // 当前下标
+
+    while (exitCount < num - 1) {
+      if (allplayer[curIndex] !== 0) counter++;
+
+      if (counter == count) {
+        allplayer[curIndex] = 0;
+        counter = 0;
+        exitCount++;
+      }
+      curIndex++;
+      if (curIndex == num) {
+        curIndex = 0;
+      }
+    }
+    for (let i = 0; i < num; i++) {
+      if (allplayer[i] !== 0) {
+        return allplayer[i];
+      }
+    }
+  }
+  childNum(30, 3);
+}
+
+// 实现一个订阅
+{
+  class EventEmitter {
+    subscriptions = new Map();
+
+    subscribe(eventName, callback) {
+      if (!this.subscriptions.has(eventName)) {
+        this.subscriptions.set(eventName, new Set());
+      }
+      const subscriptions = this.subscriptions.get(eventName);
+      const callbackObj = { callback: callback };
+      subscriptions.add(callbackObj);
+
+      return {
+        release: () => {
+          subscriptions.delete(callbackObj);
+          if (subscriptions.size === 0) {
+            delete this.subscriptions.eventName;
+          }
+        },
+      };
+    }
+
+    emit(eventName, ...args) {
+      const subscriptions = this.subscriptions.get(eventName);
+      if (subscriptions) {
+        subscriptions.forEach((cbObj) => {
+          cbObj.callback.apply(this, args);
+        });
+      }
+    }
+  }
+}
+
+// 找出文中出现最多的单词
+{
+  function findMostWord(str) {
+    // 将字符串转换为小写并按照空格分割成单词数组
+    const words = str.toLowerCase().split(/\s+/);
+
+    // 创建一个对象用于统计单词出现的次数
+    const wordCounts = {};
+
+    // 统计单词出现的次数
+    for (const word of words) {
+      wordCounts[word] = (wordCounts[word] || 0) + 1;
+    }
+
+    // 找出出现次数最多的单词
+    let mostWord = '';
+    let maxCount = 0;
+    for (const word in wordCounts) {
+      if (wordCounts[word] > maxCount) {
+        mostWord = word;
+        maxCount = wordCounts[word];
+      }
+    }
+
+    // 返回出现次数最多的单词
+    return mostWord;
+  }
+
+  // 示例
+  const sentence = 'The quick brown fox jumps over the lazy dog';
+  console.log(findMostWord(sentence)); // 输出：'the'
+}
+
+```
+

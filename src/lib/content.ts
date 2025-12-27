@@ -25,6 +25,7 @@ export interface ContentMetadata {
   demo?: string;
   arxiv?: string;
   paper?: string;
+  keyId?: string; // 书籍专属字段，用于关联 DATA 中的 booksContent Key (例如 "Interview") 
   [key: string]: unknown;
 }
 
@@ -42,7 +43,7 @@ export interface ContentItem {
   headings: Heading[];
 }
 
-export type ContentType = "blog" | "projects";
+export type ContentType = "blog" | "projects" | 'books';
 
 
 const CONTENT_DIR = path.join(process.cwd(), "content");
@@ -120,8 +121,33 @@ export async function markdownToHtml(
     }
   );
 
-  // 预处理 drawio
- const drawioBlocks: { xml: string; id: string }[] = [];
+  // -------------------------------------------------------------
+  // [新增逻辑 START] Books 专属：重写相对路径图片链接
+  // -------------------------------------------------------------
+  // 场景：MDX 中写了 ![图](./a.png) 
+  // 目标：渲染为 src="/content/books/Interview/test/Resource/a.png"
+  if (contentType === "books") {
+    // 1. 处理 Markdown 图片语法: ![alt](./path)
+    processed = processed.replace(
+      /!\[([^\]]*)\]\(\.\/([^)]+)\)/g,
+      (_, alt, src) => {
+        // slug 在这里被传入为 "Interview/test" (书名/章节名)
+        return `![${alt}](/content/books/${slug}/Resource/${src})`;
+      }
+    );
+
+    // 2. 处理 HTML <img> 标签: src="./path"
+    processed = processed.replace(
+      /src=["']\.\/([^"']+)["']/g,
+      `src="/content/books/${slug}/Resource/$1"`
+    );
+  }
+  // -------------------------------------------------------------
+  // [新增逻辑 END]
+  // -------------------------------------------------------------
+
+  // 预处理 drawio (保持原有逻辑)
+  const drawioBlocks: { xml: string; id: string }[] = [];
   processed = processed.replace(
     /```drawio\n([\s\S]*?)```/g,
     (_, filePath) => {
@@ -136,6 +162,7 @@ export async function markdownToHtml(
     }
   );
 
+  // ... (unified 处理流程保持不变) ...
   const result = await unified()
     .use(remarkParse)
     .use(remarkGfm)
@@ -144,15 +171,21 @@ export async function markdownToHtml(
     .use(rehypeSlug)
     .use(rehypeKatex)
     .use(rehypePrettyCode, {
-      theme: { light: "github-light", dark: "github-dark-dimmed" },
-      keepBackground: false,
+      theme: 'dracula', 
+      keepBackground: true,
+      onVisitLine(node) {
+        // 防止空行塌陷
+        if (node.children.length === 0) {
+          node.children = [{ type: "text", value: " " }];
+        }
+      },
     })
     .use(rehypeStringify, { allowDangerousHtml: true })
     .process(processed);
 
   let html = result.toString();
 
-  // 恢复 mermaid
+  // ... (恢复 mermaid 和 drawio 的逻辑保持不变) ...
   html = html.replace(
     /<!--mermaid:(\d+)-->/g,
     (_, idx) =>
@@ -161,19 +194,14 @@ export async function markdownToHtml(
       ).toString("base64")}"></div>`
   );
 
-
-  // 恢复 drawio - 使用 mxgraph 格式
   html = html.replace(/<!--drawio:(\d+)-->/g, (_, idx) => {
     const { xml, id } = drawioBlocks[+idx];
-    // 将 XML 编码为 base64
     const encoded = Buffer.from(xml).toString("base64");
     return `<div class="drawio-container" data-drawio-xml="${encoded}" id="${id}"></div>`;
   });
 
   return html;
 }
-
-
 
 export async function getContent(
   type: ContentType,
@@ -222,4 +250,83 @@ export async function getAllSlugs(type: ContentType): Promise<string[]> {
   const dir = getContentPath(type);
   const files = getMdxFiles(dir);
   return files.map((f) => path.basename(f, ".mdx"));
+}
+
+
+//根据 keyId 获取某本书下的所有章节列表
+export async function getChaptersByKeyId(keyId: string): Promise<ContentItem[]> {
+  // 1. 获取 content/books 下所有文件
+  const allChapters = await getContentList("books");
+  
+  // 2. 过滤出 keyId 匹配的章节
+  const bookChapters = allChapters.filter(
+    (chapter) => chapter.metadata.keyId === keyId
+  );
+
+  // 3. 按照日期排序 (如果书籍章节有先后顺序，建议在 metadata 里加 index 字段排序，或者依赖 date)
+  return bookChapters.sort((a, b) => 
+    new Date(a.metadata.date).getTime() - new Date(b.metadata.date).getTime()
+  );
+}
+
+//专门用于获取书籍特定章节内容的解析器  content/books/[bookSlug]/[chapterSlug].mdx
+//资源路径: 自动将 ./xxx 解析为 /content/books/[bookSlug]/[chapterSlug]/Resource/xxx
+export async function getBooksContent(
+  bookSlug: string,
+  chapterSlug: string
+): Promise<ContentItem | null> {
+  // 1. 构造文件物理路径
+  // const bookDir = path.join(getContentPath("books"), bookSlug);
+  // const filePath = path.join(bookDir, `${chapterSlug}.mdx`);
+  // 1. 解码并规范化中文路径
+    const safeBookSlug = decodeURIComponent(bookSlug).normalize('NFC');
+    const safeChapterSlug = decodeURIComponent(chapterSlug).normalize('NFC');
+
+    const bookDir = path.join(getContentPath("books"), safeBookSlug);
+    
+    // 2. 尝试匹配多种后缀 (mdx 或 md)
+    let filePath = path.join(bookDir, `${safeChapterSlug}.mdx`);
+    if (!fs.existsSync(filePath)) {
+      const fallbackPath = path.join(bookDir, `${safeChapterSlug}.md`);
+      if (fs.existsSync(fallbackPath)) {
+        filePath = fallbackPath;
+      } else {
+        console.warn(`File not found: ${filePath} or .md`);
+        return null;
+      }
+    }
+  //end
+  
+
+  if (!fs.existsSync(filePath)) {
+    console.warn(`Book chapter not found: ${filePath}`);
+    return null;
+  }
+
+  // 2. 读取文件内容
+  const source = fs.readFileSync(filePath, "utf-8");
+  const { content, data } = matter(source);
+
+  // 3. 构造组合 Slug (用于传给 markdownToHtml 生成正确的资源路径)
+  // 结果示例: "Interview/test"
+  const compositeSlug = `${bookSlug}/${chapterSlug}`;
+
+  // 4. 转换 HTML (触发 books 类型的特殊图片处理)
+  const html = await markdownToHtml(content, "books", compositeSlug);
+  const headings = extractHeadings(html);
+
+  return {
+    slug: compositeSlug, // 返回组合路径作为唯一标识
+    content,
+    html,
+    headings,
+    metadata: {
+      title: data.title || "",
+      date: data.date || "",
+      summary: data.summary || "",
+      // 如果 frontmatter 没写 keyId，自动用 bookSlug 填充，方便关联目录
+      keyId: data.keyId || bookSlug, 
+      ...data,
+    },
+  };
 }

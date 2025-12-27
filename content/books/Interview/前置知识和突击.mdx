@@ -1,0 +1,107 @@
+---
+title: "面试突击：项目复盘、移动端适配与 JS 继承模式"
+date: "2025-12-27"
+summary: "精选面试核心考点，涵盖高质量项目经验复盘技巧、基于 Viewport 的移动端适配最新方案（H5/RN），以及 JavaScript 寄生组合继承等面向对象底层实现。"
+status: "completed"
+tech: ["Interview", "Mobile", "JavaScript", "OOP"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Interview"
+---
+
+
+> 这里放一些突击类型的东西，适合突击面试😂，背背佳！真的就是背背佳 老铁
+>
+
+## 项目不要流水账
+<font style="color:#000000;">不要流水帐！不要流水账！项⽬经历是考察重点，</font>**<u><font style="color:#DF2A3F;">⾯试官想知道候选⼈在⼀次项⽬经历中扮演的⻆⾊、负责的模块、碰到的问题、解决的思路、达成的效果以及最后的总结与沉淀。</font></u>****<font style="color:#000000;">  
+</font>**
+
+## 还有什么需要问的嘛；
++ <font style="color:#000000;">这个团队的规模责任是什么 配备人员是如何的</font>
++ 这个团队的近期和远期目标是什么
++ <font style="color:#000000;">你对这个职位理想⼈选的期待是什么，希望它能够带来那些贡献</font>
++ <font style="color:#000000;">这个团队对候选人的考核标准什么</font>
+
+## H5 在移动端
+> 目前H5的适配的方法有哪些？flexbox 媒体查询 viewport
+>
+
+
+
+> 目前H5 在移动端的最新的适配方案是？提示：viewport
+>
+
+
+
+> RN的适配你是如何做的呢？见方案 -> 
+>
+
+## JS面向对象
+> 关于面向对象的东西，有下面的这些东西
+>
+
+
+
+实现一个面向对象
+
+```typescript
+// 组合继承
+function Student(name) {
+  this.name = name;
+  this.hobbies = ["sing", "dance", "rap"];
+}
+
+function GreatStudent(name, age) {
+  Student.call(this, name);
+  this.age = age;
+}
+
+GreatStudent.prototype = new Student(); // 注意这个时候 greatStudent 的 constructor 跑了你需要重置
+GreatStudent.prototype.constructor = GreatStudent;
+
+
+// 寄生继承
+function CreateObj(o) {
+  let clone = Object.create(o);
+  clone.sayName = function () {
+    console.log("hi");
+  };
+  return clone;
+}
+
+let person = {
+  name: "JoseyDong",
+  hobbies: ["sing", "dance", "rap"],
+};
+
+let anotherPerson = CreateObj(person);
+// anotherPerson.sayName(); // => hi
+
+// 最佳 寄生组合继承
+    function Student(name) {
+      this.name = name;
+      this.hobbies = ["sing", "dance", "rap"];
+    }
+
+    function GreatStudent(name, age) {
+      student.call(this, name);
+      this.age = age;
+    }
+
+    // 这样做的缺点是 父类构造函数会调用两次 new student() 和 new greatStudent
+    // greatStudent.prototype = new student();
+    // greatStudent.prototype.constructor = greatStudent;
+    // let kunkun = new greatStudent('kunkun','18');
+
+    //关键的三步 实现继承
+    // 使用F空函数当子类和父类的媒介 是为了防止修改子类的原型对象影响到父类的原型对象
+    let F = function () {};
+    F.prototype = Student.prototype; // 这样做
+    GreatStudent.prototype = new F();
+
+    let kunkun = new greatStudent("kunkun", "18");
+  }
+
+```
+

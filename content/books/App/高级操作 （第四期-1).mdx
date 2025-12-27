@@ -1,0 +1,645 @@
+---
+title: "iOS App 开发指南：生命周期、组件化与SDK集成"
+date: "2024-12-19"
+summary: "深入讲解iOS App生命周期管理、启动优化、组件化通信方案、第三方SDK集成（如QQ登录）、日志采集与崩溃上报等核心技术。"
+status: "completed"
+tech: ["iOS", "AppLifecycle", "Componentization", "SDK"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "App"
+---
+
+> 从本章开始 我们将会接触高级内容
+>
+
+
+
+# App生命周期
+## 理论知识
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1641558780015-c5fad6cc-181d-472b-b73c-f5a5827cd3c0.png)
+
+> 实际上 就拿到 UIAplication这个对象，它具备下面的功能👇，App的启动流程也在下面给出了，对于RN来说中间还需要加一层yogo和jscore线程 ，我们现在的启动优化 也是可以在这个流程中去做
+>
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1641559024990-f6e4cd04-93ee-4778-8ae6-4e4ab4e1cb28.png)
+
+
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1641559300938-99bd8ab6-f0df-48c5-9d02-1bb78e19f894.png)
+
+上面这个图中 第一个函数 是 前期准备，第二个 我们的初始化操作（核心操作就是在这里-代码里看得到的启动之后的操作）数据的上报可以丢到kill app中去做上报 
+
+
+
+## 实践指南App启动图（闪屏）
+需求如下：广告也在这里出现 哈- 先一张图，再一张广告图，（业界主流的方案）
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1641559813648-135afb9d-9768-40e7-8461-e222682bf2eb.png)
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1641560007305-05ce8b10-2c98-47a3-8f0b-605bc503c30f.png)
+
+
+
+1. 清理掉原来的闪屏
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1641560330356-e907102d-5942-4d15-ba4c-66915adbc285.png)
+
+这个里面的相关的东西删除就好了
+
+2. 添加一张
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1641560424755-a264276b-4c13-43b1-a14d-c2f2c08cf2ad.png)
+
+实际上不是在这里面添加 你需要把这个重置为空，第二步的时候点击在file中显示，然后把我的github的上的东西拿下来就丢进去，然后你应该能看到 图片了，名字你可以自己改你喜欢的名字
+
+
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1641563086052-d9354515-da55-47ee-b6a6-660f2a1294f4.png)
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1641563190213-50f0f5d9-bdf2-4acf-b7a8-692786a9cf35.png)
+
+
+
+主要啊，你还需要去做一件事情，就是13 之后的ios没有直接指定的imglaunch了，你需要这样来做，在每一个project 还是target下都把 Limg 改成你自己拖过来的名字哈
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1641563289063-a5a186d4-07e2-4582-97f6-aa046a8180de.png)
+
+这样就完了？想屁吃，你可能还会遇到启动黑屏幕的情况你需要这样处理
+
+1.首先我们去到info.plist，删掉如下图箭头所示
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1641563419839-91ceef45-5d5b-41c2-8abd-dc73b1e4b4ef.png)
+
+
+
+2.项目目录，删掉Scenedelegate.h和Scenedelegate.m这两个文件。
+
+
+
+3.咱们再进入APPdelegate.m,注释或者删掉图示里面内容
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1641563447240-56d92a64-d391-4f38-bded-a67e09b525e9.png)
+
+4.最后一步，别忘了在APPdelegate.h里面添加window属性
+
+@property (strong, nonatomic) UIWindow * window;
+
+
+
+5.大功告成
+
+至于为什么 有这些问题，我们来看看官方的解释（恶心人 😂 [官方](In iOS 13 and later, use UISceneDelegate objects to respond to life-cycle events in a scene-based app.)）：
+
+iOS13的生命周期发生了改动,大家都知道,应用生命周期这个东西,一直到目前的iOS 12这个版本都是在AppDelegate里头(也就是UIApplicationDelegate里面)，但是ios13版本包括之后，AppDelegate(UIApplicationDelegate)控制生命周期的行为交给了SceneDelegate(UIWindowSceneDelegate)
+
+
+
+> 好了有点意思了解决上面的问题了，我们来看如何做 广告图呢？
+>
+
+// 主要有两类方式让它消失 ，一个是覆盖，另一个多window
+
+
+
+```javascript
+# 新建一个UIImageView 
+//
+//  UIGGImg.m
+//  SimpelApp
+//
+//  Created by 李仕增 on 2022/1/7.
+//
+
+#import "UIGGImg.h"
+#import "GTScreen.h"
+
+@interface UIGGImg()
+@property(nonatomic, strong, readwrite) UIButton *button;
+@end
+
+@implementation UIGGImg
+
+-(instancetype) initWithFrame:(CGRect) frame {
+    self = [super initWithFrame:frame];
+    
+    if(self){
+        self.image = [UIImage imageNamed:@"icon.bundle/Spla.png"];
+        
+        [self addSubview:({
+            _button = [[UIButton alloc] initWithFrame:UIRect(330, 77, 60, 40)];
+//            设置点击事件
+            _button.backgroundColor = [UIColor lightGrayColor];
+            [_button setTitle:@"跳过" forState:UIControlStateNormal];
+            [_button addTarget:self action: @selector(_handlePalyEnd) forControlEvents:UIControlEventTouchUpInside];
+            _button;
+            // IUImge能响应点击
+        })];
+        self.userInteractionEnabled = YES;
+        
+    };
+    return self;
+};
+- (void)_handlePalyEnd {
+    [self removeFromSuperview];
+}
+
+@end
+
+# 然后 去 AppDelegate  didFinishLaunchingWithOptions 函数中添加逻辑
+   +++++
+    self.window.rootViewController = navigationController;
+    [self.window makeKeyAndVisible];
+    //   系统首屏消失之后
+        [self.window addSubview:({
+            UIGGImg *GGVIew = [[UIGGImg alloc] initWithFrame:self.window.bounds];
+            GGVIew;
+        })];
+        
+    return YES;
+
+```
+
+
+
+# 如何唤起其他App 协议
+## 系统提供的
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1641566842342-e5963d8e-17df-4094-8337-d7b91342a571.png)
+
+1. 首先去app配置文件夹中添加 type 它是系统级别的，只需要 注册 就好了
+
+比如我们希望 浏览器 输入一些东西，浏览器就能打开我这个app，但是弊端就是 容易重名
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1641567204235-ca8db8dd-76c6-418b-8be6-5c576e239f80.png)
+
+对于如何携带参数，我们可以这样来实现
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1641567269861-9875d33f-34e0-47af-91c6-4e92e088ac85.png)
+
+我们下面👇来看看如何接受 参数，使用这个我们还可以防御一些攻击 比如option里的form 下面就是写代码了
+
+
+
+```javascript
+# AppDelegate
+
+#pragma mark -
+- (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options {
+return  YES;
+};
+```
+
+这就是 系统提供的方案，很简单，基于这些我们就能干很多事情，比如打开某一个底层页
+
+
+
+好的上面是如何 调起我们的App，那么我们如何调用其他app？
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1641568002205-6e2dcdf7-8e35-43d5-9988-d4d5fc447352.png)
+
+```objectivec
+- (void) myButtonClick {
+//  加这段判断的原因是：我们的自定义的Delegate是非必选的，为了避免报错需要这样来兜底处理
+    if(self.delegate && [self.delegate respondsToSelector:@selector(tabViewCell:clickDeleteButton:)]  ) {
+//        [self.delegate tabViewCell:self clickDeleteButton:self.myButton];
+        
+        // 这个是打开
+        NSURL *urlSchem = [NSURL URLWithString:@"TestApp://img77"];
+//        [[UIApplication sharedApplication] openURL:urlSchem options:nil completionHandler:^(BOOL success) {
+//                NSLog(@"");
+//            }];
+        // 这个是 系统提供的canOpne也能做业务逻辑 比如用户没有安装此app的时候做些什么操作。 注意⚠️ 我们需要写一个白名单！要不然 是判断不出来的 这个函数！
+        BOOL canopne = [[UIApplication sharedApplication] canOpenURL:urlSchem];
+        
+    }
+}
+```
+
+## 另一种方式 UniversalLink 
+> IOS9 之后开始支持的 
+>
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1641569613663-d88020c1-f0c1-4eae-8dc4-fcdfa41609eb.png)
+
+又能打开App 又能打开H5 ，这个就是AppStore中的 落地页
+
+如果要实现，需要三方面 【App需要开启，证书需要配置 Web页面也需要配置】
+
+也就是说 他 就是一个链接，h5打开的话就有一个 头部（打开App标时），其他App内打开这个网址的话就会唤起你这个App
+
+
+
+但是腾讯的App的一个 优秀习惯 就说把 自己家的app 把这个功能禁止掉，因为会造成用户流失，所以只会给你打开内嵌的webView 不会给你跳H5
+
+
+
+# IOS 开发中的组件化
+
+
+## 组件库
+### 理论基础
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1641994450229-276c05c9-ef65-46b1-9550-edec86041a2c.png)
+
+> 其中主要的实现方式就是 组件化，把每一个UI都分割成不同的组件，每个组件都是独立的，如果要做独立，那么就回涉及到通信的问题，如何通信和治理通信，也是我们需要思考的🤔
+>
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1641997098204-40fc3665-c0c3-4b5b-814b-7c233c183e06.png)
+
+> 实际上方案1  就是使用一个中间件 做两个组件的通信，
+>
+
+
+
+### 代码实践
+> 注意这里的代码事件 主要是做组件化的通信方案，由于之前的代码出问题了，现在我们以老师的code为准. 在代码实践中 我们用了两个主要的class
+>
+
+```objectivec
+# 我们先来看中间件（实际上三种通信方式 都是挂到了一个不相关的class中间件上的）
+
+//
+//  GTMediator.h
+//  SampleApp
+//
+//  Created by dequanzhu on 2019.
+//  Copyright © 2019 dequanzhu. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
+
+//常用的三种组件化方案
+
+NS_ASSUME_NONNULL_BEGIN
+
+@protocol GTDetailViewControllerProtocol <NSObject>
+
+- (__kindof UIViewController *)detailViewControllerWithUrl:(NSString *)detailUrl;
+
+@end
+
+@interface GTMediator : NSObject
+
+//target action
++ (__kindof UIViewController *)detailViewControllerWithUrl:(NSString *)detailUrl;
+
+//url scheme
+typedef void(^GTMediatorProcessBlock)(NSDictionary *params);
++ (void)registerScheme:(NSString *)scheme processBlock:(GTMediatorProcessBlock)processBlock;
++ (void)openUrl:(NSString *)url params:(NSDictionary *)params;
+
+//protol class
++ (void)registerProtol:(Protocol *)proto class:(Class)cls;
++ (Class)classForProtocol:(Protocol *)proto;
+
+@end
+
+NS_ASSUME_NONNULL_END
+
+
+
+//
+//  GTMediator.m
+//  SampleApp
+//
+//  Created by dequanzhu on 2019.
+//  Copyright © 2019 dequanzhu. All rights reserved.
+//
+
+#import "GTMediator.h"
+
+@implementation GTMediator
+
++ (__kindof UIViewController *)detailViewControllerWithUrl:(NSString *)detailUrl{
+    
+    Class detailCls = NSClassFromString(@"GTDetailViewController");
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+    UIViewController *controller = [[detailCls alloc] performSelector:NSSelectorFromString(@"initWithUrlString:") withObject:detailUrl];
+#pragma clang diagnostic pop
+    return controller;
+}
+
+#pragma mark -
++ (NSMutableDictionary *)mediatorCache{
+    static NSMutableDictionary *cache;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        cache = @{}.mutableCopy;
+    });
+    return cache;
+}
+
++ (void)registerScheme:(NSString *)scheme processBlock:(GTMediatorProcessBlock)processBlock{
+    if (scheme && processBlock) {
+        [[[self class] mediatorCache] setObject:processBlock forKey:scheme];
+    }
+}
+
++ (void)openUrl:(NSString *)url params:(NSDictionary *)params{
+    GTMediatorProcessBlock block = [[[self class] mediatorCache] objectForKey:url];
+    if (block) {
+        block(params);
+    }
+}
+
+// 这个是另一种 组件化的通信方式
++ (void)registerProtol:(Protocol *)proto class:(Class)cls{
+    if (proto && cls) {
+        [[[self class] mediatorCache] setObject:cls forKey:NSStringFromProtocol(proto)];
+    }
+}
+
++ (Class)classForProtocol:(Protocol *)proto{
+    return [[[self class] mediatorCache] objectForKey:NSStringFromProtocol(proto)];
+}
+
+@end
+
+
+# 如何是使用，我们先来看 两个要进行通信的组件
+// newsContall下的utils下/  GTNewsViewController.m
+# 组件1：contaoller
+++++
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    GTListItem *item = [self.dataArray objectAtIndex:indexPath.row];
+    
+//组件化三种方案讲解  建议三种一起使用 没有一个是能完全解决 且通用的
+// Target-Action
+//    __kindof UIViewController *detailController = [GTMediator detailViewControllerWithUrl:item.articleUrl];
+
+// URL Scheme
+//    [self.navigationController pushViewController:detailController animated:YES];
+//    [GTMediator openUrl:@"detail" params:@{@"url":item.articleUrl,@"controller":self.navigationController}];
+    
+// Protocal-Class
+    Class cls = [GTMediator classForProtocol:@protocol(GTDetailViewControllerProtocol)];
+
+    [self.navigationController pushViewController:[[cls allonoc] detailViewControllerWithUrl:item.articleUrl] animated:YES];
+     [self.navigationBarC]
+    [[NSUserDefaults standardUserDefaults] setBool:YES forKey:item.uniqueKey];
+}
+++++
+  
+# 组件2：将要调整到的UIView
+#  GTDetailViewController
+  + (void)load {
+    [GTMediator registerScheme:@"detail://" processBlock:^(NSDictionary * _Nonnull params) {
+        NSString *url = (NSString *)[params objectForKey:@"url"];
+        UINavigationController *navigationController = (UINavigationController *)[params objectForKey:@"controller"];
+        GTDetailViewController *controller = [[GTDetailViewController alloc] initWithUrlString:url];
+//        controller.title = [NSString stringWithFormat:@"%@", @(indexPath.row)];
+        [navigationController pushViewController:controller animated:YES];
+    }];
+    
+    [GTMediator registerProtol:@protocol(GTDetailViewControllerProtocol) class:[self class]];
+}
+
+```
+
+# 三方SDK-实现简单的登录功能
+## 理论知识
+> 主要是 巩固URL Schem的方式实现SSO （实现第三方的登录）静态库  动态库 账户体系 以下的东西就是你将要学习的
+>
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642082208697-f7f6c24e-da08-451a-aaae-5289deb9f17c.png)
+
+
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642082342309-90486f4f-ae46-4fe0-8939-5c131041538d.png)
+
+    有时候我们使用别人的东西，别人不回给你源代码，别人给你的 编译好的东西，在IOS中这就是 库 ，然后IOS中还做了分类j 静态/动态 ，静态的问题上面也说了，编译的时候要把好多东西cv进编译执行/ 是噎一个静态库，动态库就是 runtime的，动态库 是有风险的，包括审核什么的，但是开发的时候 我们为了安全是不回使用动态库的，我们直接就是静态库打包到app中，但是系统的UIKit就是静态库，可以做一部分的优化。
+
+## 实践：创建静态库
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642082659218-c31b5663-1a11-43c7-988e-506968a4b0b5.png)
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642082720907-dabf6214-0917-41ce-9aa6-122a72b5f925.png)
+
+ 
+
+如果要集成的话，直接拖进去就好了
+
+安装上述步骤 ，build 下，静态.a 文件就出来，这个就是要用到的二进制文件。然后点击CopyLikn 把需要为h 头文件 暴露出去
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642082946945-9106d86d-26da-4e67-adc4-78c1094b822b.png)
+
+然后show File 找到不Procuts文件夹📁 把需要的东西搞出来，比如下面我用到了两个头文件和一个二进制文件
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642083062377-4549a93a-eae5-4d51-9ff8-f9ecf46331aa.png)
+
+
+
+在项目中如果要应用就这样来操作
+
+1. 为了管理我们创建一个Glup
+2. 直接打开file 然后 把build的三个东西 丢进去，
+3. 注意 上述操作之后xcode 不回识别 你需要再点击一下 然后选中 再savei下 这样你的静态库就可以进来了 
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642083257602-d6e7859a-30d1-414f-8ab5-ff3de271391f.png) 使用的话你就 直接#import 就好了 ![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642083339027-74d28455-d38b-4722-b535-4f458fd9850d.png) 如果能run 就表示已经 link好了 很完美哈！
+
+但是需要注意！我们生产build 库的时候不能只选模拟器的，我们还需要连接上手机 再buiild 一个真机的库 ，然后把它们合并在一起才行。因为模拟器的架构 和 真机架构上不一样的。但打包的时候只需要 真机的包就好了。如何合并呢？实际上就是上面的命行，走一下就好了
+
+
+
+## 实践：动态库是如何制作和使用的？
+如何创建？
+
+1. 选择formawrok 选项
+2. 完成之后xcode打开 ，发现product下 得到了.framwork 文件夹，而不是 .a 二进制文件 。
+3. 在这个项目下新增文件 或者业务逻辑之后，只需要在buildPhase 中找到 Headers  把你需要的,h 头文件加到Publikc下就好了，这样外部就能使用 你这个framwrok了，默认创建的时候再 Project下所以你需要弄到public下
+4. 再执行BUIIL 再看framwork文件夹下的Headrs 文件夹下 就有你的,h 头文件了
+
+
+
+如何使用？
+
+1. 整个文件夹拖到项目中
+2. 再xcode中add一下 
+3. 然后 需要在![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642084191625-8d88920d-dd7f-4928-9aa5-6f9917233997.png) 这里加入一下，因为我们的动态库和系统的动态库是不一样的。系统的动态库是原来 就有的，但是你的这个 是扩展的 系统没有 你需要自己添加，在runtime 的时候再去动态加载
+4. 使用的时候 你需要  换一种方式去引入
+
+```javascript
+#import <TencentOpenAPI/TencentOAuth.h>
+这样才能引入
+```
+
+5. 同时呢 你也需要分 真机 和 模拟器 然后进行合并
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642084335615-48c74499-7d32-4e0b-9322-8ac7dd569d9a.png)
+
+
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642084396658-86a9e3f1-9873-4f2a-9df8-d5e134bc0f89.png)
+
+我们也能把Farmwork 打包方式 下的静态库 进行转化 具体的选项再这里
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642084476121-f5130bd1-8cf3-44ed-9676-f2d5f85159f5.png)
+
+## 我们再来看看登录的研制体系
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642084609663-9b1f9e71-cb47-4e26-99f6-8731344a872f.png)
+
+实际上 现在的登录系统都是这样来做的，基本上国内的都是接如一套独立的 第三方 系统，它们做的事情就是：
+
+你要集成的第三方比如你要支持QQ快捷登录，那么你的后台要去接入QQ的三方登录体系，你通过它们的提供的API拿到里面的数据，给你自己的登录体系用
+
+
+
+OAuth 就是App之间调整，但是登录的时候 还是在第三方登录的内部进行的。
+
+OpenID  是另一种体系，主要是第三方的信息方法给你的时候做了一层加密🔐处理
+
+我们现在就是结合两个 使用 （也是主流的登录体系）
+
+
+
+## 集成QQSDK集成登录
+> 上述都是铺垫！现在开始正文！
+>
+
+
+
+这里是qq的sdk连接 [🔗](https://wiki.open.qq.com/index.php?title=iOS_SDK%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA) ，有一点需要说明 QQ的SDK 在没有App的时候 默认拉起一个 H5的登录页面 进行登录。
+
+里面的文档有这样的一句话
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642085641006-fe6a957f-bb54-46f4-8a7c-d0f6742a78c7.png)
+
+实际上，你只需要把这个系统的东西 ，安装前面说的集成framwork 方法link进来就好了
+
+接下来就是！看文档！  
+
+
+建议创建一个单例来进行 统一的管理 管理 三方登录相关的行为，需要登录 调用一下就好了，比如代码里的GTLogin单例
+
+
+
+ 比如你要分享说明什么 ，朋友圈什么的，只需要去集成qq的SDK，然后调用你们的方法就够用了哈。
+
+
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642086764514-ecb4643b-d00e-476d-bfeb-be417df969af.png)  
+这个就是整个的回顾！其他的各种乱七八糟的SDK 也是 类似的集成方式
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642086862655-619fd357-fe5a-4262-8cc4-66b0f52c6f1f.png)
+
+
+
+# 如何做日志采集和上报
+## 理论知识
+> 主要是存储问题 和上报问题哈
+>
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642087034911-00e9df6f-3fb5-4362-a861-46bc0cc6cd82.png)
+
+在IOS中的日志系统是不一样的，它是一种内部的日志
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642165363471-1853568b-5eb9-438f-bf2d-bbff1177e31d.png)
+
+NSlog我们是不用的，我们用开源的框架 CocaoLumberjack中，这个开源的库，提供了pod方式的集成，这个是比较好的，我们直接添加依赖，进行使用就好了，非常的方便
+
+```podFile
+
+```objectivec
+platform :ios, "12.0"
+
+inhibit_all_warnings!
+
+target 'SampleApp' do
+	pod 'AFNetworking'
+	pod 'SDWebImage'
+	pod 'CocoaLumberjack'
+end
+```
+
+
+
+
+
+
+
+## 日志收集CocoaLumberjack分析
+> 我们来分析 这个开源的库
+>
+
+我们拉看DDLog,h 头文件就能找到其核心！DDLog这个库，里面有很多的宏，你只需要去调用它就好了。DDLog还可以帮助我们存入本地，然后再从中洗出来
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642166179271-b31434c9-21d4-4458-8941-e0a2884d5845.png)
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642166229539-7cd3cc8f-3c38-4c2e-b020-b0109418394f.png)
+
+理解这种日志系统的架构，有利于我们后期构建自己的 日志系统，存的方式日志无非就是string组合成的 数据
+
+其中还要处理 很多场景，比如如何存，断网如何纯本地，如何更新，需要定时上报
+
+## 如何收集崩溃日志Crash
+> 我们一般都是 crash 的时候收集堆栈信息，存到本地，然后进行上报
+>
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642170778331-7819290a-fab4-432d-b3b2-ee9a4f82a884.png)
+
+事实上，最主要的工作还是分析，客户端主要是 处理采集起来的数据
+
+对于捕获Crash 主要有下面的方案
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642171004573-d6706644-319b-4a52-af09-03d5b946ee44.png)
+
+更底层的操作可能还是需要操作底层C++，但是我们还是用开源的库 就好一些比如KSCrash
+
+
+
+下面的操作，我们是使用自己手写方法来捕获它。关于引起 crash 主要有两类（主要哈，意思是还有更多的）一个是NSExpoorsioni 和 singal（信号量）
+
+
+
+```objectivec
+// Appdeleget.m
+#pragma mark - CRASH
+++++
+   mian函数只能要注册它，还是建议 使用成熟的开源方案
+    //测试crash收集
+    //[self _caughtException];
+    //[@[].mutableCopy addObject:nil];
+
+++++
+
+- (void)_caughtException{
+    //NSexception
+    NSSetUncaughtExceptionHandler(HandleNSException);
+    
+    //signal 
+    signal(SIGABRT, SignalExceptionHandler);
+    signal(SIGILL, SignalExceptionHandler);
+    signal(SIGSEGV, SignalExceptionHandler);
+    signal(SIGFPE, SignalExceptionHandler);
+    signal(SIGBUS, SignalExceptionHandler);
+    signal(SIGPIPE, SignalExceptionHandler);
+}
+
+void SignalExceptionHandler(int signal){
+    void* callstack[128];
+    int frames = backtrace(callstack, 128);
+    char **strs = backtrace_symbols(callstack, frames);
+    NSMutableArray *backtrace = [NSMutableArray arrayWithCapacity:frames];
+    for (int i = 0; i < frames; i++) {
+        [backtrace addObject:[NSString stringWithUTF8String:strs[i]]];
+    }
+    free(strs);
+    //存储crash信息。
+}
+
+void HandleNSException(NSException *exception){
+    __unused NSString *reason = [exception reason];
+    __unused NSString *name = [exception name];
+    //存储crash信息。
+}
+```
+
+## 关于上报方案
+> 主要是两类 一类是  埋点，一个是无埋点的（无痕的）
+>
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642171633709-5fe777f7-e705-42e9-889c-77eec27cd904.png)
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1642172011454-b3ecf202-c1aa-4c0b-8f50-607c1398cd36.png)
+
+
+

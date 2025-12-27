@@ -1,0 +1,175 @@
+---
+title: "TypeScript 高频面试题精编：类型系统、泛型、工具类型与逆变协变"
+date: "2025-12-27"
+summary: "汇总 TypeScript 面试必备 19 题，覆盖基本类型、接口、泛型、装饰器、工具类型、逆变/协变等核心概念，并附可运行代码示例与进阶阅读链接。"
+status: "completed"
+tech: ["TypeScript", "面试", "类型系统", "泛型", "工具类型"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Interview"
+---
+
+> 这里的内容是引用 GPT的面试题而来的
+>
+
+好书推荐：[深入理解 TypeScript | 深入理解 TypeScript](https://jkchao.github.io/typescript-book-chinese/#why)
+
+建议去读 原书 [https://basarat.gitbook.io/typescript/docs/getting-started.html](https://basarat.gitbook.io/typescript/docs/getting-started.html)
+
+
+
+### 1. TypeScript 中的基本数据类型有哪些？
+答案： TypeScript 中的基本数据类型包括：
+
++ number：表示数字，包括整数和浮点数。
++ string：表示文本数据。
++ boolean：表示逻辑值，即 true 或 false。
++ null：表示一个空值。
++ undefined：表示一个未定义的值。
++ symbol：表示唯一的、不可变的值。
++ bigint：表示任意精度的整数。
+
+### 2. TypeScript 中的类型注解和类型推断有什么区别？
+答案：
+
++ 类型注解（Type Annotation）：通过显式指定变量、参数、函数返回值等的类型来提供类型信息。例如：let num: number = 5;。
++ 类型推断（Type Inference）：TypeScript 编译器根据变量的初始值推断出其类型，而无需显式指定。例如：let num = 5;，TypeScript 会自动推断 num 的类型为 number。
+
+### 3. TypeScript 中的接口有什么作用？
+答案： 接口（Interfaces）用于定义对象的结构，它描述了对象应该具有的属性和方法。通过接口可以实现对代码的约束和规范，帮助开发者在编码过程中发现潜在的错误。接口也可以用来描述函数类型、数组类型等。
+
+### 4. TypeScript 中的泛型是什么？它有什么作用？
+答案： 泛型（Generics）是一种在定义函数、类、接口时使用类型变量的方法，使得这些结构更加灵活和通用。通过泛型，我们可以编写具有广泛适用性的代码，而不需要对类型进行硬编码。泛型可以帮助我们编写更加灵活和类型安全的代码，同时提高代码的复用性和可维护性。
+
+### 5. 如何在 TypeScript 中定义可选属性和只读属性？
+答案：
+
++ 可选属性：在接口定义时，在属性名后面加上 ? 表示该属性是可选的。例如：interface Person { name?: string; }。
++ 只读属性：在属性名前面加上 readonly 关键字表示该属性是只读的，即不能在赋值之后修改。例如：interface Point { readonly x: number; readonly y: number; }
+
+### 6. TypeScript 中的联合类型和交叉类型有什么区别？
+答案：
+
++ 联合类型（Union Types）：表示一个变量可以是多种类型中的一种。使用 | 符号进行类型间的联合。例如：let value: string | number;。
++ 交叉类型（Intersection Types）：表示一个变量具有多种类型的组合。使用 & 符号进行类型的交叉。例如：interface A { prop1: string; } interface B { prop2: number; } type C = A & B;
+
+### 7. TypeScript 中的类和接口有什么区别？
+答案：
+
++ 类（Classes）：用于创建对象，可以包含属性和方法，并且支持继承和多态。类提供了一种面向对象的封装和抽象的方式。
++ 接口（Interfaces）：用于描述对象的结构，但不提供具体的实现。接口主要用于类型检查和约束，以及实现类的多态。
+
+### 8. TypeScript 中的命名空间和模块有什么区别？
+答案：
+
++ 命名空间（Namespaces）：用于组织代码，避免命名冲突。命名空间是在全局范围内声明的，通过 namespace 关键字进行定义。
++ 模块（Modules）：用于封装和组织代码，以便于复用和维护。模块是在文件级别上进行组织的，通过 export 和 import 关键字进行导出和导入。
+
+### 9. TypeScript 中的类型别名和接口有什么区别？
+答案：
+
++ 类型别名（Type Aliases）：用于创建类型别名，可以将现有的类型赋予新的名称。类型别名使用 type 关键字进行定义。
++ 接口（Interfaces）：用于定义对象的结构，描述对象应该具有的属性和方法。接口主要用于类型检查和约束。
++ type 比 Interfaces 要强大一些
+
+[type 与 interface 的区别，你真的懂了吗？ - 掘金](https://juejin.cn/post/7072945053936648200)
+
+### 10. TypeScript 中的类装饰器是什么？它有什么作用？
+答案： 类装饰器（Class Decorators）是一种特殊类型的声明，它可以附加到类声明之前。类装饰器在类声明之前被声明（紧靠着类声明）。类装饰器应用于类构造函数，可以用来监视、修改或替换类定义。装饰器函数接受一个参数，即被装饰的类的构造函数。
+
+### 11. TypeScript 中的可索引类型是什么？它有什么作用？
+答案： 可索引类型（Index Types）是一种类型，在 TypeScript 中用于描述对象的属性类型和索引类型。它可以让我们在编写代码时更加灵活地处理对象的属性和索引，使代码更加通用和易于维护。
+
+### 12. TypeScript 中的类型守卫是什么？它有什么作用？
+答案： 类型守卫（Type Guards）是一种在 TypeScript 中用于检查变量类型的技术。它可以在运行时检查变量的类型，并根据类型进行相应的处理。类型守卫可以通过 typeof、instanceof、in、自定义类型谓词等方式进行实现，帮助我们编写更加安全和健壮的代码。
+
+### 13. TypeScript 中的声明合并是什么？它有什么作用？
+答案： 声明合并（Declaration Merging）是指 TypeScript 中允许将多个同名的接口、命名空间或类合并成一个单一的声明。声明合并可以使我们在编写代码时更加灵活，可以将多个相关联的声明组合成一个更加完整的声明，从而提高代码的可读性和可维护性。
+
+### 14. TypeScript 中的类型断言是什么？它有什么作用？
+答案： 类型断言（Type Assertion）是一种在 TypeScript 中告诉编译器某个值的类型的方式。它可以通过 <type> 语法或 as 关键字将一个值断言为特定的类型。类型断言主要用于解决编译器无法准确推断类型的情况，帮助我们在编写代码时更加精确地指定类型，以提高代码的类型安全性和可读性。
+
+### 15. TypeScript 中的异步编程方式有哪些？它们之间有什么区别？
+答案： 在 TypeScript 中，常见的异步编程方式包括：
+
++ 回调函数（Callbacks）：通过回调函数来处理异步操作的结果。
++ Promises：通过 Promise 对象来处理异步操作的结果，提供了更加灵活和可靠的异步编程方式。
++ Async/Await：通过 async 和 await 关键字来编写更加直观和易于理解的异步代码，基于 Promise 的语法糖。
+
+### 16.关于 Ts中的装饰器和反射 以及 IOC AOP编程
+[(转)一文速览 TypeScript 装饰器 与 IoC 机制 - 掘金](https://juejin.cn/post/7018077322414653454#heading-1)
+
+### 17.TS常用的工具类型是有哪些？
+答案：有6种Partial、Pick、Record、Omit、Exclude、Required、Readonly 和 ReturnType。
+
+用一段代码来展示他们的作用
+
+```typescript
+interface Person {
+  name: string;
+  age: number;
+  address: string;
+}
+
+type PartialPerson = Partial<Person>;
+=> 
+{
+  name?: string | undefined;
+  age?: number | undefined;
+  address?: string | undefined;
+}
+
+// Required 的功能和这个相反
+type PartialPerson = Required<Partial<Person>>;
+=> 
+{
+  name: string;
+  age: number;
+  address: string;
+}
+
+type NameAndAge = Pick<Person, "name" | "age">; 
+=> 
+{
+  name: string;
+  age: number;
+}
+
+const fruits = ["apple", "banana", "orange"] as const;
+type FruitFlags = Record<typeof fruits[number], boolean>; // 从对象中创建新对象
+{
+  apple: boolean;
+  banana: boolean;
+  orange: boolean;
+}
+
+
+type NameAndAge = Omit<Person, "address">; // 删除
+=> 
+{
+  name: string;
+  age: number;
+}
+
+type Color = "red" | "blue" | "green"; 
+type NonGreenColor = Exclude<Color, "green">; // 排除类型
+=> 
+"red" | "blue"
+
+
+// 下面可以直接获取函数的返回值 (有且仅限函数)
+function add(a: number, b: number) {
+  return a + b;
+}
+type AddReturnType = ReturnType<typeof add>; // number
+
+```
+
+
+
+### 18.来自光神的一道面试题
+
+
+### 19.什么是逆变什么是协变
+[最易理解的ts协变和逆变教程](https://zhuanlan.zhihu.com/p/539205870)
+

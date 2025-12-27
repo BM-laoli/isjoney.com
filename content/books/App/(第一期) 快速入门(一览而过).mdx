@@ -1,0 +1,551 @@
+---
+title: "Objective-C 核心特性：Getter/Setter、继承、多态与内存管理"
+date: "2024-12-19"
+summary: "深入解析 Objective-C 的属性访问器（getter/setter）、self/super 关键字、多态机制、数据类型封装（NSValue/NSNumber）、集合操作（NSDictionary/NSSet）以及内存管理策略。"
+status: "completed"
+tech: ["Objective-C", "Memory Management", "Property"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "App"
+---
+
+> 此文档 梳理补充了 来自 github [saitjr](https://github.com/saitjr)  的大大的一个仓库 ，主要是补充了其中涉及到的一些但是没有写得完全的话题比如getter 和setter 等内容。
+>
+
+# <font style="color:rgb(51, 51, 51);">Getter and setter</font>
+```objectivec
+
+// 这里是.h声明文件
+// 声明了一个继承自NSObject类的Person类
+@interface Person : NSObject {
+//    类的成员属性，_为命名规范
+    NSString *_name;
+    NSInteger _age;
+    float _height;
+}
+
+// 这样之后就能够 使用.的方法 和setGet方法了
+@property(nonatomic,copy) NSString *_name;  变成了这个对象的属性
+@property(nonatomic,copy) NSString *_age;
+@property(nonatomic) float *_height;
+
+//  重写getter 和setter 不需要重声明 去m文件里实现 和重写方法就好了 声明文件只需要 @property装饰器
+@end
+```
+
+```objectivec
+// 这里是.m实现文件
+// @implementation 类的实现
+@implementation Person
+
+//getSeter方法
+// 只重写其中一个
+//- (void) set_age:(NSString *)_age {
+//    NSLog(@"触发了setAge");
+//    _age = @"我是你爸爸";
+//};
+
+// 重写全部
+ @synthesize _age = __age;
+- (void)set_age:(NSString *)_age {
+    NSLog(@"触发了setAge");
+    __age = @"我是你爸爸";
+};
+
+- (NSString *) _age {
+    NSLog(@"触发了getAge");
+    return __age;
+};
+
+@end
+
+
+// 调用在mian.m中调用就好了
+```
+
+# <font style="color:rgb(51, 51, 51);">Self-Super</font>
+```objectivec
+// 所谓的self就是 js中的this哈不解释了
+// 所谓的的super是指的继承的父类，注意哈，OC中只有单继承 你的super就是你的直属爸爸 不是你爷爷
+
+.h
+// Human父亲
+@interface Human: NSObject {
+    @public
+    NSString *_name;
+    NSInteger _age;
+    float _height;
+}
+
+@property(nonatomic,copy) NSString *name;
+- (void)As;
+// 初始化方法
+- (instancetype) initWithName:(NSString *)name age:(NSInteger)age height:(float)height;
+@end
+
+// Student
+@interface Student: Human {
+    @private
+    float _score;
+}
+
+- (void) Qa;
+
+@end
+
+// Teacher
+@interface  Teacher: Human {
+    @private
+    float _salary;
+}
+
+@end
+
+```
+
+```objectivec
+
+// 实现两个
+@implementation Human
+- (instancetype)initWithName:(NSString *)name age:(NSInteger)age height:(float)height {
+    self = [super init];
+    if (self) {
+        _name = name;
+        _age = age;
+        _height = height;
+    }
+    return self;
+}
+- (void)As {
+    NSLog(@"你个小垃圾");
+};
+@end
+
+@implementation Student
+
+- (void)Qa {
+    NSLog(@"学生开始问问题：我们的物种是什么名字");
+    NSLog(@"%@",self.name);
+    NSLog(@"学生开始问问题：你爸爸的发方法是什么");
+//    super.As;
+    self.As;
+};
+
+@end
+
+@implementation Teacher
+
+@end
+
+```
+
+# 多态
+>  <font style="color:rgb(77, 77, 77);">当相同类型的变量调用同一个方法时呈现出多种不同的行为特征，就是多态。  
+</font><font style="color:rgb(77, 77, 77);">指针变量在编译阶段只能调用其编译时类型所具有的方法，但运行时则执行其运行时类型所具有的方法</font>
+>
+
++ 强制类型转换  
+类型转换运算符的用法为  
+（type *)variable  
+类型转换运算符可以将一个基本类型变量转换为另一种类型  
+还可以将一个指针类型变量转换为其子类an du p类型
+
+
+
++ 判断指针变量的实际类型  
+一般建议在执行强制类型转换之前先判断该对象是否为该类或其他类的实例，可通过如下方法：
+
+
+
+    - -（BOOL）isMemberOfClass:clazz:判断该对象是否为clazz类的实例
+    - -（BOOL）isKindOfClass:clazz:判断该对象是否为clazz类或其子类的实例（主要作用是：在执行强制类型转换之前，首先判断前一个对象是否是该类的实例）
+    - -（BOOL）isSubclassOfClass:clazz:这是个类方法，用于判断当前类是否为clazz的子类。
+
+# 数据类型
+## NSValue
+一个NSValue对象是用来存储一个C或者Objective－C数据的简单容器。它可以保存任意类型的数据，比如**int，float，char，当然也可以是指pointers, structures, and object ids。NSValue类的目标就是允许以上数据类型的数据结构能够被添加到集合里，例如那些需要其元素是对象的数据结构，如NSArray或者NSSet的实例。需要注意的是NSValue对象一直是不可枚举的。**  
+我们可以使用NSValue来辅助我们实现一些简单数据结构的封装。比如我们定义了一个简单的结构体类型
+
+
+
+```objectivec
+
+typedef struct
+{
+    int id;
+    float height;
+    unsigned char flag;
+} Test;
+```
+
+
+
+    此时，我们就可以使用MyTestStruct这个结构体来很容易地封装数据。如
+
+
+
+
+
+
+
+```objectivec
+
+Test test;
+test.id=1;
+test.height=23.0;
+test.flag='A';
+
+NSValue *value =
+    [NSValue valueWithBytes: &test objCType:@encode(Test)];//对结构体进行封装
+NSLog(@"id=%d,height=%f,flag=%c",test.id,test.height,test.flag);
+
+
+// 在我们想取出*value 中的数据时，可以使用如下方式：
+
+
+Test test2;//声明test2，为了得到test1的值
+[value getValue:&test2];//同类型赋值
+NSLog(@"id=%d,height=%f,flag=%c",test2.id,test2.height,test2.flag);
+```
+
+
+
+之后就可以对theTestStruct的操作来取得其中的数据。
+
+## NSNumber
+<font style="color:rgb(77, 77, 77);">NSNumber封装C语言的数据类型 int long char double float bool</font>  
+<font style="color:rgb(77, 77, 77);">例如：NSNumber *nb = [NSNumber numberWithInt:20];</font>
+
+
+
+<font style="color:#F5222D;">从一名前段开发者的角度来理解 NSValue  NSNumber 是某些数值类型的基类，  
+</font><font style="color:#F5222D;">NSValue 就是一个容器包含所有类型</font>
+
+<font style="color:#F5222D;"></font>
+
+## NSDictionary
+> <font style="color:rgb(119, 119, 119);">无序集合：存储顺序与添加顺序无关键值对形式出现，都不为nil ，键名不能重复</font>
+>
+> <font style="color:rgb(119, 119, 119);">参考文档如下：</font>[https://www.jianshu.com/p/786dd591fee6](https://www.jianshu.com/p/786dd591fee6)
+>
+
+###### 
+```objectivec
+# 创建和初始化：
+
+
+NSDictionary *dic1 = [[NSDictionary alloc] initWithObjectAndKeys:Value, Key, nil];
+NSDictionary *dic1 = [NSDictionary dictionaryWithObjectsAndKeys:Value, Key, nil]; // 类方法
+
+// 创建时初始化一个元素
+NSDictionary *dic1 = [NSDictionary dictionaryWithObject:Value, forKey: Key];
+
+// 初始化新字典，新字典包含一个字典
+NSDictionary *dic1 = [NSDictionary dictionaryWithDictionary:dic2];
+
+
+# 获取字典中的数据
+// 取得字典中个数
+NSUinteger count = dic1.count;
+
+// 取得字典中所有的Key，等价于dic1.allKeys；
+NSArray *allKey = [dic1 allKeys];
+
+// 取得字典中所有的Value
+NSArray *allValue = [dic1 allValue];
+
+// 通过Key取得Value
+NSArray *array2 = [dic1 objectForKey:@"shen"]; 
+
+// 获取相同Key的所有Value
+[dic1 valueForKeyPath:Key];
+
+// 将字典中元素赋值到self的相应属性
+[self setValuesForKeysWithDictionary:dic1];
+
+// 将字典的Key转成枚举对象，用于遍历
+NSEnumerator *enumerator = [dic1 keyEnumerator];
+
+
+
+# 优化语句
+// 创建
+NSDictionary *dic2 = @{Key:Value, Key:Value};
+
+// 取值
+NSArray *array3 = dic1[@"shen"];
+
+# 读写文件
+// 文件路径
+NSString *path = [NSHomeDirectory() stringByAppendingPathComponent:@"Document/dic.plist"];
+
+// 写文件
+BOOL success = [array writeToFile:path atomically:YES];
+
+// 读文件
+NSDictionary *readDic = [[NSDictionary dictionaryWithContentsOfFile:path];
+                         
+                         
+# 可变的字典
+NSMutableDictionary *muDic1 = [[NSMutableDictionary alloc] initWithCapacity:3];
+
+NSMutableDictionary *dic2 = [NSMutableDictionary dictionaryWithObjectsAndKeys: Value, Key, nil];
+
+NSDictionary *dic3 = [NSDictionary dictionaryWithObject: Value forKey: Key];
+                         
+# 添加元素
+                         // 添加一个元素
+[muDic1 setObject:array1 forKey:@"shen"];
+
+// 将字典dic1中所有元素添加到muDic1中
+[muDic1 addEntriesFromDictionary:dic1];
+                         
+# 移除元素
+                         
+// 根据Key移除元素
+[muDic1 removeObjectForKey:@"shen"];
+
+// 移除所有元素
+[muDic1 removeAllObjects];
+
+// 根据多个Key移除元素
+[muDic1 removeObjectFormKeys:@[@"shen", @"shi"]];
+                         
+# 遍历元素
+                         // 快速遍历：
+for (NSString *key in muDic1) {
+     NSArray *n = [muDic1 objectFoeKey:key];
+     NSLog("@Key=%@, Value=%@", key, n);
+}
+
+// 普通遍历：
+NSArray *allKeys = [muDic1 allKeys];
+for (int i = 0; i < allValues.count; i ++) {
+     NSString *key = allKeys[i];
+     NSArray *n = muDic1[key];
+NSLog("@Key=%@, Value=%@", key, n);  
+}
+ 
+// 枚举遍历：
+NSEnumerator *enumerator = [dic keyEnumerator];
+id key = [enumerator nextObject];
+while (key) {
+     id obj = [dic objectForKey:key];
+     NSLog(@"%@", obj);
+     key = [enumerator nextObject];
+}
+```
+
+## NSSet
+> 与java中的Set 类似 都是作为不可变的的集合而存在
+>
+
+```objectivec
+//
+//  main.m
+//  OcDemo
+//
+//  Created by wcmismac020 on 2021/11/12.
+//
+
+#import <Foundation/Foundation.h>
+
+//定义一个函数，可以把Array或者NSSet集合转换为字符串
+NSString*  NSCollectionToString(id collection){
+    NSMutableString* str = [NSMutableString stringWithString:@"["];
+    
+    //使用for-each循环语法，遍历集合
+    for(id obj in collection){
+        [str appendString:[obj description]];
+        [str appendString:@", "];
+    }
+    //获取字符串长度，去掉最后2个多余的字符
+    NSUInteger length = [str length];
+    [str deleteCharactersInRange:NSMakeRange(length-2, 2)];
+    [str appendString:@"]"];
+    return str;
+}
+
+void testVnil(int age) {
+    NSLog(@"666");
+}
+
+ 
+int main(int argc, const char * argv[]) {
+  
+    @autoreleasepool {
+        NSLog(@"Hello, World!");
+        testVnil(2);
+        
+        //NSSet是不可变集合，可变集合是NSMutableSet。
+        //与NSArray，NSMutableArray一个鸟样
+        //构造4个元素的集合，其中2个是重复的
+        NSSet* set1 = [NSSet setWithObjects:@"A", @"B",@"C",@"B",nil];
+        NSLog(@"The set1 count :%ld",[set1 count]);
+        NSLog(@"The set1 :%@",NSCollectionToString(set1));
+        //set1是不可变集合
+        NSSet* set2 =[set1 setByAddingObject:@"D"];
+        NSLog(@"The new set1 :%@",NSCollectionToString(set1));
+        NSLog(@"The set2 :%@",NSCollectionToString(set1));
+        
+        BOOL isSubSet =[set1 isSubsetOfSet:set2];
+        NSLog(@"The set1 is subSet of set2:%d",isSubSet);
+        
+        BOOL have = [set1 containsObject:@"C"];
+        NSLog(@"The set1 has C:%d",have);
+    }
+    return 0;
+    
+}
+
+```
+
+## NeNull
+> 这个东西就是一个 js中的null
+>
+
+标识 某个东西不存在
+
+<font style="color:#F5222D;"></font>
+
+# <font style="color:rgb(34, 34, 38);">Description关键字</font>
+> 改方法作为 OC对象语法章节的补充，它的作用是 控制对象返回什么`
+>
+
+```objectivec
+#import <Foundation/Foundation.h>
+#import "Person.h"
+
+// main
+
+void test9()
+{
+    // 输出当前函数名
+    NSLog(@"%s\n", __func__);
+}
+
+int main()
+{
+    // 输出行号
+    NSLog(@"%d", __LINE__);
+
+    // NSLog输出C语言字符串的时候，不能有中文
+    // NSLog(@"%s", __FILE__);
+
+    // 输出源文件的名称
+    printf("%s\n", __FILE__);
+
+    test9();
+
+    Person *p = [[Person alloc] init];
+
+    // 指针变量的地址
+    NSLog(@"%p", &p);
+    // 对象的地址
+    NSLog(@"%p", p);
+    // <类名：对象地址>
+    NSLog(@"%@", p);
+
+    return 0;
+}
+
+void test2()
+{
+    Class c = [Person class];
+
+    // 1.会调用类的+description方法
+    // 2.拿到+description方法的返回值（NSString *）显示到屏幕上
+    NSLog(@"%@", c);
+}
+
+void test1()
+{
+    Person *p = [[Person alloc] init];
+    p.age = 20;
+    p.name = @"Jack";
+    // 默认情况下，利用NSLog和%@输出对象时，结果是：<类名：内存地址>
+
+    // 1.会调用对象p的-description方法
+    // 2.拿到-description方法的返回值（NSString *）显示到屏幕上
+    // 3.-description方法默认返回的是“类名+内存地址”
+    NSLog(@"%@", p);
+
+    //Person *p2 = [[Person alloc] init];
+    //NSLog(@"%@", p2);
+
+    //NSString *name = @"Rose";
+
+    //NSLog(@"我的名字是%@", name);
+
+    Person *p2 = [[Person alloc] init];
+    p2.age = 25;
+    p2.name = @"Jake";
+
+    NSLog(@"%@", p2);
+}
+
+// 定义和实现
+@interface Person : NSObject
+@property int age;
+@property NSString *name;
+@end
+
+
+#import "Person.h"
+
+@implementation Person
+
+// 决定了实例对象的输出结果
+- (NSString *)description
+{
+    // 下面代码会引发死循环
+    // NSLog(@"%@", self);
+    return [NSString stringWithFormat:@"age=%d, name=%@", _age, _name];
+    //return @"3424324";
+}
+
+// 决定了类对象的输出结果
++ (NSString *)description
+{
+    return @"Abc";
+}
+
+@end
+
+
+```
+
+
+
+# memory-managment内存管理
+Objective-C内存管理技术大致可分为两类 - 
+
++ “手动保留或释放”或MRR
++ “自动参考计数”或ARC
+
+
+
+图示和说明
+
+
+
+代码演式
+
+
+
+对于ARC的我们简单的说一下就好了 涉及到很多C++的东西
+
+
+
+# **<font style="color:rgb(0, 0, 0);background-color:rgb(254, 254, 242);">property</font>**
+> 这个文档中把细节说明的非常的全面，简单的来说 属性加上这个就好 其他无限关系，1. 尽量使用**<font style="color:rgb(0, 0, 0);background-color:rgb(254, 254, 242);">property，2.请明确其参数 （</font>**<font style="color:rgb(255, 0, 0);background-color:rgb(254, 254, 242);">readonly  nonatomic   strong  weak  copy  </font>**<font style="color:rgb(0, 0, 0);background-color:rgb(254, 254, 242);">）</font>**
+>
+
+[链接](https://www.cnblogs.com/zhanggui/p/4656427.html)
+
+
+
+# 深入理解Objective-C：Category
+> 请看这个文章 有详细的说明 [链接](https://tech.meituan.com/2015/03/03/diveintocategory.html)
+>
+

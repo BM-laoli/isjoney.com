@@ -56,22 +56,26 @@ function getPreferredLocale(request: NextRequest): Locale {
   return i18n.defaultLocale;
 }
 ```
-### 
+### 关键实现MDX渲染器
+我们重新归纳和整理了一个渲染器，使他能够渲染 MD + Mared + DarwIo + 数学公式, 下面是核心方法 以及重点
+```tsx
+```
+### 自适应到底是怎么实现的？
+
 
 
 ## TODO:
 
+
+- [✅] rebuild - framework (Books+Porjects) Layout Category ,查最后一项：移动端适应 和 数据生成规则...(books 和project)
 - [❎✅] hom page modify - footer discover 
 - [❎] hom page modify - Selected Projects
 - [❎] hom page modify - Last New
 - [❎] hom page modify - pink Icon (Youtube + Bilili)
 
 
-
-
 footer discover
 *都单独挂一个页面介绍一下 然后 在页面上挂一个 外链 Links. 以上的内容也放到 Selected Projects 里去*
-
 - 实况足球 - 
 - Newegg Seller - 
 - Newegg.com
@@ -80,13 +84,19 @@ footer discover
 - NestJs 项目 RBAC 项目重新用AI整理一下
 - AI实现的
 
-
-
-
-
 Selected Projects 要做两个一个是 自己的项目 一个是参与的项目
 
 - 实况足球 - 
 - Newegg Seller - 
 - Newegg.com
 - 游戏项目 -- 没做好
+
+## 鸣谢
+感谢由 aasd的提供的框架基础
+
+## 开源
+采取MIT ，欢迎fork 欢迎start！
+
+## Blog 架构
+有道理 这样话的 最好了 本地通过程序 只读这一个md文件 这一个路径
+写完文档之后，用ci 去跑 job 这样就可以 直接更新了，不需要考验构建性能问题 和 nextjs 重新构建问题

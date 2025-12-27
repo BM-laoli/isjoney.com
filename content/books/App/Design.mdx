@@ -1,0 +1,143 @@
+---
+title: "系统架构设计：UI/UX、数据库设计与技术选型"
+date: "2024-12-19"
+summary: "详细介绍UI/UX设计、系统总体架构、数据库表结构设计（用户表、登录状态表、文件服务、Todo分类等）以及后端技术选型（NestJS）。"
+status: "completed"
+tech: ["Architecture", "Database", "NestJS", "MySQL"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "App"
+---
+
+> 这里放置的是UI  UX 以及各 系统总体架构 子模块的架构在这里也有，各个模块里也同步了一次
+>
+
+
+
+
+
+## UX
+
+
+
+
+## UI
+
+
+
+
+## App总体架构
+
+
+
+
+## 后端Server总体架构
+### 1. 数据库
+> 数据库选型使用Mysq
+>
+
+
+
+### 2. 数据表结构
+
+
+- [x] 用户表 user
+
+| 字段名 | 字段类型 | 描述 | 是否主键 | 是否外键 |
+| --- | --- | --- | --- | --- |
+| id | type_id |  | 是 |  |
+| password | String | 密码 |  |  |
+| birth | Date | 生日 |  |  |
+| sex | Boolean | 性别 |  |  |
+| name | String | 名称 |  |  |
+| avatar | String | 头像具体就是图URL | | 是 |
+| roleId | roleId[] | 具备哪些权限，目前demo写死 vip notvip suppervip | | |
+
+
+
+
+- [x] 登录状态表 loginState
+
+| 字段名 | 字段类型 | 描述 | 是否主键 | 是否外键 |
+| --- | --- | --- | --- | --- |
+| id | type_id |  | 是 |  |
+| userId | use_id | 当前登录的用户id |  | 是 |
+| token | string | 登录token | |  |
+
+
+
+
+
+
+- [ ] 文件服务file
+
+| 字段名 | 字段类型 | 描述 | 是否主键 | 是否外键 |
+| --- | --- | --- | --- | --- |
+| id | type_id |  | 是 |  |
+| size | Number | 文件大小单位字节 |  |  |
+| url | String | 文件地址 | | |
+
+
+
+
+- [x] Todo父分类TodoCategory
+
+| 字段名 | 字段类型 | 描述 | 是否主键 | 是否外键 |
+| --- | --- | --- | --- | --- |
+| id | type_id |  | 是 | 是 |
+| name | String | 文件大小单位字节 |  |  |
+| date | Date | 创建日期 | | |
+
+
+
+
+- [x] todo列表
+
+| 字段名 | 字段类型 | 描述 | 是否主键 | 是否外键 |
+| --- | --- | --- | --- | --- |
+| id | type_id |  | 是 |  |
+| name | String | todo想详情 |  |  |
+| state | Boolean | 是否完成 | | |
+| category | type_id | 属于某一个 父级别 | | 是 |
+
+
+
+
+
+
+- [x] IM使用第三方服务 不自建 自建需要很多环境 由于公司环境限制这里就做演示 ，本人使用的网易云信4，谁叫它免费一部分Api呢，腾讯就很啃爹了，必须买
+
+[https://app.yunxin.163.com/index#/app/20867038](https://app.yunxin.163.com/index#/app/20867038)
+
+
+
+
+
+
+
+### 3. 总体技术选型
+> NestJs ，Nodejs框架中的佼佼者媲美spring
+>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

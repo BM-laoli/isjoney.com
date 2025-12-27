@@ -32,7 +32,10 @@ export default async function ProjectsPage() {
                 title={project.metadata.title}
                 summary={project.metadata.summary}
                 tech={project.metadata.tech}
+                video="https://files.zangwei.dev/proj-video-agent.mp4"
                 status={project.metadata.status}
+                image={`https://placehold.co/600x400/e2e8f0/1e293b.png?text=${project.metadata.title}`}
+                // image={project.metadata.image || }
               />
             </BlurFade>
           ))}

@@ -1,0 +1,278 @@
+---
+title: "React Native 环境配置指南"
+date: "2024-12-19"
+summary: "详细的 React Native 开发环境配置教程，涵盖 Mac 和 Windows 平台下的 Android/iOS 环境搭建、常见问题解决方案及 M1 芯片兼容性处理。"
+status: "completed"
+tech: ["React Native", "Environment Setup", "Mobile Development"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "App"
+---
+
+> 本指南 主要指导 Rn环境的安装 相关，如果你照着官方文档配置没有问题的话，可以略过
+>
+
+
+
+**<font style="color:#F5222D;">重要非常重要</font>****<font style="color:#F5222D;">⚠️</font>****<font style="color:#F5222D;">，一定要确保您有一个非常好得网络环境，它需要满足这样的条件</font>**
+
+1. **<font style="color:#F5222D;">可以连接到Google (一些SDK 和编译工具严重依赖GitHub）</font>**
+2. **<font style="color:#F5222D;">网络速度高  （一些SDK可能非常非常的大！大到你怀疑人生</font>****<font style="color:#F5222D;">😂</font>****<font style="color:#F5222D;">）</font>**
+
+**<font style="color:#F5222D;"></font>**
+
+## 一、Mac下的环境配置
+> Mac下的配置比较的简单，主要是权限问题，其他的都没有任何问题
+>
+> 大哥大姐们，球球你们先去看看官方文档 吧 [RN官方文档-环境配置指南](https://reactnative.cn/docs/environment-setup)
+>
+
+
+
+> Vscode 国内源  （mac）[https://vscode.cdn.azure.cn/stable/3866c3553be8b268c8a7f8c0482c0c0177aa8bfa/VSCode-darwin-universal.zip](https://vscode.cdn.azure.cn/stable/3866c3553be8b268c8a7f8c0482c0c0177aa8bfa/VSCode-darwin-universal.zip)
+>
+
+### Mac -> Android
+#### 1. 安装Brew 
+请点击这个连接 [HomeBrew国内源](https://gitee.com/cunkai/HomebrewCN) 去依照指引完成安装，注意📢 不要sudo 然后执行，请直接执行 遇到要求密码再去输入
+
+#### 2. 安装Node 和Watchman
+执行以下命令
+
+```shell
+brew install node
+brew install watchman
+```
+
+切换npm（必须）下载源 和下载yarn （非必须）
+
+```shell
+# 使用nrm工具切换淘宝源
+npx nrm use taobao
+
+# 如果之后需要切换回官方源可使用
+npx nrm use npm
+
+# 安装 yarn
+npm install -g yarn
+```
+
+#### 3. 安装JDK
+注意📢 需要安装 <= 1.8的jdk ，高版本目前RN 不支持
+
+```shell
+brew install adoptopenjdk/openjdk/adoptopenjdk8
+```
+
+#### 4. 安装和配置Android Studio
+这个步骤非常的关键 ，只要仔细安装本文指引，Mac电脑基本不会走不下去
+
+- [x] 下载 [Android studio下载站](https://developer.android.google.cn/studio/)  （注意：如果你是M1的芯片，请选择一下哈， 别下错了，）
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1630403065728-97c1bd3a-87cb-4b17-893b-dde78442bc3b.png)![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1630403117280-291c61c0-c381-45f9-8c92-0baf512621af.png)
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1630403198603-571c5fe8-b64c-4ecf-aa53-2bdab83b2529.png)
+
+- [x] 疯狂点击Next安装就好了
+- [x] 重点！环境SDK安装⚠️
+
+这里先列一下官方文档制定的版本
+
+        * SKD Platforms 请选择：Android 10.0 （Q）  下的 Android SDK Platform 29，Interl X86 Atom_64 System Image, 当然如果你需要安装其他更高的版本也是可以的，但是29的版本是官方指定的
+        * SDK  Tools 请选择 Android SDK Build-Tools 31下的 29.0.2 （同样也是官方推荐的版本） ，NDK 下的 20.1.5948944版本再然后去安装这个 <font style="color:rgb(28, 30, 33);">Android SDK Command-line Tools (latest)就好了</font>
+- [x] 环境配置！ 这一步非常重要！📢
+
+我们先看看，shell使用的是什么 使用 echo $0 就能得到结果了，
+
+如果是.zhrc 就运行，你需要往 配置文件中输入下面的内容
+
+```shell
+# 如果你不是通过Android Studio安装的sdk，则其路径可能不同，请自行确定清楚
+export ANDROID_HOME=$HOME/Library/Android/sdk
+export PATH=$PATH:$ANDROID_HOME/emulator
+export PATH=$PATH:$ANDROID_HOME/tools
+export PATH=$PATH:$ANDROID_HOME/tools/bin
+export PATH=$PATH:$ANDROID_HOME/platform-tools
+```
+
+```shell
+# 如果你是zhrc 
+sudo vim i ~/.zshrc 
+
+# 如果你是 bash
+sudo vim i ~/.bash_profile
+
+# 如果在~下的，没有 这两个文件 ，那么您可以touch创建一下 然后再去编辑他
+touch .zshrc  
+touch .bash_profile  
+
+# 关于Vim说明
+1. 键盘 i inter 进入修改
+2. 修改完之后 先esc 退出编辑模式
+3. shift + : 号 输入wq 保存并退出，如果你遇到问题可以尝试 wq! 或者q! 然后安装步骤1.2.3重试
+
+
+
+```
+
+#### 5. 看看你要运行再模拟器还是真机上
++ 模拟器
+
+随便再Android Stuido里创建一个 Android镜像 
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1630407773305-7d4f57fc-ac62-4944-b2ed-1a4908ad9f43.png)
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1630407785651-676f45e0-fffe-42fc-a673-d7d4e5149283.png)
+
+选择一个next就好了，（此步骤需要网络支持！而且必须是在线下载的）
+
++ 真机
+    1. 连接上电脑(usb) 打开调试模式
+    2. 看看是否有设备连接上
+
+```shell
+adb devices
+```
+
+
+
+### Mac -> IOS
+> IOS的配置 比较的简单 brew 和 Node Watchman 都是一样的，JDK之后的章节就有所不同了 需要额外注意
+>
+
+#### 1.  安装Brew （同Android）
+#### 2. 安装Node 和Watchman （同Android）
+#### 3. 安装Xcode （非常重要！）
+Xcode是必须要装得，Xcode12 得官方说明得 需要Xcode12以及更高的版本支持，如果你的Mac是**<font style="color:#F5222D;">Bigsuer</font>**系统那可以不必担心，直接从App Store下载便是，如果你的Mac是10.1xx的系统需要去找到 **<font style="color:#F5222D;">Xcode12</font>**版本最低能够支持到的版本，如果不支持，目前你是玩不转的了。
+
+
+
+安装完毕之后安装官方文档来基本不会有问题
+
+#### 4. 干！我的IOS怎么跑不起来
+ 
+
+- [x] ( 主要的问题还是Cococapod的源问题 )  
+
+ a.官方指导
+
+请按照如下的规则 配置好公司的源地址，详细的可以见 公司官方的地址   
+[https://confluence.newegg.org/pages/viewpage.action?pageId=129616563](https://confluence.newegg.org/pages/viewpage.action?pageId=129616563)  
+的文档
+
+
+
+ b. 非官方指导![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1630411193726-1cad1e5c-63da-4936-91fe-7b6bd1fa5259.png)
+
+如果你出有这样类似的问题 ，多半还是包和环境的问题,这篇文章给出了详细的说明和操作指南,请参阅
+
+[https://zhuanlan.zhihu.com/p/376754036](https://zhuanlan.zhihu.com/p/376754036)
+
+在接下来的安装中，还是会报错 ，没关系 持之以恒 多搞一些就好了 这可能需要话掉你一些时间，请规划好
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1630411322949-b8be5a77-93f2-41c7-bf18-2b11d4dde686.png)
+
+- [x] Mac电脑的问题
+
+目前已知的BUG，M1芯片IOS打包时候 不能使用 use_flipper!() (在IOS目录下的，Podfile中) 不然跑不起来需要把这个注掉，Macos系统版本11.4.x 无法热更新的，请升级到11.5.x版本就可以解决了，具体的Issues请看官方的链接 
+
+[https://github.com/facebook/react-native/issues/31941](https://github.com/facebook/react-native/issues/31941)
+
+[https://github.com/facebook/metro/issues/686](https://github.com/facebook/metro/issues/686)
+
+
+
+## 二、Windows用户下的环境配置
+> windows用户下只支持开发Android的应用，请知晓
+>
+
+
+
+## 三、问题收录
+> 主要是Windows下的问题比较多，但是最主要的问题是网络速度问题，和热编译问题，
+>
+
+### 1. 网络速度问题
+> 主要问题是SDK下载非常慢的问题 这里我们放到了一个文件夹📂下，把Android Stuido安装好之后，找到SDK
+>
+> 配置的目录（就是Mac安装SDk配置的页面）有它的SDK目录，把共享资源下的SDK解压下来，重启Android Studio 它就能自动去扫描您的SDK了
+>
+
+文件夹：
+
+### 2. 热编译问题
+> 目前公司的电脑 台式机 Windows 是连接不到 对应的6x网段的，但是要获得热编译的效果让手机 开发的时候连接到你的Node服务器传输热编译的代码，就必须要连接，所以目前为止Windows 环境下是无法热编译，但是可以打包然后安装，（请不要尝试使用什么其他虚拟化方案，公司内部全部会断开）
+>
+
+### 3. 那？window开发凉凉了？
+> 基本上是这样的了，但是！有解决方案，可以试一下用你Expo-cli来让RN运行到Web端上，开发和实践你的小Demo😁
+>
+
+[新一代脚手架Expo](https://docs.expo.dev/workflow/expo-cli/#installation)
+
+
+
+
+
+## <font style="color:#F5222D;">四、关于M1芯片的问题 重要！</font>
+
+
+> 如果您的Mac设备不是M1芯片，实际测试 安装以上步骤没有发现问题，如果你的设备是M1芯片那么，在官方的issues下有两个解决方案
+>
+
+### 1. 不要用 use_flipper 去编译
+源地址[https://github.com/facebook/react-native/issues/31438](https://github.com/facebook/react-native/issues/31438)
+
+```shell
+1. Delete node_modules
+2. Delete Podfile.lock and Pods/ folder
+3. update Pod file and comment use_flipper() #use_flipper!()
+4. Install node dependencies with npm install
+5. Install pod dependencies with pod install in ios folder.
+6. yarn run ios
+```
+
+
+
+### 2. 指定  use_flipper 版本再去编译
+详细地址：[https://github.com/aiba/react-native-m1](https://github.com/aiba/react-native-m1)
+
+### 3. 额外的处理 （更加详细的M1芯片兼容处理方案）
+还有个情况是安装的时候发生的错误 ，你可能需要参考这个  [https://github.com/facebook/react-native/issues/31941](https://github.com/facebook/react-native/issues/31941)
+
+总的处理步骤如下
+
+    1. 删除node_modules
+    2. 删除Podfile.lock and Pods/ folder
+    3. 对Podfile添加如下设置
+
+
+
+```shell
+++++
+  post_install do |installer|
+      installer.aggregate_targets.each do |aggregate_target|
+        aggregate_target.user_project.native_targets.each do |target|
+          target.build_configurations.each do |config|
+            config.build_settings['LIBRARY_SEARCH_PATHS'] = ['$(SDKROOT)/usr/lib/swift', '$(inherited)']
+          end
+        end
+        aggregate_target.user_project.save
+      end
+    react_native_post_install(installer)
+  end
+end
+```
+
+## 五、关于Xcode的问题
+主要的问题还是开发的时候问题和调试 ，查找Ios系统错误的方式，
+
+#### 1. 项目的Id被占了
+您可以参考这个文档，把Bundle identifer改一下就好了
+
+[https://blog.csdn.net/qq_31337641/article/details/78401465](https://blog.csdn.net/qq_31337641/article/details/78401465)
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1630470909938-3339dd09-2ae4-4ea7-9939-b2c082f878fc.png)
+
+
+

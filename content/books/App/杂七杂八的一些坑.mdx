@@ -1,0 +1,60 @@
+---
+title: "React Native 开发常见问题与解决方案"
+date: "2024-12-19"
+summary: "汇总了React Native开发过程中遇到的常见问题，包括Git推送、路径别名配置、图标编译、useEffect报错以及字体大小限制等问题的原因分析和解决方案。"
+status: "completed"
+tech: ["React Native", "Git", "JavaScript"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "App"
+---
+
+> 此处描述了 一些第三方组件库的一些坑，你如果遇到了同类似的问题可以来这研究一下
+>
+
+**<u><font style="color:#F5222D;">注意</font></u>****<u><font style="color:#F5222D;">📢</font></u>****<u><font style="color:#F5222D;">一个原则，遇到问题能Google 绝对不要biying 能biying绝对不要百度，当然遇到问题第一反应就是去看官方的issues</font></u>**
+
+
+
+# 汇总一览表
+ 
+
+<font style="color:rgb(36, 41, 47);"></font>
+
+| 序号 | 问题描述 | 原因 | 解决方案 |
+| --- | --- | --- | --- |
+| 0 | git 没有办法推送上远程 | Git远程仓库 和本地仓库么有同步 | [https://blog.csdn.net/qq_44565971/article/details/95529563](https://blog.csdn.net/qq_44565971/article/details/95529563) |
+| 1 | 如何配置RN的@路径别名呢？ | 需要使用路径别名，而不是../../../ | [https://www.jianshu.com/p/e81fb46eb83f](https://www.jianshu.com/p/e81fb46eb83f) |
+| 2 | IOS设备上 eact-native-vector-icons 编译不出来 | 不熟悉 ios开发流程导致 | 本上只需要第一个步骤 大部分情况下是完全没有其他问题了[https://github.com/oblador/react-native-vector-icons](https://github.com/oblador/react-native-vector-icons)，IOS平台设备 只需要旋转一个手动方式引入就好了 <font style="color:rgb(36, 41, 47);">Option: Manually 。Android设备同理，按照第一个  Option: With Gradle (recommended)走就好了</font><br/><font style="color:rgb(36, 41, 47);">大部分情况下是没有问题的</font> |
+| 3 | useEffect( ()=>{} ,[ /*报错*/ ]  ) | eslint不熟悉 | [https://github.com/facebook/react/issues/14920](https://github.com/facebook/react/issues/14920) |
+
+
+<font style="color:rgb(36, 41, 47);"></font>
+
+<font style="color:rgb(36, 41, 47);"></font>
+
+# 限制RN的字体大小变化
+```javascript
+import {name as appName} from './app.json';
+import App from './src/module/Main';
+import {AppRegistry, Text, TextInput} from 'react-native';
+// 处理 RN 字体 使其不随系统字体大小变化
+if (!Text.defaultProps) {
+  Text.defaultProps = {};
+}
+if (!TextInput.defaultProps) {
+  TextInput.defaultProps = {};
+}
+Text.defaultProps.allowFontScaling = false;
+TextInput.defaultProps.allowFontScaling = false;
+
+
+AppRegistry.registerComponent(appName, () => App);
+```
+
+
+
+
+
+
+
