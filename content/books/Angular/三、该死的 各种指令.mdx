@@ -1,0 +1,1135 @@
+---
+title: "Angular 指令与模板深度解析"
+date: "2024-06-17"
+summary: "全面讲解 Angular 指令系统，包括双向绑定、结构型指令、属性型指令、模板引用变量、管道操作符以及组件投影等核心概念，配合实际代码示例深入理解 Angular 模板机制。"
+status: "completed"
+tech: ["Angular", "Directives", "Templates"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Angular"
+---
+
+# 指令
+> 在ng中除去基本的语法之外 对于模板 template来说 最大一块内容就是指令了
+>
+
+## 基本的双向绑定
+> 基本的双向绑定和Vue实际上也差不多, 它的写法如下面这样, 这里我们结合 两个父子组件来说明 如何做 双向绑定 核心要点就是**<font style="color:#F5222D;"> [ (  ) ] = event  至于具体的工作原理 实际上就是output input + emit 官方文档有详细的</font>**[**解释**](https://angular.cn/guide/two-way-binding)
+>
+
+```typescript
+# son 组件
+import { Component, OnInit, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
+
+@Component({
+  selector: 'app-son',
+  template: `
+    <div>
+    <button class="btn btn-danger" (click)="dec()" title="smaller">-</button>
+    <button class="btn btn-primary" (click)="inc()" title="bigger">+</button>
+    <label [style.font-size.px]="size">FontSize: {{size}}px</label>
+    </div>
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush,  // 这是一种 变更检测 的策略，你...无脑加上就好了
+  styles: [
+  ]
+})
+export class SonComponent implements OnInit {
+  @Input()  size: number | string;
+  // 想要用双向绑定语法，output变量名就一定是输入属性名加上Change
+  @Output() sizeChange = new EventEmitter<number>();
+
+  constructor() {}
+  ngOnInit(): void {}
+
+  dec() { this.resize(-1); }
+  inc() { this.resize(+1); }
+  resize(delta: number) {
+    this.size = Math.min(40, Math.max(8, +this.size + delta));
+    this.sizeChange.emit(this.size);
+  }
+}
+
+
+# father 组件
+import { Component, OnInit } from '@angular/core';
+
+@Component({
+  selector: 'app-father',
+  template: `
+   <app-son [(size)] = "fontSizePx"></app-son>
+   <button class="btn btn-primary"  (click) ="getValue()" title="bigger">getValue</button>
+  `,
+  styles: [
+  ]
+})
+export class FatherComponent implements OnInit {
+
+  fontSizePx = 12;
+
+  getValue(value:any) {
+    console.log(this.fontSizePx);
+  }
+
+  constructor() {}
+
+  ngOnInit(): void {}
+
+
+}
+
+```
+
+## 表单中的双向绑定
+> 话不多说 直接看 代码Code [官方文档](https://angular.cn/api/forms/NgModel)
+>
+
+```typescript
+# 首先 ng 中实现双向绑定 需要使用一个 叫做 “指令（准确来说 这里要使用的 内置指令）”的东西。ngModel
+# 前面就说过 如果一个 moduel 要使用一些 “不属于它的功能”的时候 需要引入 外部的依赖 并且放到 
+imports 数组中，所以 第一步 需要加入一个FormsModule 这样 ngModel 这个 指令 才能生效
+
+# app.moduel.ts
+import { FormsModule } from '@angular/forms'
+++++
+@NgModule({
+++++
+  imports: [
+    BrowserModule,  
+    AppRoutingModule,
+    FormsModule // 重点！
+  ], 
+++++
+})
+export class AppModule { }
+
+# demo.compnents.ts
+import { Component, OnInit } from '@angular/core';
+
+@Component({
+  selector: 'app-family',
+  template: `
+    <input [(ngModel)]="name" #ctrl="ngModel" required>
+      
+    <p>Value: {{ name }}</p>
+    <p>Valid: {{ ctrl.valid }}</p>
+    
+    <button (click)="setValue()">Set value</button>
+  `,
+  styles: [
+  ]
+})
+export class FamilyComponent implements OnInit {
+  
+  name: string = '';
+
+  constructor() { }
+
+  ngOnInit(): void {
+  }
+
+  setValue() {
+    this.name = 'Nancy';
+  }
+}
+
+// 实际上从本质来说 [( ngModel )] 指令是 这个方式的上层封装
+<input [(ngModel)]="name" /> 
+上面这行代码相当于： 
+<input [value]="name" (input)="name = $event.target.value" />
+ 
+// 如果说你想在form表单中使用 ngModel请看下面的示例代码
+  
+import { Component, OnInit } from '@angular/core';
+import {NgForm} from '@angular/forms';
+
+@Component({
+  selector: 'app-family',
+  template: `
+  <form>
+    <input [(ngModel)]="value" name="name" />
+    <input [(ngModel)]="value" [ngModelOptions]="{ standalone: true }" />
+  </form>
+  `,
+  styles: [
+  ]
+})
+export class FamilyComponent implements OnInit {
+  
+  name: string = '';
+
+  constructor() { }
+
+  ngOnInit(): void {
+  }
+
+}
+
+```
+
+## NgIf
+1. 我们先来看基本的使用 和语法糖
+
+```typescript
+import { Component, OnInit } from '@angular/core';
+import {NgForm} from '@angular/forms';
+
+@Component({
+  selector: 'app-family',
+  template: `
+    <div *ngIf="condition">Content to render when condition is true.</div>  
+    <button class="btn btn-primary" (click)="condition = !condition" title="bigger">change</button>
+  
+    <!--语法糖 我们一般怎么写
+      ng-template是一块内嵌模板 类型 TemplateRef-->
+    <ng-template [ngIf]="condition">
+      <div>Content to render when condition is true.</div>
+    </ng-template>
+
+    <!--下面的else语法 注意此处的 elseBlock 并不是某个boolean 而是ng-template
+    的一引用-->
+    <div *ngIf="condition; else elseBlock">condition为真时显示</div>
+    <ng-template #elseBlock>
+      <p>condition为假时显示</p>
+    </ng-template>
+    <ng-template #thenBlock>condition为true时显示</ng-template>
+  `,
+  styles: [
+  ]
+})
+export class FamilyComponent implements OnInit {
+  
+  condition = true;
+
+  constructor() { }
+
+  ngOnInit(): void {
+  }
+
+}
+
+```
+
+上面就是 一种 隐式 的使用templateRef ，下面演示怎么用组件中的变量TemplateRef类型 [请看文档](https://angular.cn/api/core/TemplateRef)
+
+```typescript
+import { Component, OnInit, ChangeDetectionStrategy, 
+        ViewChild, TemplateRef, AfterViewInit } from '@angular/core';
+
+@Component({
+  selector: 'app-family',
+  template: `
+  <button class="btn btn-primary" (click)="condition = !condition">toggle block</button>
+  <p *ngIf="condition else elseBlocks">{{ condition }} === true 时显示</p>
+  <ng-template #firstTpl>
+    <p>{{ condition }} === false 时显示</p>
+  </ng-template>
+  `,
+  styles: [
+  ]
+})
+export class FamilyComponent implements OnInit {
+  elseBlocks: TemplateRef<any> = null;
+  @ViewChild('firstTpl', {static: true}) primaryBlock: TemplateRef<any> = null;
+  // 先不要管这个语法 你照着写就是了，后续会慢慢的详细的介绍
+  condition = false;
+
+  constructor() { }
+
+  ngOnInit(): void {
+    console.log('ngOnInit', this.primaryBlock);
+    this.elseBlocks = this.primaryBlock;
+  }
+
+}
+
+```
+
+## NgSwitch
+```typescript
+import { Component, OnInit, ChangeDetectionStrategy, ViewChild, TemplateRef, AfterViewInit } from '@angular/core';
+
+@Component({
+  selector: 'app-family',
+  template: `
+      <p>
+      <input 
+        type="radio" 
+        name="fruit" 
+        value="apple" 
+        id="apple" 
+        [(ngModel)]="fruit" />
+      <label for="apple">🍎</label>
+    </p>
+    <p>
+      <input 
+        type="radio" 
+        name="fruit" 
+        value="pear" 
+        id="pear" 
+        [(ngModel)]="fruit" />
+      <label for="pear">🍐</label>
+    </p>
+    <p>
+      <input 
+        type="radio" 
+        name="fruit" 
+        value="grape" 
+        id="grape" 
+        [(ngModel)]="fruit" />
+      <label for="grape">🍇</label>
+    </p>
+    <p>
+      <input 
+        type="radio" 
+        name="fruit" 
+        value="other" 
+        id="other"
+         [(ngModel)]="fruit" />
+      <label for="other">other</label>
+    </p>
+
+    selected fruit: {{ fruit }}
+
+    <div class="content" [ngSwitch]="fruit">
+      <p *ngSwitchCase="'apple'">这是 苹果</p>
+      <p *ngSwitchCase="'pear'">这是 梨</p>
+      <p *ngSwitchCase="'grape'">这是 葡萄</p>
+      <p *ngSwitchDefault>啥都不是</p>
+    </div>
+  `,
+  styles: [
+  ]
+})
+export class FamilyComponent implements OnInit {
+  fruit = '';
+  condition = false;
+
+  constructor() { }
+
+  ngOnInit(): void {
+  }
+
+}
+
+```
+
+## NgFor
+> 这个NgFor ，
+>
+
+最基础的使用 
+
+```typescript
+import { Component, OnInit } from '@angular/core';
+const Heros = [
+  {
+    id: 'hero_0',
+    name: '盖伦'
+  },
+  {
+    id: 'hero_1',
+    name: '赵信'
+  },
+  {
+    id: 'hero_2',
+    name: '嘉文'
+  },
+  {
+    id: 'hero_3',
+    name: '易大师'
+  },
+  {
+    id: 'hero_3',
+    name: '泰达米尔'
+  }
+];
+interface Hero {
+  id: string;
+  name: string;
+}
+
+@Component({
+  selector: 'app-family',
+  template: `
+    <p>
+      add hero：
+      <button class="btn btn-info" (click)="reset()">reset</button>
+    </p>
+    <ul>
+      <li 
+        *ngFor="let item of heros;  trackBy: trackByHero" 
+        [style.color]="item.id === 'hero_2' ? 'orange' : '#333'">{{ item.name }}</li>
+    </ul>
+  `,
+  styles: [
+  ]
+})
+export class FamilyComponent implements OnInit {
+  heros: Hero[] = Heros;
+  constructor() { }
+  ngOnInit(): void {
+  }
+  reset() {
+    this.heros = [
+      {
+        id: 'hero_4',
+        name: '盖伦4'
+      },
+      {
+        id: 'hero_5',
+        name: '赵信5'
+      },
+      {
+        id: 'hero_2',
+        name: '嘉文'
+      },
+      {
+        id: 'hero_6',
+        name: '易大师6'
+      },
+      {
+        id: 'hero_7',
+        name: '泰达米尔7'
+      }
+    ];
+  }
+
+  // trackBy接收一个函数，返回 NgFor 应该跟踪的值（比如id），
+  // 这样刷新列表时，id相同的dom不会触发更新
+  trackByHero(hero: Hero): string {
+    return hero.id;
+  }
+}
+
+```
+
+我们来看看更多的扩展字段
+
+| 参数 | 含义 |
+| --- | --- |
+| <font style="color:rgb(36, 41, 47);">$implicit: T：</font> | <font style="color:rgb(36, 41, 47);">迭代目标（绑定到ngForOf）中每个条目的值。</font> |
+| <font style="color:rgb(36, 41, 47);">ngForOf: NgIterable</font> | <font style="color:rgb(36, 41, 47);">迭代表达式的值。当表达式不局限于访问某个属性时，这会非常有用，比如在使用 async 管道时（userStreams | async）</font> |
+| <font style="color:rgb(36, 41, 47);">index: number</font> | <font style="color:rgb(36, 41, 47);">可迭代对象中当前条目的索引。</font> |
+| count：number | <font style="color:rgb(36, 41, 47);">可迭代对象的长度。</font> |
+| <font style="color:rgb(36, 41, 47);">first: boolean</font> | <font style="color:rgb(36, 41, 47);">如果当前条目是可迭代对象中的第一个条目则为 true。</font> |
+| <font style="color:rgb(36, 41, 47);">last: boolean</font> | <font style="color:rgb(36, 41, 47);">如果当前条目是可迭代对象中的最后一个条目则为 true。</font> |
+| <font style="color:rgb(36, 41, 47);">even: boolean</font> | <font style="color:rgb(36, 41, 47);">如果当前条目在可迭代对象中的索引号为偶数则为 true。</font> |
+| <font style="color:rgb(36, 41, 47);">odd: boolean</font> | <font style="color:rgb(36, 41, 47);">如果当前条目在可迭代对象中的索引号为奇数则为 true。</font> |
+
+
+```typescript
+import {Component} from '@angular/core';
+@Component({
+  selector: 'app-switch',
+  template: `
+    <ul>
+      <li
+        *ngFor="
+        let item of heros; 
+        index as i 
+				count as len;
+        let ev = even; 
+        let od = odd; 
+        let f = first; 
+        let l = last 
+        trackBy: trackByHero"
+        [class.even]="ev"
+      	[class.odd]="od">
+        
+        <p>first: {{ f }} -- last: {{ l }}</p>
+        <p>name: {{ item.name }}</p>
+        <p>length: {{ len }}</p>
+        <p>index: {{ i }}</p>
+        <hr />
+      </li>
+    </ul>
+  `,
+    styles: [`
+    .even {
+      color: #82fa54;
+    }
+
+    .odd {
+      color: #698efa;
+    }
+  `]
+})
+export class SwitchComponent {
+  heros: Hero[] = Heros;
+  trackByHero(hero: Hero): string {
+    return hero.id;
+  }
+}
+```
+
+
+
+## 模板引用变量
+所谓的模板引用变量实际上有点类似，React中的额Ref（如果你不懂React请忽略），它的作用是可以拿到一些东西的引用，比如dom 、指令、组件、元素等。它的写法非常的简单
+
+```typescript
+<input #phone placeholder="phone number" /> 
+  // 这样也是可以的
+<input ref-phone placeholder="phone number" /> 
+  
+<button (click)="callPhone(phone.value)">Call</button>
+
+// 这的callPhone(phone.value)里的phone 就是上面的input这个DOM原素
+```
+
+
+
++ 它有下面的一些规则
+
+1.如果是组件上声明 # 就是 获取组件实例
+
+2.如果是HTML上声明 # 就是 获取引用元素
+
+3.如果是<ng-template>上声明 # 就是 TemplatRef
+
+4.如果#左边指定了一个名字，就是引用元素上具备这个名字的指令/组件
+
+```typescript
+#var="ngModel" 
+
+如果是TemplateRef 你可以这样获得它
+@ViewChild('firstTpl', {static: true}) primaryBlock: TemplateRef<any> = null;
+```
+
++ 它可以和NgForm结合
+
+```typescript
+<form #itemForm="ngForm" (ngSubmit)="onSubmit(itemForm)">
+  <label for="name">Name</label>
+  <input type="text" id="name" class="form-control" name="name" ngModel required />
+  <button type="submit">Submit</button>
+</form>
+
+<div [hidden]="!itemForm.form.valid">
+  <p>{{ submitMessage }}</p>
+</div>
+
+// itemForm出现了三次
+// 如果没有ngForm的话，那么这个itemForm就是form这个DOM 如果有了就是这个 NgFrom指令的引用了
+// 有了这个引用就能拿它做很多NgFrom上的事情了 ，比如valid
+
+
+
+
+```
+
++ 你应该还需呀小心它的作用域
+
+```typescript
+// 总的来说，如果你写成这样
+<input *ngIf="true" #ref2 type="text" [(ngModel)]="secondExample" />
+<span>Value: {{ ref2?.value }}</span> <!-- doesn't work -->
+
+// 或则这样那么就上有问题的！
+<ng-container *ngFor="let i of [1,2]">
+  <input #ref type="text" [value]="i" />
+</ng-container>
+{{ ref.value }}
+
+// 第一个上ref2不一定能获取到你的ref2 因为它前面有一个*ngIf
+// 第二个 由于*ngForm把 这个ng-conotaiern实例化了两次，导致不知道到底是哪一个
+
+```
+
+  
+
+
+## 模板运算符
+所谓的模板运算符就是一些在模板上的特殊语法，他们具备特殊的功能，比如pipe   
+
+
+### 管道Pipe基础使用
+```typescript
+// 比如下面的这个最简单的例子 它格式化了日期和事件
+<p>The hero's birthday is {{ birthday | date }}</p>
+
+// 
+ birthday = new Date(1988, 3, 15); 
+
+
+```
+
+### 管道参数和串联  
+
+```typescript
+ 这里是原数据 | 这里是处理管道
+
+ // 参数在处理管道这里加，譬如
+{{ amount | currency:'EUR' }}  // 会把 amount 转换成欧元。
+{{ amount | currency:'EUR':'Euros '}} 
+// 会把第二个参数（字符串 'Euros '）添加到输出字符串中
+// 下面的例子很简单易懂 
+<p>The hero's birthday is {{ birthday | date:"MM/dd/yy" }} </p>
+// 参数也可以从 组件中通过函数返回比如
+  <p>The hero's birthday is {{ birthday | date:format }}</p>
+  get format()   { return this.toggle ? 'shortDate' : 'fullDate'; }
+
+// 受到FP编程方式的影响管道可以 克里化 一个一个串联起来用
+{{  birthday | date:'fullDate' | uppercase}}  // 从左到右的执行
+
+
+```
+
+### 自定义管道
+
+
+<font style="color:rgb(255, 255, 255);background-color:rgb(51, 51, 51);"> </font>[ng generate pipe](https://angular.cn/cli/generate#pipe)<font style="color:rgb(255, 255, 255);background-color:rgb(51, 51, 51);"> 命令会自动注册该管道。</font>
+
+```typescript
+// 自定义管道非常的简单
+ @Pipe 装饰器应用到这个类上。就好了，比如下面👇 （主要是实现PipeTransform 接口和重写
+transform接口
+）
+
+
+import { Pipe, PipeTransform } from '@angular/core';
+@Pipe({name: 'exponentialStrength'})
+export class ExponentialStrengthPipe implements PipeTransform {
+  transform(value: number, exponent = 1): number {
+    return Math.pow(value, exponent);
+  }
+}
+
+// 使用 
+<p>Super power boost: {{2 | exponentialStrength: 10}}</p>
+ 
+```
+
+### 关于管道的变更检测  
+
+
+
+```typescript
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-power-boost-calculator',
+  template: `
+    <h2>Power Boost Calculator</h2>
+    <label for="power-input">Normal power: </label>
+    <input id="power-input" type="text" [(ngModel)]="power">
+    <label for="boost-input">Boost factor: </label>
+    <input id="boost-input" type="text" [(ngModel)]="factor">
+    <p>
+      Super Hero Power: {{power | exponentialStrength: factor}}
+    </p>
+  `,
+  styles: ['input {margin: .5rem 0;}']
+})
+export class PowerBoostCalculatorComponent {
+  power = 5;
+  factor = 1;
+}
+
+// 从上面的例子我们可以知道，如果管道有绑定，那么意味着，如果值变了 那么管道就会重新执行
+
+
+// 但是它是这么做到的，如果我不希望它变怎么半？ 对于管道来说默认的情况下都是：”纯的pure“默
+// 人只能做值检测和引用检测，dep检测没有处理 也就是说push数组不会触发更新，如果你需要
+// 怎么做的时候请使用 [...] , or {...}
+
+// 如果我说有副作用的管道怎么办？官方知道是把 参数pure变成fasle就好了，譬如下面
+// 基础类 （默认纯的）
+import { Pipe, PipeTransform } from '@angular/core';
+
+import { Hero } from './heroes';
+
+@Pipe({ name: 'flyingHeroes' })
+export class FlyingHeroesPipe implements PipeTransform {
+  transform(allHeroes: Hero[]) {
+    return allHeroes.filter(hero => hero.canFly);
+  }
+}
+
+// 派生的非纯的
+@Pipe({
+  name: 'flyingHeroesImpure',
+  pure: false
+})
+export class FlyingHeroesImpurePipe extends FlyingHeroesPipe {}
+
+
+// 如果你的管道依赖的值说 observe的，那么需要注意了 ，你需要做的事情是 使用 async 内置管道
+// 处理数据
+
+import { Component } from '@angular/core';
+
+import { Observable, interval } from 'rxjs';
+import { map, take } from 'rxjs/operators';
+
+@Component({
+  selector: 'app-hero-async-message',
+  template: `
+    <h2>Async Hero Message and AsyncPipe</h2>
+    <p>Message: {{ message$ | async }}</p>
+    <button (click)="resend()">Resend</button>`,
+})
+export class HeroAsyncMessageComponent {
+  message$: Observable<string>;
+
+  private messages = [
+    'You are my hero!',
+    'You are the best hero!',
+    'Will you be my hero?'
+  ];
+
+  constructor() {
+    this.message$ = this.getResendObservable();
+  }
+
+  resend() {
+    this.message$ = this.getResendObservable();
+  }
+
+  private getResendObservable() {
+    return interval(500).pipe(
+      map(i => this.messages[i]),
+      take(this.messages.length)
+    );
+  }
+}
+```
+
+### 使用非纯管道缓存Http数据( 每个管道都将会是一个实例 )
+```typescript
+// 使用非纯管道可以缓存http数据
+// 每当组件运行变更检测时就会调用非纯管道，这可能每隔几毫秒就运行一次。为避免出现性能问题，
+//只有当请求的 URL 发生变化时才会调用该服务器（如下例所示） 
+
+import { HttpClient } from '@angular/common/http';
+import { Pipe, PipeTransform } from '@angular/core';
+
+@Pipe({
+  name: 'fetch',
+  pure: false
+})
+export class FetchJsonPipe implements PipeTransform {
+  private cachedData: any = null;
+  private cachedUrl = '';
+
+  constructor(private http: HttpClient) { }
+
+  transform(url: string): any {
+    if (url !== this.cachedUrl) {
+      this.cachedData = null;
+      this.cachedUrl = url;
+      this.http.get(url).subscribe(result => this.cachedData = result);
+    }
+
+    return this.cachedData;
+  }
+}
+
+// 使用
+
+{
+template: `
+    <h2>Heroes from JSON File</h2>
+
+    <div *ngFor="let hero of ('assets/heroes.json' | fetch) ">
+      {{hero.name}}
+    </div>
+
+    <p>Heroes as JSON:
+      {{'assets/heroes.json' | fetch | json}}
+    </p>
+`
+}
+
+```
+
+## 属性型指令
+属性型指令，可以用来改变DOM外观和行为
+
+### 最简单的使用
+```typescript
+// 使用非常的容易
+import {Directive, ElementRef, EventEmitter, HostListener, Input, Output} from '@angular/core';
+
+@Directive({
+  selector: '[appHighlight]'
+})
+export class HighlightDirective {
+  @Input('appHighlight') highlightColor: string;  // @HostListener 能够替你进行事件监听
+  @Output() colorChange = new EventEmitter<string>();
+  constructor(private el: ElementRef) {
+    console.log('appHighlight');
+  }
+  @HostListener('mouseenter') onMouseEnter() {
+    this.highlight(this.highlightColor || 'yellow');
+  }
+
+  @HostListener('mouseleave') onMouseLeave() {
+    this.highlight('');
+  }
+
+  private highlight(color: string) {
+    this.el.nativeElement.style.backgroundColor = color;
+    this.colorChange.emit(color);
+  }
+}
+
+//
+<p [appHighlight]="color">Highlight me!</p>
+
+```
+
+### 我希望展示 <font style="color:rgb(255, 255, 255);background-color:rgb(68, 68, 68);">{{ 1 + 1 }}</font><font style="color:rgb(255, 255, 255);background-color:rgb(48, 48, 48);"> </font>怎么办？  
+
+```typescript
+<p ngNonBindable>This should not evaluate: {{ 1 + 1 }}</p>
+// 请使用系统内置的 ngNonBindable 指令
+```
+
+## 结构型指令  
+
+结构顾名思义它可以更改dom的结构，专门用来干这件事的，比如ngIf ，ngFor ，ngSwitch 都是结构性指令
+
+
+
+```typescript
+// 创建一个结构性指令 这个功能是对NgIf的取反操作 
+import { Directive, Input, TemplateRef, ViewContainerRef } from '@angular/core';
+
+
+@Directive({ selector: '[appUnless]'})
+export class UnlessDirective {
+  private hasView = false;
+
+  constructor(
+    private templateRef: TemplateRef<any>,  // 这个可以帮你获取ng-templaye引用
+    private viewContainer: ViewContainerRef) { } // 这个也是可以帮你获取视图容器
+// 前面的文章中，我们有指出 NgIf的完整写法是就是外面有一层template
+
+  @Input() set appUnless(condition: boolean) {
+    if (!condition && !this.hasView) {
+      this.viewContainer.createEmbeddedView(this.templateRef);
+      this.hasView = true;
+    } else if (condition && this.hasView) {
+      this.viewContainer.clear();
+      this.hasView = false;
+    }
+  }
+}
+// 使用
+<p *appUnless="condition">Show this sentence unless the condition is true.</p>
+```
+
+
+
+## TemplateRef和ViewContainerRef  
+  
+
+前者表示 一个内嵌的模版，它的createEmbeddedVIew可以把它自己附着到一个父试图上
+
+后者表示  可以将一个/多个 视图附着到组件中的容器，在createComponent的时候
+
+```typescript
+import {AfterViewInit, Component, EmbeddedViewRef, OnInit, TemplateRef, ViewChild, ViewContainerRef} from '@angular/core';
+
+@Component({
+  selector: 'app-tpl-container',
+  templateUrl: './tpl-container.component.html'
+})
+export class TplContainerComponent implements OnInit, AfterViewInit {
+  // 获取模板中的元素(组件、ng-template、dom)
+  @ViewChild('box') readonly boxEl: ElementRef;
+  @ViewChild('firstTpl', { read: TemplateRef }) readonly firstTpl: TemplateRef<any>;
+  @ViewChild('secondTpl', { read: TemplateRef }) readonly secondTpl: TemplateRef<any>;
+  @ViewChild('thirdTpl', { read: TemplateRef }) readonly thirdTpl: TemplateRef<any>;
+  @ViewChild('fourthTpl', { read: TemplateRef }) readonly fourTpl: TemplateRef<any>;
+  @ViewChild('freeTpl', { read: TemplateRef }) readonly freeTpl: TemplateRef<any>;
+  @ViewChild('firstContainer', { read: ViewContainerRef, static: true }) readonly firstContain: ViewContainerRef;
+  @ViewChild('secondContainer', { read: ViewContainerRef, static: true }) readonly secondContain: ViewContainerRef;
+  private freeViewRef: EmbeddedViewRef<any>;
+  constructor() {
+    // console.log('constructor');
+  }
+
+  insert(tpl: TemplateRef<any>) {
+    this.firstContain.insert(tpl.createEmbeddedView(null));
+  }
+
+  insertAll() {
+    [this.secondTpl, this.thirdTpl, this.fourTpl].forEach(tpl => {
+      this.firstContain.insert(tpl.createEmbeddedView(null));
+    });
+  }
+
+  getOne() {
+    console.log(this.firstContain.get(2));
+    console.log(this.firstContain.indexOf(this.freeViewRef));
+  }
+
+  insertFree() {
+    this.firstContain.insert(this.freeViewRef, 1);
+  }
+
+  move() {
+    // 不需要事先插入也可以移动(定好位置再插入)
+    this.firstContain.move(this.freeViewRef, 2);
+  }
+
+  move2To4() {
+    const view = this.firstContain.detach(1);
+    this.firstContain.insert(view, 3);
+  }
+
+  move2ToOther() {
+    const view = this.firstContain.detach(1);
+    this.secondContain.insert(view);
+  }
+
+  ngOnInit(): void {
+    // console.log('onInit');
+  }
+
+  ngAfterViewInit(): void {
+    console.log('ngAfterViewInit');
+    this.freeViewRef = this.freeTpl.createEmbeddedView({ $implicit: 'defaultValue', free: 'aa' });
+    // console.log(this.firstTpl);
+    // const viewRef = this.firstTpl.createEmbeddedView(null);
+    // console.log('viewRef', viewRef);
+    /*this.boxEl.nativeElement.appendChild(viewRef.rootNodes[0]);*/
+    setTimeout(() => {
+      this.firstContain.createEmbeddedView(this.firstTpl);
+    }, 0);
+  }
+
+}
+```
+
+```html
+<div class="box" #box>
+  <button class="btn btn-primary mr-1" (click)="insert(secondTpl)">insert second</button>
+  <button class="btn btn-primary mr-1" (click)="insert(thirdTpl)">insert third</button>
+  <button class="btn btn-primary mr-1" (click)="insert(fourthTpl)">insert fourth</button>
+  <button class="btn btn-primary mr-1" (click)="insertAll()">insert all</button>
+  <button class="btn btn-secondary mr-1" (click)="insertFree()">insert free</button>
+  <button class="btn btn-info mr-1" (click)="getOne()">get one</button>
+  <button class="btn btn-success mr-1" (click)="move()">move free</button>
+  <button class="btn btn-success mr-1" (click)="move2To4()">把第二个移动到第四个位置上</button>
+  <button class="btn btn-success" (click)="move2ToOther()">把第二个移动到其他容器中</button>
+  <p>长度：{{ firstContain?.length }}</p>
+</div>
+<ng-template #firstTpl>
+  <p>first tpl content</p>
+</ng-template>
+
+
+<ng-template #secondTpl>
+  <p>第二段template</p>
+</ng-template>
+
+<ng-template #thirdTpl>
+  <p>第三段template</p>
+</ng-template>
+
+<ng-template #fourthTpl>
+  <p>第四段template</p>
+</ng-template>
+
+<ng-template #freeTpl>
+  <p>自由的template</p>
+</ng-template>
+
+<p>
+  first container:
+  <ng-container #firstContainer></ng-container>
+</p>
+
+<hr>
+
+<p>
+  second container:
+  <ng-container #secondContainer></ng-container>
+</p>
+```
+
+## 
+## NgTemplateOutlet指令  
+
+这个东西可以“根据一个提前准备好的templateRef插入内嵌视图”  
+
+
+```typescript
+import { Component, Input, TemplateRef } from '@angular/core';
+@Component({
+  selector: 'app-tpl-outlet',
+  template: `<div>
+               <ng-container *ngTemplateOutlet="render || defaultTpl; context: myContext"></ng-container>
+               <!--      <ng-container [ngTemplateOutlet]="render || defaultTpl" [ngTemplateOutletContext]="myContext"></ng-container>-->
+               
+               <!--   用在ng-template上也可以   -->
+               <!--      <ng-template *ngTemplateOutlet="render || defaultTpl; context: myContext"></ng-template>-->
+               <!--      <ng-template [ngTemplateOutlet]="render || defaultTpl" [ngTemplateOutletContext]="myContext"></ng-template>-->
+             </div>
+            <ng-template #customTpl let-def let-val="value">
+              <b>customTpl rendered! def: {{ def }}; value: {{ val }}</b>
+            </ng-template>`
+})
+export class TplOutletComponent  {
+  @Input () render: TemplateRef<any>;
+  myContext = {$implicit: 'World', value: 'Svet'};
+
+}
+
+//  在上下文对象中使用 $implicit 这个 key 会把对应的值设置为默认值。
+```
+
+
+
+调用TplOutletComponent传入自定义的dom
+
+
+
+```typescript
+import { Component, Input } from '@angular/core';
+@Component({
+  selector: 'app-root',
+  template: `<app-tpl-outlet [render]="render"></app-tpl-outlet>
+             <ng-template #render let-value="value">
+               <p><b>自定义的dom -- {{ value }}</b></p>
+             </ng-template>
+          `
+})
+export class ItemDetailComponent  {
+
+}
+```
+
+## 组件投影  
+
+这个东西就像Vue中的插槽 或则React中的Chilend一样, 它有下面几种变体 
+
+```typescript
+
+// 最基础使用  单投影
+@Component({
+  selector: 'app-zippy-basic',
+  template: `
+    <h2>Single-slot content projection</h2>
+    <ng-content></ng-content>
+  `
+})
+export class ZippyBasicComponent {}
+
+<app-zippy-basic>
+  <p>Is content projection cool?</p>  // 这个将会显示在ng-content 中
+</app-zippy-basic>
+
+// 多插槽 投影
+@Component({
+selector: 'app-zippy-multislot',
+template: `
+  <h2>Multi-slot content projection</h2>
+
+  Default:
+  <ng-content></ng-content>
+
+  Question:
+  <ng-content select="[question]"></ng-content>
+`
+})
+export class ZippyMultislotComponent {}
+
+// 使用 question 属性的内容将投影到带有 select=[question] 属性的 <ng-content> 元素。
+<app-zippy-multislot>
+  <p question>
+    Is content projection cool?
+  </p>
+  <p>Let's learn about content projection!</p>
+</app-zippy-multislot>
+
+// 带条件的 这个比较的复杂
+1.在continer中接受ng-template
+2.给container包裹一层判断（既你自己的判断逻辑）
+3.用template把内容拿好
+4.如何关联进来？使用自定义指令 
+5.使用@contentChild获取此投影的模板
+
+
+@Component({
+  selector: 'app-example-zippy',
+  template: `
+  <ng-content></ng-content>
+  <div *ngIf="expanded" [id]="contentId">
+      <ng-container [ngTemplateOutlet]="content.templateRef"></ng-container>
+  </div>
+  `,
+})
+export class ZippyComponent {
+  contentId = `zippy-${nextId++}`;
+  @Input() expanded = false;
+  @ContentChild(ZippyContentDirective) content!: ZippyContentDirective;
+}
+
+
+@Directive({
+  selector: '[appExampleZippyContent]',
+})
+export class ZippyContentDirective {
+  constructor(public templateRef: TemplateRef<unknown>) {}
+}
+
+let nextId = 0;
+
+@Directive({
+  selector: 'button[appExampleZippyToggle]',
+})
+export class ZippyToggleDirective {
+  @HostBinding('attr.aria-expanded') ariaExpanded = this.zippy.expanded;
+  @HostBinding('attr.aria-controls') ariaControls = this.zippy.contentId;
+  @HostListener('click') toggleZippy() {
+    this.zippy.expanded = !this.zippy.expanded;
+  }
+  constructor(public zippy: ZippyComponent) {}
+}
+
+
+//在html上的呈现
+
+<app-example-zippy>
+  <button appExampleZippyToggle>Is content project cool?</button>
+  <ng-template appExampleZippyContent>
+    It depends on what you do with it.
+  </ng-template>
+</app-example-zippy>
+
+
+
+```
+
+## ViewChild和ViewChildren  
+
+
+
+## ContentChild和ContentChildren
+
+
+
+
+# 生命周期
+
+
+
+
+# 变更检测
+
+
+# 组件样式
+
+
+# 高级内容
+
+
+## 动态组件
+
+
+## 分配模块

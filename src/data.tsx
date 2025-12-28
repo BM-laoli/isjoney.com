@@ -802,7 +802,26 @@ export const DATA = {
           ],
         }
       },
-      
+      {
+        slug: "Angular", // 固定为 Angular
+        metadata: {
+          title: "Angular 现代 Web 开发实战",
+          summary: "深度解析 Angular 框架核心，涵盖 TypeScript 基础、组件化架构、DI 依赖注入、RxJS 响应式编程、路由守卫及表单处理。结合听书网实战项目，掌握 NgRx 状态管理与 Enterprise 级应用开发。",
+          tags: ["Angular", "TypeScript", "RxJS", "Web"],
+          image: "https://placehold.co/322x172/fef2f2/991b1b.png?text=Angular",
+          status: "Mar. 2024 - Mar. 2025",
+          href: "/books/Angular/一、项目的基础目录结构",
+          authors: "Joney",
+          video: "",
+          links: [
+            {
+              type: "Github",
+              href: "https://github.com/BM-laoli",
+              icon: <Icons.github className="size-3" />,
+            },
+          ],
+        }
+      }
     ],
     // 配置项 Books 目录
     booksContent: {
@@ -1400,6 +1419,62 @@ export const DATA = {
               slug: "Go/研发流程设计（下）：如何管理应用的生命周期？"
             }
           ]
+        }
+      ],
+      Angular: [
+        {
+          title: "第一章 （基础的一些小的语法）",
+          slug: "Angular/第一章 （基础的一些小的语法）",
+          children: [
+            {
+              title: "一、项目的基础目录结构",
+              slug: "Angular/一、项目的基础目录结构"
+            },
+            {
+              title: "二、基础模板语法",
+              slug: "Angular/二、基础模板语法"
+            },
+            {
+              title: "三、该死的 各种指令",
+              slug: "Angular/三、该死的 各种指令"
+            }
+          ]
+        },
+        {
+          title: "第二章 （DI）",
+          slug: "Angular/第二章 （DI）"
+        },
+        {
+          title: "第三章（RXJS）",
+          slug: "Angular/第三章（RXJS）"
+        },
+        {
+          title: "第四章（路由守卫 & 各种守卫）",
+          slug: "Angular/第四章（路由守卫 & 各种守卫）"
+        },
+        {
+          title: "第五章 （各种表单）",
+          slug: "Angular/第五章 （各种表单）"
+        },
+        {
+          title: "第六章 （Hero小Demo）",
+          slug: "Angular/第六章 （Hero小Demo）"
+        },
+        {
+          title: "第七章（动画在ng中如何实现）",
+          slug: "Angular/第七章（动画在ng中如何实现）"
+        },
+        {
+          title: "第八章（实战-听书网）",
+          slug: "Angular/第八章（实战-听书网）"
+        },
+        {
+          title: "第九章（ngrx）",
+          slug: "Angular/第九章（ngrx）"
+        },
+        {
+          title: "第十章（其它扩展）",
+          slug: "Angular/第十章（其它扩展）"
         }
       ]
       //更多

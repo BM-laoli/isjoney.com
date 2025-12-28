@@ -1,0 +1,91 @@
+---
+title: "React Hook：比较功能控制逻辑实现"
+date: "2024-12-19"
+summary: "实现一个 React Hook，用于管理比较功能的控制逻辑，包括删除操作（单项、分组、全部）、比较功能、标签切换等核心功能。"
+status: "completed"
+tech: ["React", "TypeScript", "Hook"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Angular"
+---
+
+```typescript
+import { useEffect, useState } from "react";
+import { useCompareLocalStorage } from "@b2c-site/www-widgets/dist/index2021";
+
+
+// modal 中的 控制逻辑 delete ( item &  group & all), compare , tabChange
+const useCompareAction = () => {
+
+  const [ activeTabKey, setActiveTabKey ] = useState<number>(0);
+  const [ isLoading, setIsLoading ] = useState<boolean>(true);
+  const [LSCompareData,setLSCompareData]=useState(undefined);
+  const {
+    getCompareStorageSubCateList,
+    removeCompareSubCate,
+    removeItemOfCompareSubCate,
+    clearAllCompareSubCate
+  } = useCompareLocalStorage({maxSelect: 5});
+
+  useEffect(()=>{
+    getData()
+  },[])
+
+  async function getData() {
+    const data =  await getCompareStorageSubCateList();
+    console.log('data',data);
+    // setLSCompareData((prev)=>{
+    //     return _.isEqualWith(data, prev, customizerCompare)?prev:data;
+    // });
+    return data;
+  }
+
+  // delete item from group
+  const deleteItemFromSubCategory = async (item,) => {
+
+    // 场景1 没有这个东西 subCategory
+    // if(){}
+
+    // 场景2 subCategory 的item Number > 1
+
+    // 场景3 subCategory 的item Number = 1
+
+    removeItemOfCompareSubCate(item)
+  };
+
+  // delete group
+  const deleteSubCategory = () => {
+
+  };
+
+  // delete all
+  const clearAll = () => {
+
+  };
+
+  // tabChange
+  const tabChange = () => {
+
+  }
+
+  // eventListener on WindowTabChange 
+  const windowEventTabChange  = () => {
+
+  }
+
+  // windowTab 变化的时候
+
+  return {
+    isLoading,
+    activeTabKey,
+    deleteItemFromSubCategory,
+    deleteSubCategory,
+    clearAll,
+    tabChange,
+  }
+}
+
+export default useCompareAction
+
+```
+

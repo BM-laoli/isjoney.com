@@ -1,0 +1,133 @@
+---
+title: "Angular 入门指南：项目创建、文件结构与第三方库引入"
+date: "2024-12-19"
+summary: "跟随 Angular 官网快速上手，学习项目创建、文件组织结构解析，以及 Bootstrap 和 Moment 等第三方库的多种引入方式。"
+status: "completed"
+tech: ["Angular", "CLI", "Bootstrap"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Angular"
+---
+
+> 本章节说明：入手一个框架 首先嗯就是“用起来”，我们现在跟着官网走一遍，用起来。然后我们来讨论，项目中的文件组织规则和结构浅析 和 第三方库的引用方式
+>
+
+
+
+# 创建一个项目
+首先和官网文档保持一致，先把cli安装上 [官方](https://angular.cn/guide/setup-local),  然后去创建项目就好了( 创建项目的时候 选择“需要rourtiing & 使用Scss” ), 然后你就得到了下面的目录 ，输入命令你就得到了一个可以运行的app
+
+```shell
+
+yarn global add @angular/cli@9
+ 
+sudo ng new myapp 
+
+yarn  start 
+```
+
+创建好得项目目录如下，
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1636864266702-7c2afa41-e237-4fa5-9c83-06d652aa90c4.png)
+
+启动成功之后如下：
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1636864336533-92d401f6-7b47-42e6-8f9e-bb97e0e3f37f.png)
+
+关于 ng new 这个cli命令 这里不详细的展开了， 你可以看这里的文档 [ngCli命令参考](https://angular.cn/cli/new) ，上述的new 命令实际上可以简化成下面的命令,  （不过感觉没必要怎么搞 怎么长 你记得住？）
+
+```shell
+ng new myapp --routing --skip-tests --style scss
+```
+
+
+
+# 关于项目文件夹结构
+> 实际上你可以直接去官方找文档 [官方文档](https://angular.cn/guide/file-structure)，所以这里没有深入介绍的必要了，去看文档吧骚年。这个有个地方需要特别的说明一下：module 是 ng中非常重要的组织方式，在react或者vue中大多都是以“页面” 那个页面在那个地方 那个页面由哪些组件构成，但是在ng中这种思想 并没有 module 重要，我们的页面和组件都是一个一个的module 哪些需要哪里搬，淡化了组件，提供了module 
+>
+
+# 在ng中引入 第三方插件
+> 举个例子🌰 我们现在 引入bootstartp 和 moment, 首先这两个库的 文档 你要去看看哈
+>
+
+ 使用CDN的方法引入
+
+1. 在根文件引入
+
+index.html
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Myapp</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+</head>
+<body>
+  <app-root></app-root>
+</body>
+</html>
+
+```
+
+2. 自接给定html 就好了
+
+app.component.html
+
+```html
+<div class="alert alert-success" role="alert">.谢谢谢谢谢寻想学习</div>
+```
+
+
+
+ 使用CDN的方法引入 骚操作去改Angularjson （改全局）注意：如果你这么干的话 就需要重启 项目哈
+
+1. 先去把文件夹下载到本地 
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1636865801616-e89429ea-552a-4eb0-9f40-90361de7acb6.png)
+
+2. 然后去修改angulaerJson文件
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1636865827575-26668048-6f28-4bce-9205-bc6f4d3964d0.png)
+
+或者你直接写就好了 加到另一个 styles.scss中就好啦
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1636866022541-f0523200-e9ba-4308-a2aa-8a920cf3d044.png)
+
+
+
+ 使用ESModule的方法引入 （推荐） 对于momet 也是一样的使用方式
+
+```shell
+yarn add bootstrap@3
+```
+
+```typescript
+# main.ts 中
+
+import { enableProdMode } from '@angular/core';
+import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import { AppModule } from './app/app.module';
+import { environment } from './environments/environment';
+
+import  'bootstrap';
+if (environment.production) {
+  enableProdMode();
+}
+
+platformBrowserDynamic().bootstrapModule(AppModule)
+  .catch(err => console.error(err));
+
+```
+
+```css
+// styles.scss
+@import "~bootstrap";
+
+```
+
