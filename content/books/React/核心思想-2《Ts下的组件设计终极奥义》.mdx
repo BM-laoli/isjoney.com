@@ -1,0 +1,118 @@
+---
+title: "TypeScript 组件设计实践：Hook 与 Class 组件类型系统"
+date: "2024-12-19"
+summary: "深入探讨 TypeScript 在 React 组件设计中的应用，包括 Hook 类型定义、静态类型检查优势以及 Class 组件类型系统，结合实际代码示例进行讲解。"
+status: "completed"
+tech: ["TypeScript", "React", "Component Design"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "React"
+---
+
+> 该本文描述了 ts下的组件设计的终极奥义，接招吧!少年！
+>
+
+
+
+##  Typescript
+首先我们来看一下计算机语言的两种类型
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1613618694300-012bae60-af19-45ae-9bc3-91cb5741d2ab.png)
+
+<font style="color:#333333;"></font>
+
+了解之后，我们来看看ts是啥？优点是啥？
+
+<font style="color:#333333;">TypeScript是一个很好的工具，是js的超集合，js的写法在ts中完全兼容，而且额外增加了许多静态语言的优点</font>
+
+1. <font style="color:#F5222D;">TypeScript更可靠</font>
+
+与JavaScript相比，TypeScript代码更可靠、更容易重构。这使开发人员可以更轻松地避免错误并进行重写。
+
+类型的定义和编译器的引入，可使你避免掉代码中的大多数愚蠢错误
+
+
+
+2. <font style="color:#F5222D;">TypeScript更清晰</font>
+
+<font style="color:#333333;">显式类型使我们代码可读性更高，所以我们的注意力将会更集中在我们的系统究竟是如何构建的，以及系统的不同部分如何相互作用。在大型系统中，能够在记住上下文的同时抽象出系统的其余部分是很重要的。类型的定义使我们能够做到这一点。</font>
+
+<font style="color:#333333;"></font>
+
+3. <font style="color:#F5222D;">TypeScript和JavaScript实际上是可以互换的，何乐而不为呢？</font>
+
+
+
+4. <font style="color:#F5222D;">静态类型检查可以做到early fail</font>，即你编写的代码即使没有被执行到，一旦你编写代码时发生类型不匹配，语言在编译阶段（解释执行也一样，可以在运行前）即可发现
+
+
+
+5. **<font style="color:#F5222D;">类型就是最好的注释</font>**。静态类型对阅读代码是友好的
+
+## 结合到hook上进行实践
+> 下面的例子主要是使用了ts的静态类型检查的特性
+>
+
+### 首先是基础的三个hook函数的实践
+#### 1.结合 useState
+```jsx
+
+import React from 'react'
+
+type UserInfo = {
+  name: string,
+  age: number,
+}
+
+export const User:React.FC<UserInfo> = ({ name, age }) => {
+  return (
+    <div className="User">
+      <p>{ name }</p>
+      <p>{ age }</p>
+    </div>
+  )
+}
+
+const user = <User name='vortesnail' age={25} />
+      
+      
+// 优点如下
+      1. 根优雅的代码提示
+      2.更安全的程序
+      3.不需要把所有参数都显示地解构
+```
+
+#### 2.结合 useRef
+```jsx
+const countRef = useRef<number>(count) 
+
+// 其余的都是一样的做法，加入类型检查就好了！
+// 以下 是一些小的ts语法
+type ActionType = {  // 定义枚举
+  type: 'reset' | 'decrement' | 'increment'
+}
+
+
+```
+
+### 
+### 我们是否每一个组件都要写type？
+从上面的例子来看，我们是否每一个组件都有必要在文件的内部加入types 外部如果需要应用又该怎么办？一个相对流行的社区解决方案是写到.d.ts文件夹中，需要源码也是如此，比如antd的源码
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1613619969919-1fed9ac0-8f9e-4669-8175-9d9a2f92e92c.png)
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1613620001525-a02e0121-2ace-4f27-acc4-426e278f5243.png)
+
+
+
+## ts结合到class组件上
+了解ts如何结合到class组件上，有利于我们维护一些旧项目，和阅读组件库源代码比如antd中就有很多都是class写法
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1613619542576-36ceed19-35cd-4a59-aed8-d0ae97fe9923.png)
+
+当然更多的ts的集合，需要阅读相关的文档进行学习
+
+
+
+ts的运用不仅仅是在类型检查，只要有想法，想法够多，就能在项目中官方使用，比如函数重载，装饰器，类型构造等......,具体的使用，我们会在分析源码时进行详细的说明
+

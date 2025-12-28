@@ -1,0 +1,732 @@
+---
+title: "React Router 路由管理详解"
+date: "2024-12-19"
+summary: "深入讲解 React Router 的基础使用、路由参数传递、嵌套路由、动态路由配置以及路由守卫等核心概念，结合实际代码示例进行演示。"
+status: "completed"
+tech: ["React", "React Router", "JavaScript"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "React"
+---
+
+> 在这一小节，我们将学习到最重要的两部分核心内容
+>
+> + react-router路由
+> + react-redux状态管理，类似于vuex
+> + 这两个东西都是非常的重要的东西
+>
+
+## react-router    
+> 与vue-router一样，react中也是有router的，接下来我们来学习看看这个到底是怎么操作的
+>
+> 
+>
+
+### 基础的使用
+> 基础的使用非常的简单，我们使用官方推荐的一个库，来进行路由管理
+>
+> + react-router 核心组件
+> + react-router-dom 应用于浏览器端的路由库（单独使用包含了react-router的核心部分）
+> + react-router-native 应用于native端的路由
+>
+
+```shell
+yarn add react-router-dom
+# 或者，不使用 yarn
+npm install react-router-dom
+```
+
+1. 由于最新的react-router更新了，所以不再需要单独的配置
++ Router是所有路由组件共用的底层接口组件，它是路由规则制定的最外层的容器。
++ Route路由规则匹配，并显示当前的规则对应的组件。
++ Link路由跳转的组件
+
+
+
+
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597222200953-bb5c3eba-eb26-4269-863c-8173cc6477c8.png)
+
+小结：如果说我们的应用程序是一座小城的话，那么Route就是一座座带有门牌号的建筑物，而Link就代表了到某个建筑物的路线。有了路线和目的地，那么就缺一位老司机了，没错Router就是这个老司机。
+
+
+
+2. 安装完毕之后我们来使用一下
+
+> 导入三个核心的东西，注意啊我们这里是起别名的
+>
+> ![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597233473738-14778f10-1db7-4187-961a-2af56ebad323.png)
+>
+
+3. 使用Router组件包裹整个应用
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597233513534-3109d212-83df-497c-96e9-12eea3f59b0d.png)
+
+4. 使用link作为点击跳转的（入口）
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597233564056-f54996da-1b32-4110-b0a1-8b17aded72dd.png)
+
+5. 使用Route配置（出口）
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597233571380-12ea7fda-719d-42f8-b733-acdff7505617.png)
+
+> 注意啊，这里的这个这个path就是配置的，component就是指定匹配的时候要显示的路由,link的to和Route的path是要匹配的
+>
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597233662292-79c67478-a7c4-4975-aff0-32c92fc85f63.png)
+
+### 常用组件的说明
+> + 一个React应用中只需要使用一次，除了我们之前说的BrowserRouer我们还有一个HashRouter效果是一样的，只是后面加了一个#符号
+> + Link最终变成a标签，href就变成了to的属性，to也是url里的东西，也是可以更改的，
+> + Route是出口，占位符，path是一个规则，注意如果有一堆Router那么一个Link会去匹配所有的Route的paht直到找到匹配成功为止
+>
+> 
+>
+> 
+>
+> 
+>
+
+### 整个流程到底是什么呢？
+**<font style="color:#F5222D;background-color:#FADB14;">只要rul发生变化，整个路由都会重新匹配一次</font>**
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597234093116-1f2228a2-e21b-4728-998a-b56ec079f4bc.png)
+
+
+
+### 如何实现编程式导航？
+> 非常的简单，我们之前说过React中的prop是一个核心，如果一个组件是被Route占位显示出来的，意味着这个组件内部的prop上就有一个history属性，通过它就能完成url改变 ，实现导航
+>
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597234247548-59eef9c7-1dae-44c3-ae57-83ded306c5ef.png)
+
+history有相关的如下的一些api
+
+
+
+### 默认的路由如何展示？展示还是非常的简单
+> 只需要使用一个path = '/'就好了。/就是默认的路由，进入页面就会被匹配的路由，
+>
+
+### 精确匹配
+> ![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597234621256-426dd157-ac27-457a-a32c-d7043bb6e8af.png)
+>
+
+以上都是最基础的使用步骤，当然关关是基础的使用是远远不足够我们做项目的，我们需要更多的深入学习react-router
+
+
+
+### 如何实现路由的参数传递呢？
+比如，你点击某一个具体的文件的时候 ，我需要你这篇文章的id那么你如何传递这个id给我呢？我又要如何获取？props.params 是一种解决方案
+
+###### 1、目录及 组件关系图
+
+
+组件关系：
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597323081565-5c9a78a9-8ca5-4818-9c4e-25a61798b990.png)
+
+##### 2、源码
+./index.js
+
+```javascript
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './components/App/App';
+ReactDOM.render(<App />, document.getElementById('root'));
+
+```
+
+./src/components/App/App.js
+
+```javascript
+import React , { Component } from 'react';
+import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
+import About from '../About/About';
+class App extends Component {
+  constructor() {
+    super();
+    this.state = {
+      lists: ['10010', '10086', '8000'],  // 在react中万物皆组件，万物皆组件，跟我默念，万物皆组件！！！！！
+    };
+  }
+  render() {
+    let linkList = this.state.lists.map(item => {
+      return (
+        <li><Link to={`/about/${item}`}> {item} </Link></li>
+      );
+    });
+    return (
+      <Router>
+        <div>
+          <ul> { linkList } </ul>
+          <Route path="/about/:tel" component={About} />
+        </div>
+      </Router>
+    );
+  }
+}
+export default App;
+```
+
+
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597323082564-4ed4a91e-c95f-4a42-b578-ce3fcbb56ff1.png)
+
+注：< Route>在选择渲染About组件时，其实也传给了About组件一个 `match对象`。在About中直接this.props.match即可访问。
+
+**<font style="background-color:#FADB14;">这句话的意思就是，在路由跳转的时候，你传递了一个match对象在props上，这个match就是路由对象</font>**
+
+
+
+./src/components/About/About.js
+
+```javascript
+import React, { Component } from 'react';
+class About extends Component {
+    render() {
+        return (
+            <div>about: {this.props.match.params.tel}</div>
+        );
+    }
+}
+export default About;
+```
+
+
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597323081538-666c1615-c5e8-477a-8bde-8b9215ebb584.png)
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597323081674-0d5d5c9c-6f2e-4356-9a32-747a0cffa51e.png)
+
+点击8000后：
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597323081563-49363df8-22d4-444e-ae3e-463cd871566d.png)
+
+
+
+第二种传参扥方式
+
+使用query定义传值方式，注意：页面刷新后，参数丢失
+
+```javascript
+<Route path="/query" component={App} />
+
+//在Link组件中定义参数
+
+const param ={
+    pathname:"/query",
+    query:"参数"
+}
+
+<Link to={param}>List</Link>
+
+//在子组件中获取参数值
+
+this.props.location.query
+```
+
+
+
+第三种解决方案
+
+> 以上仅仅是我们的点击的时候传递的值，在rul上可以拿到，但是如果我们要编程式导航，那么如何拿到我们的值呢？
+>
+
++ 入股是history.repacle( 目标path，{}）第二个就是你需要传递过去的对象，在目标path组件内通过this.props上有一个location能拿到第二个对象（你传递过去的值）
+
+
+
+第四中解决方案（推荐）
+
+可以有效的解决页面刷新后，参数丢失的问题
+
+
+
+1. linke定义
+
+```javascript
+let obj = {
+  pathname: '/component',
+  search: '?sort=name',
+  query: { fromDashboard: 123 },
+  state: { fromDashboard: 123 }
+}
+<Link to="{obj}">Zillow Group</Link>
+```
+
+2. 接收
+
+```javascript
+this.props.location.search // search == "?sort=name"
+this.props.location.query // query == { fromDashboard: 123 }
+this.props.location.state // state == { fromDashboard: 123 }
+```
+
+### 如何实现多层级的页面嵌套呢?实际上也非常的简单
+###### 1、目录及 组件关系图
+组件关系：
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597323292781-8d37a974-9cc0-407a-a9b5-34672d3fd057.png)
+
+##### 2、源码
+./index.js
+
+```javascript
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './components/App/App';
+ReactDOM.render(<App />, document.getElementById('root'));
+```
+
+./src/components/App/App.js
+
+```javascript
+import React from 'react';
+import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
+import Home from '../Home/Home';
+import About from '../About/About';
+import Inbox from '../Inbox/Inbox';
+function App() {
+  return (
+    <Router>
+      <div>
+        <ul>
+          <li><Link to="/">Home</Link></li>
+          <li><Link to="/about">About</Link></li>
+          <li><Link to="/inbox">Inbox</Link></li>
+        </ul>
+        <hr/>
+        <Route path="/" exact component={Home} />
+        <Route path="/about" component={About} />
+        <Route path="/inbox" component={Inbox} />
+      </div>
+    </Router>
+  );
+}
+export default App;
+```
+
+
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597323292652-590b46bd-0634-4028-89eb-3971a5d9df24.png)
+
+./src/components/About/About.js
+
+```javascript
+import React, { Component } from 'react';
+class About extends Component {
+    render() {
+        return (
+            <div>i am about</div>
+        );
+    }
+}
+export default About;
+```
+
+./src/components/Inbox/Inbox.js
+
+```javascript
+import React, { Component } from 'react';
+import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
+class Inbox extends Component {
+    render() {
+        return (
+            <div>
+                <h2>Inbox title</h2>
+                <ul>
+                    <li><Link to={`${this.props.match.url}/components`}> Components </Link></li>
+                    <li><Link to={`${this.props.match.url}/props-v-state`}> Props v. State </Link></li>
+                </ul>
+                <Route path={`${this.props.match.path}/:getId`} component={Topic} />
+                <Route path={this.props.match.path} exact render={() => <h3>Please select a topic.</h3>}/>
+            </div>
+        );
+    }
+}
+function Topic(props) {
+    return <h3>{props.match.params.getId}</h3>;
+}
+export default Inbox;
+
+```
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597323292650-cd06c4f3-056d-4889-ad84-ffa9025d64dd.png)![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597323292730-20d0953d-3aa1-43ea-abf0-4461b3d9b923.png)
+
+##### 3、展示
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597323292663-91ebc614-63ad-45e9-95e5-6ffd9f72eb5f.png)
+
+点击Inbox后：
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597323292713-4e88944c-9cb9-4e09-a1a5-b91727049325.png)
+
+点击 Props v. State 后：
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597323292608-42595c94-8055-460b-ad06-2df22e705d43.png)
+
+
+
+
+
+### 如何把路由独立出来？(手写实现，当然你也可以使用router-config这个来搞)
+> 目前啊，我发现现在的router耦合度太高了，如果我想要把他们我说的是router独立出来操作，那么我要如何做呢？
+>
+> 实际上还是有些复杂的，我们来看需求
+>
+
+1. 需求，我希望
+
+```javascript
+import home from 'pages/Home.jsx'
+import record from 'pages/Record.jsx'
+import feedBack from 'pages/FeedBack.jsx'
+const router = [
+    {
+        path:'/record',
+        component:record
+    },
+    {
+        path:'/',
+        component:home,
+        redirect:'/feedBack',
+        children:[
+            {
+                path:'/feedBack',  ////就是这里vue的话会写成feedBack，但是react会/
+                 component:feedBack
+            }
+        ]
+    },
+]
+//如果熟悉vue的小伙伴会明白想干什么，
+// 主要是在/路径下生成home但是匹配到/之后会重新定义到/feedBack路径上去，
+//此时的home和feedBack组件是共存的，也就是常说的layout和contain是共存的，如果是vue的话很简单，很好做，但是react的路由我*****
+```
+
+
+
+2. 实现的步骤如下
+
+<font style="color:#4D4D4D;">我们使用了router 对路由数据进行了构建，下面我只需要一个方法生成他，手写！但是没有必要，我们后续会介绍一个router结合使用的一个库，利用那个库，可以优雅的实现动态路由生成</font>
+
+```javascript
+
+// 生成动态路由的方法
+function generateRoute(value){
+    if(value.children){  // 如果有子组件
+        return (
+                <Switch  key={value.path}>
+                   <Redirect exact from={value.path} to={value.redirect} />
+                   <Route key={value.path} path={value.path}>
+                        <value.component>
+                            {
+                                value.children.map(item=>{
+                                    return generateRoute(item)
+                                })
+                            }
+                        </value.component>
+                    </Route>
+                </Switch>                
+            )
+        }
+        // 如果没有子组件
+    return <Route key={value.path} path={value.path} component={value.component} />
+}
+    
+// 组件
+function app(){
+    return (
+        <Switch>
+            {
+              // 重点来了！
+                router.map(item=>{
+                    return generateRoute(item)
+                })
+            }
+        </Switch>
+    )
+}
+// 在一系列的转化下他会生成这个东西
+<Switch>
+      <Route path='/record' component={record}></Route>
+      <Switch>
+           <Redirect exact from='/' to='/feedBack'></Redirect>
+           <Route path='/'>
+                <Home>
+                    {
+                        <Route path='/feedBack' component={feedBack} />
+                    }
+                </Home>
+           </Route>
+      </Switch>
+</Switch>
+//在这里我们看到了<Home>组件，这样在Home组件中我们可以通过this.props.children来获取传入的组件，类似于vue的插槽
+
+```
+
+
+
+
+
+#### 相关技术点说明：
+> 在上述的例子中，我们的这个发现有两个貌似没有接触过的东西**<font style="background-color:#FADB14;">Switch</font>**** **和**<font style="background-color:#FADB14;">Redirect</font>**接下来我们来看看他们到底是干什么用的
+>
+
+1. switch
+
+字面上非常好理解，这个就是一个开关，同一个时间点内只匹配一个
+
+**<font style="color:#F5222D;background-color:#FADB14;">有<Switch>标签，则其中的<Route>在路径相同的情况下，只匹配第一个，这个可以避免重复匹配；换句话说，匹配的时候如果有多个路径，只显示当前匹配的哪一个其他的不显示</font>**
+
+2. reditect
+
+字面上非常好理解，重定向！，这个没有什么需要说明的，重定向！重什么地方跳到什么地方去
+
+```javascript
+ ＜Redirect from="messages/:id" to="/messages/:id" />
+```
+
+
+
+### 使用第三方库来实现 路由的配置抽离
+> 在vue中，经常会有 路由拦截件的东西，在react中如何做到呢？
+>
+> 答案就是
+>
+> # react-router-config
+
+```shell
+npm i react-router-dom react-router-config –save
+```
+
+1. <font style="color:#4D4D4D;">react可以通过一款react-router-config插件做到和vue-router一样的使用块感</font>
++ 搞一个home页面
+
+```javascript
+import React from 'react';
+
+export default function Home(){
+   return (
+      <div>
+        <h1>这是主页</h1>
+        <a href="/about">去about</a>
+        <a href="/discover">去discover</a>
+      </div>    
+   )
+}
+```
+
++ 建立一个about页面
+
+```javascript
+import React from 'react';
+import {Link} from 'react-router-dom';
+import {renderRoutes} from 'react-router-config';
+
+//变量的导出用export，而不是export default
+export const About = (props)=>{
+   const route = props.route
+   return (  
+      <div>
+        <h1>这是关于</h1>
+        <a href="/">去home</a>
+        <a href="/discover">去discover</a>
+        <Link to="/about/my">关于我的</Link>
+        <br />
+        <Link to="/about/you">关于你的</Link>
+     
+        {/*使用renderRoutes方法继续渲染子路由，第二个参数可以进行传参*/}
+        {renderRoutes(route.childrens,{user:'hello'})}
+
+      </div>
+   )
+}
+```
+
++ 建立一个discover页面
+
+```javascript
+import React from 'react';
+import {Link} from 'react-router-dom';
+import {renderRoutes} from 'react-router-config';
+
+export default function Discover(props){
+   const route = props.route
+   return (  
+      <div>
+        <h1>这是发现</h1>
+        <a href="/">去home</a><br />
+        <a href="/about">去about</a><br />
+        <Link to="/discover/earth">发现地球</Link>
+        <br />
+        <Link to="/discover/star">发现星星</Link>
+        {renderRoutes(route.childrens)}
+      </div>
+   )
+}
+```
+
++ 再建立两个子页面
+
+my
+
+```javascript
+import React from 'react';
+
+export default function My(props){
+   return (  
+      <div>
+        <h1>这是关于我的</h1>
+        <p>{props.user}</p>
+      </div>
+   )
+}
+```
+
+you
+
+```javascript
+import React from 'react';
+
+export default function You(){
+   return (  
+      <div>
+        <h1>这是关于你的</h1>
+      </div>
+   )
+}
+```
+
++ 我们还需要一些辅助页面
+
+Star
+
+```javascript
+import React from 'react';
+
+export default function Star(){
+   return (  
+      <div>
+        <h1>这是发现星星</h1>
+      </div>
+   )
+}
+```
+
+Earth
+
+```javascript
+import React from 'react';
+
+//<p>{props.match.params.id}</p>
+export default function Earth(props){
+   return (  
+      <div>
+        <h1>这是发现地球</h1>
+      </div>
+   )
+}
+```
+
+2. 建立配置文件
+
+router.js
+
+```javascript
+在src目录下新建文件夹route（名字自己随便取），然后在该目录下新建route.js文件，在route.js里进行文件的配置
+
+import Home from '../component/home'
+//注意非函数、非表达式等导入要用{}括住
+import {About} from '../component/about'
+import Discover from '../component/discover'
+import Earth from '../component/earth'
+import Star from '../component/star'
+import My from '../component/my'
+import You from '../component/you'
+
+ const routes = [
+   {
+      path:'/',
+      component: Home,
+      exact:true
+   },
+   {
+      path:'/about',
+      component: About,
+      childrens:[
+        {
+        path:'/about/my',
+        component:My
+        },
+        {
+        path:'/about/you',
+        component:You
+        }
+      ]
+   },
+   {
+      path:'/discover',
+      component: Discover,
+      childrens:[
+        {
+        path:'/discover/earth',
+        component:Earth
+        },
+        {
+        path:'/discover/star',
+        component:Star
+        }
+      ]
+   }
+]
+
+export {routes}
+```
+
+3. 最后的最后我们总算来渲染了
+
+index,js
+
+```javascript
+import React from 'react';
+
+import ReactDOM from 'react-dom';
+import * as serviceWorker from './serviceWorker';
+import { BrowserRouter} from "react-router-dom";
+import { renderRoutes } from "react-router-config";
+import './index.css';
+import {routes} from './router/route';
+
+// 使用renderRoutes方法渲染路由
+ReactDOM.render(<BrowserRouter>
+            { renderRoutes(routes)  }
+            </BrowserRouter>, document.getElementById('root'));
+
+serviceWorker.unregister();
+```
+
+> 以上就是一个非常简单的库的基础使用在里面
+>
+
+### 如何做路由守卫的拦截和权限的判断呢？
+> 非常简单，使用router-config只需要改一些东西就好，什么？💩吧，这要手写一个鉴权 ，没事哥扛得住！
+>
+
+由于这里的这一块内容相对的比较难，需要学习redux之后才能读得明白，那么我们先去学习redux后续回过头开看这个实现的技术解决方案
+
+
+
+关于路由鉴权和动态路由匹配的这个问题是非常值得一提的，因为在业务中会经常的使用到，所以啊，这个非常的重要！我们在学习完redux之后需要额外的认真学习，该需求的解决方案
+
+
+
+/ ---2021-12-10日更新，目前针对这一块的解决方案如下，也是目前老李在企业中的运用
+
+
+
+```javascript
+
+```
+
+
+

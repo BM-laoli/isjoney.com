@@ -284,6 +284,7 @@ export async function getBooksContent(
 
     const bookDir = path.join(getContentPath("books"), safeBookSlug);
     
+    console.log('Safe Book Dir:', bookDir);
     // 2. 尝试匹配多种后缀 (mdx 或 md)
     let filePath = path.join(bookDir, `${safeChapterSlug}.mdx`);
     if (!fs.existsSync(filePath)) {

@@ -1,0 +1,400 @@
+---
+title: "Ant Design Pro 核心原理：登录拦截与鉴权机制"
+date: "2024-12-19"
+summary: "深入剖析 Ant Design Pro 中后台系统的登录拦截、路由鉴权、动态权限控制等核心机制，结合实际代码实现进行详细讲解。"
+status: "completed"
+tech: ["React", "Ant Design Pro", "UmiJS"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "React"
+---
+
+> 实际上 一个中后台适合于二次开发的框架，比如说vue-admin，Avue，vue-beautiful....诸如此类的东西，我个人的简介，最核心的东西就是  路由的拦截，换种说法就是登录鉴权，这个我认为是中后台系统的核心，_**<font style="color:#F5222D;">鉴权！</font>**_其次，才是我们的这个，依附于这个鉴权系统下的各个业务模块，当然哈，一个好的中后台框架，一定要有自己的亮点，要不然就会没有市场，当然 我也没有深入了解过antPro，但是我们要有这样的一种精神，接下里，我们来层层剖析AntPro
+>
+
+
+
+## 前言
+> 这里哈，我们十分有必要说明一下 antPro和UMI的关系，要知道，对于我已经很多新手刚刚接触这个框架的时候也是很蒙圈，怎么又是umi又是antPro到底是什么？比如粗浅的任务umi提供了很多丰富的功能，比如useRequst config等....antPro与umi深度的集成，umi是底层的框架，而antPro是上层的框架，如果你熟悉要学习antPro建议先熟悉属性umi，antPro中的很多配置性的东西 已经reduce都是umi中结合dva的那一套，umi很重要，一定要先看umi再来搞antPro
+>
+
+## 核心一、登录拦截
+> 这里我们想要的效果是这样的哈
+>
+> - [x]  如果如果用户没有登录，那么它输入的任何路由都要 有对应的提示 无权访问类似的内容
+> - [x]  当用户登录了，但是没有权限，但是访问的不存在的页面就提示404类似的内容
+>
+> 实际上，这与简单的功能在我们的antPro中是已经实现了的，我们来分析一下哈
+>
+> 
+>
+
+
+
+### 为什么我们一进来页面就跳转到登录页了呢？
+
+
+为了更加清楚的了解，我们先来看看config下的路由配置哈
+
+```typescript
+// https://umijs.org/config/
+import { defineConfig } from 'umi';
+import defaultSettings from './defaultSettings';
+import proxy from './proxy';
+const { REACT_APP_ENV } = process.env;
+export default defineConfig({
+  hash: true,
+  antd: {},
+  dva: {
+    hmr: true,
+  },
+  layout: {
+    name: 'Ant Design Pro',
+    locale: true,
+    siderWidth: 208,
+  },
+  locale: {
+    // default zh-CN
+    default: 'zh-CN',
+    // default true, when it is true, will use `navigator.language` overwrite default
+    antd: true,
+    baseNavigator: true,
+  },
+  dynamicImport: {
+    loading: '@/components/PageLoading/index',
+  },
+  targets: {
+    ie: 11,
+  },
+  // umi routes: https://umijs.org/docs/routing
+  routes: [
+    {
+      path: '/user', // 第一个路由就是在这里被匹配到的
+      layout: false,
+      routes: [
+        {
+          name: 'login',
+          path: '/user/login',
+          component: './user/login',
+        },
+      ],
+    },
+    {
+      path: '/welcome',
+      name: 'welcome',
+      icon: 'smile',
+      component: './Welcome',
+    },
+    {
+      path: '/admin',
+      name: 'admin',
+      icon: 'crown',
+      access: 'canAdmin',
+      component: './Admin',
+      routes: [
+        {
+          path: '/admin/sub-page',
+          name: 'sub-page',
+          icon: 'smile',
+          component: './Welcome',
+        },
+      ],
+    },
+    {
+      name: 'list.table-list',
+      icon: 'table',
+      path: '/list',
+      component: './ListTableList',
+    },
+    {
+      path: '/',
+      redirect: '/welcome',
+    },
+    {
+      name: '拓扑编辑器',
+      icon: 'smile',
+      path: '/editorkoni',
+      component: './EditorKoni',
+    },
+    {
+      component: './404',
+    },
+  ],
+  // Theme for antd: https://ant.design/docs/react/customize-theme-cn
+  theme: {
+    // ...darkTheme,
+    'primary-color': defaultSettings.primaryColor,
+  },
+  // @ts-ignore
+  title: false,
+  ignoreMomentLocale: true,
+  proxy: proxy[REACT_APP_ENV || 'dev'],
+  manifest: {
+    basePath: '/',
+  },
+});
+
+```
+
+首先我们来看我们的main，也就是我们的这个app.js
+
+我们先来做一个大概的解读，然后我们再继续的深入
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1599392894095-b8af7736-4246-45b4-882a-c8d3b3c63196.png)
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1599392886845-0924d5ef-6af7-49ed-a30a-66afa7c4166e.png)
+
+
+
+接下来我们来深入到每一个方法里去
+
+```typescript
+import React from 'react';
+import { BasicLayoutProps, Settings as LayoutSettings } from '@ant-design/pro-layout';
+import { notification } from 'antd';
+import { history, RequestConfig } from 'umi'; // 第一个是umi封装的路由，用于获取路由讯息，路由跳转，路由监听等操作
+import RightContent from '@/components/RightContent';
+import Footer from '@/components/Footer';
+import { ResponseError } from 'umi-request'; //这个是封装的类似于axios不过底层的实现是fetch 而axios是封装的XHMRequest
+import { queryCurrent } from './services/user';// 接口，查询接口
+import defaultSettings from '../config/defaultSettings';
+
+/**
+ * 一个异步的函数。返回一个Promose，对象
+ *  {
+ *    currentUser：当前登录的用户的讯息，
+ *    settings：当前APP的配置项 主题颜色什么的
+ *  }
+ */
+export async function getInitialState(): Promise<{
+  currentUser?: API.CurrentUser; // 定义当前登录的用户对象的接口
+  settings?: LayoutSettings;
+}> {
+  // 如果是登录页面，不执行
+  if (history.location.pathname !== '/user/login') {
+    try {
+      // 不是登录页，就和服务器确认是否是当前登录的用户信息。并且返回回去重新保存一下
+      const currentUser = await queryCurrent();
+      return { // 这里的饭后结果多了一个currentUser 
+        currentUser,
+        settings: defaultSettings,
+      };
+    } catch (error) {
+      history.push('/user/login'); // 如果登没有登录就访问需要权限的页面就兰回去
+    }
+  }
+  return {
+    settings: defaultSettings,
+  };
+}
+
+// 布局layout，返回一个基础的BasicLayoutProps属性 接受一初始化对象，initialState.返回一个对象
+export const layout = ({
+  initialState,
+}: {
+  initialState: { settings?: LayoutSettings; currentUser?: API.CurrentUser };
+}): BasicLayoutProps => {
+  return {
+    rightContentRender: () => <RightContent />,
+    disableContentMargin: false,
+    footerRender: () => <Footer />,
+    onPageChange: () => {
+      // 如果没有登录，重定向到 login。符合两个条件 一个是用户的当前讯息找不到了，还有一个就是不在登录页
+      if (!initialState?.currentUser?.userid && history.location.pathname !== '/user/login') {
+        history.push('/user/login');
+      }
+    },
+    menuHeaderRender: undefined,
+    ...initialState?.settings, // 其它的属性都展开出去
+  };
+};
+
+/**
+ * 常见的一些错误状态码和响应提示
+ */
+const codeMessage = {
+  200: '服务器成功返回请求的数据。',
+  201: '新建或修改数据成功。',
+  202: '一个请求已经进入后台排队（异步任务）。',
+  204: '删除数据成功。',
+  400: '发出的请求有错误，服务器没有进行新建或修改数据的操作。',
+  401: '用户没有权限（令牌、用户名、密码错误）。',
+  403: '用户得到授权，但是访问是被禁止的。',
+  404: '发出的请求针对的是不存在的记录，服务器没有进行操作。',
+  405: '请求方法不被允许。',
+  406: '请求的格式不可得。',
+  410: '请求的资源被永久删除，且不会再得到的。',
+  422: '当创建一个对象时，发生一个验证错误。',
+  500: '服务器发生错误，请检查服务器。',
+  502: '网关错误。',
+  503: '服务不可用，服务器暂时过载或维护。',
+  504: '网关超时。',
+};
+
+/**
+ * 异常处理程序，网络发生了异常 ResponseError
+ */
+const errorHandler = (error: ResponseError) => {
+  const { response } = error;
+  if (response && response.status) {
+    const errorText = codeMessage[response.status] || response.statusText;
+    const { status, url } = response;
+
+    notification.error({
+      message: `请求错误 ${status}: ${url}`,
+      description: errorText,
+    });
+  }
+
+  if (!response) {
+    notification.error({
+      description: '您的网络发生异常，无法连接服务器',
+      message: '网络异常',
+    });
+  }
+  throw error;
+};
+
+export const request: RequestConfig = {
+  errorHandler,
+};
+
+// 注意这个接口这里的currentUser
+declare namespace API {
+  export interface CurrentUser {
+    avatar?: string;
+    name?: string;
+    title?: string;
+    group?: string;
+    signature?: string;
+    tags?: {
+      key: string;
+      label: string;
+    }[];
+    userid?: string;
+    access?: 'user' | 'guest' | 'admin';
+    unreadCount?: number;
+  }
+
+  export interface LoginStateType {
+    status?: 'ok' | 'error';
+    type?: string;
+  }
+
+  export interface NoticeIconData {
+    id: string;
+    key: string;
+    avatar: string;
+    title: string;
+    datetime: string;
+    type: string;
+    read?: boolean;
+    description: string;
+    clickClose?: boolean;
+    extra: any;
+    status: string;
+  }
+}
+```
+
+<font style="color:#F5222D;background-color:#FADB14;">我们解决了第一个问题，为啥我们一开始就是来到的登录页，还有如何如果用户原来是登录的，那么我们再次进来是直接登录到的页 而不是新的登录页，接下来我们来看看，登录的时候如何进行权限验证的（既 如果用户没有登录不然它访问其它的东西，&& 根据不同的角色生成不同的路由列表）</font>
+
+值得注意的是！我们的鉴权拦截，已经在前面的app.ts代码里做了，就是下面的代码
+
+```typescript
+// 这里只是列出几个核心的代码
+// 如果当前不是登录页就进行一次鉴权
+  try {
+      // 不是登录页，就和服务器确认是否是当前登录的用户信息。并且返回回去重新保存一下
+      const currentUser = await queryCurrent();
+      return { // 这里的饭后结果多了一个currentUser 
+        currentUser,
+        settings: defaultSettings,
+      };
+    } catch (error) {
+      history.push('/user/login'); // 如果登没有登录就访问需要权限的页面就兰回去
+    }
+// 并且我们和后台约定好了 未登录的情况http状态代码
+
+// 注意我们在layout中也有对应的逻辑
+// 布局layout，返回一个基础的BasicLayoutProps属性 接受一初始化对象，initialState.返回一个对象
+export const layout = ({
+  initialState,
+}: {
+  initialState: { settings?: LayoutSettings; currentUser?: API.CurrentUser };
+}): BasicLayoutProps => {
+  return {
+    rightContentRender: () => <RightContent />,
+    disableContentMargin: false,
+    footerRender: () => <Footer />,
+    onPageChange: () => {
+      // 如果没有登录，重定向到 login。符合两个条件 一个是用户的当前讯息找不到了，还有一个就是不在登录页
+      if (!initialState?.currentUser?.userid && history.location.pathname !== '/user/login') {
+        history.push('/user/login');
+      }
+    },
+    menuHeaderRender: undefined,
+    ...initialState?.settings, // 其它的属性都展开出去
+  };
+};
+
+/**
+ * 常见的一些错误状态码和响应提示
+ */
+const codeMessage = {
+  200: '服务器成功返回请求的数据。',
+  201: '新建或修改数据成功。',
+  202: '一个请求已经进入后台排队（异步任务）。',
+  204: '删除数据成功。',
+  400: '发出的请求有错误，服务器没有进行新建或修改数据的操作。',
+  401: '用户没有权限（令牌、用户名、密码错误）。',
+  403: '用户得到授权，但是访问是被禁止的。',
+  404: '发出的请求针对的是不存在的记录，服务器没有进行操作。',
+  405: '请求方法不被允许。',
+  406: '请求的格式不可得。',
+  410: '请求的资源被永久删除，且不会再得到的。',
+  422: '当创建一个对象时，发生一个验证错误。',
+  500: '服务器发生错误，请检查服务器。',
+  502: '网关错误。',
+  503: '服务不可用，服务器暂时过载或维护。',
+  504: '网关超时。',
+};
+
+/**
+ * 异常处理程序，网络发生了异常 ResponseError
+ */
+const errorHandler = (error: ResponseError) => {
+  const { response } = error;
+  if (response && response.status) {
+    const errorText = codeMessage[response.status] || response.statusText;
+    const { status, url } = response;
+
+    // 这个就是你看到的错误弹出框
+    notification.error({
+      message: `请求错误 ${status}: ${url}`,
+      description: errorText,
+    });
+  }
+
+  if (!response) {
+    notification.error({
+      description: '您的网络发生异常，无法连接服务器',
+      message: '网络异常',
+    });
+  }
+  throw error;
+};
+
+export const request: RequestConfig = {
+  errorHandler,
+};
+
+    
+```
+
+## 核心二、身份鉴权，动态路列表
+### 身份鉴权，为不同的身份生成不同的路由
+## 核心三、布局与鉴权的结合，
+
+
+## 

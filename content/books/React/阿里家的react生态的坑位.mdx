@@ -1,0 +1,87 @@
+---
+title: "React 生态开发实战：Antd 与 UmiJS 常见问题解决方案"
+date: "2024-12-19"
+summary: "基于 Antd 4.8 + UmiJS 等 React 生态的实战开发经验总结，涵盖表单联动、ProTable 定制、权限控制、性能优化等常见问题的解决方案。"
+status: "completed"
+tech: ["React", "Antd", "UmiJS"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "React"
+---
+
+> 这篇文档是基于 antd 4.8 + umijs  以及其他 阿里家的react 生态来记录的坑位，后续我们会跟踪版本的变化进行有必要的更新，并且保留历史更新和文档，确保你可以平滑的学习和升级
+>
+
+### 1. 联动表单的问题，如何进行联动
+最简单的方法就是拿到整个Form对象，通过方法控制它，在antd是这样，在vue中也是这样，最好呢整个Form都在一个对象之中，这样的话，好操作，数据就不会在全局飞来飞去了！
+
+### 2.ProTable个性化搜索时候的问题 如何自定义，详见 => cmdb回收站
+### 3.select如何的收缩智能提示过滤筛选的问题，详见 => ops 巡检任务的执行人搜素
+### 4.antd的checked的值搬定依赖问题
+### 6. 拿到一个AntdPro的项目如何实现自己的接口调试和proxy代理
+### 6. 拿到一个AntdPro的项目如何完成权限控制
+### 7. 使用useMemo（）避免子组件重复渲染 
+### 8. Form表单的子属性name={[father, children]}
+```java
+from:{
+  father:{
+    children:''
+  }
+}
+```
+
+
+
+### 10 如果你需要这样的参数怎么办
+如果你需要用到下面这样的参数，你需要使用到form-List
+
+```json
+from:{
+  father:[
+  {
+    children:''
+  },
+    {
+    children:''
+  }
+  ]
+}
+```
+
+### 9. umijs中的history的query 传参数的时候它一定是字符串的 不是你也需要转！
+### 10.原则上 用户的东西应该不做处理，同一个接口的【】数组里的单位或者格式应该保持一致
+### 11. 关于搜索记录搜索历史的本地存储版本
+```javascript
+  
+const updateTags = (removeKeyWord) => {
+    console.log(removeKeyWord);
+    // setKeyWords(keyWords.filter((word) => word !== removeKeyWord));
+    // setKeyWords(Object.assign(keyWords, [removeKeyWord]));  灵活的运用set去重！
+
+    if (removeKeyWord && !keyWords.includes(removeKeyWord)) {
+      if (keyWords.length > 6) {
+        keyWords[0] = removeKeyWord;
+        localStorage.setItem('Tag', JSON.stringify(keyWords));
+      } else {
+        keyWords.unshift(removeKeyWord);
+        localStorage.setItem('Tag', JSON.stringify(keyWords));
+      }
+    }
+  };
+
+
+  const deleteTag = (key) => {
+    let tags = JSON.parse(window.localStorage.getItem('Tag'))
+    console.log(tags, 'is');
+    tags.splice(key, 1);
+    localStorage.setItem('Tag', JSON.stringify(tags));
+  };
+
+```
+
+### 在开发微信网页应用的时候，如果使用dayjs会有兼容性问题，iPhone 6  8 X，都不支持
+### 给vue配置代理proxy
+
+
+
+

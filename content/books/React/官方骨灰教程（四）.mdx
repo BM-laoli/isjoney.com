@@ -1,0 +1,840 @@
+---
+title: "React 核心技术：第三方库协同、JSX 深入与性能优化"
+date: "2024-12-19"
+summary: "全面解析 React 与第三方库集成方案、JSX 语法细节、性能优化策略及 Portals 和 Profiler 高级特性，助力构建高性能 React 应用。"
+status: "completed"
+tech: ["React", "JSX", "Performance"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "React"
+---
+
+>  这一期主题，我们来聊一下下面的几个方
+>
+> - [x] react如何与第三方库协同，
+> - [x] 深入jsx
+> - [x] 性能优化
+> - [x] 挂载外dom节点，Portals
+> - [x] 性能统计Profiler
+>
+
+## react如何与第三方库协同，
+### 1.介绍
+官方介绍了两种与第三方库结合的操作案例，一个的jq的协同操作一个是与Backbone.js框架的协同操作案例，思路都一样，这里简单的介绍一下与jq的操作就好了啦。
+
+### 2.协同DOM操作库Jq
+首先需要注意的是，当react与带有dom操作的第三方库结合使用时，需要注意下面的原则：
+
+**<font style="color:#F5222D;">React 不会理会 React 自身之外的 DOM 操作。它根据内部虚拟 DOM 来决定是否需要更新，而且如果同一个 DOM 节点被另一个库操作了，React 会觉得困惑而且没有办法恢复。一个库只做它应该做的事情，这就是结合使用多个类库，最重要的思想。</font>**
+
+**<font style="color:#F5222D;"></font>**
+
++ 如何解决上面提到的 DOM操作问题？
+
+事实上也不是很难哈，主要的核心就<font style="color:#F5222D;">是获取DOM，然后不去触碰这个DOM</font>，主要是方案是
+
+1. 在react组件中只返回一个的DOM，
+2. 然后在生命周期中获取这个dom
+3. 然后把dom返回给jq就行了，React不对这个DOM或者这个组件做任何的更新操作，全全交给jq去做
+
+注意：你可以更新这个DOM下的children 这没有任何问题，只是最外层的dom交给了jq，那就别去碰他就好了
+
+
+
+下面的实例代码:
+
+```jsx
+class SomePlugin extends React.Component {
+  componentDidMount() {
+    this.$el = $(this.el);
+    this.$el.somePlugin();
+  }
+
+  componentWillUnmount() {
+    this.$el.somePlugin('destroy');
+  }
+
+  render() {
+    return <div ref={el => this.el = el} />;
+  }
+}
+
+```
+
++ 与jq的中的插件进行集成
+
+我们拿一段代码来具体的说明一下这个案例的原理,<font style="color:#000000;">我们给这个用于增强 </font>`<select>`<font style="color:#000000;"> 输入的 </font>[Chosen](https://harvesthq.github.io/chosen/)<font style="color:#000000;"> 插件写一个最小的 wrapper。</font>
+
+1. 我们需要返回一个组件结构，它是我们最终要实现的效果
+
+```jsx
+function Example() {
+  return (
+    <Chosen onChange={value => console.log(value)}>
+      <option>vanilla</option>
+      <option>chocolate</option>
+      <option>strawberry</option>
+    </Chosen>
+  );
+}
+
+ReactDOM.render(
+  <Example />,
+  document.getElementById('root')
+);
+```
+
+
+
+2. 创建我们的组件
+
+<font style="color:#000000;">注意我们为什么要把 </font>`<select>`<font style="color:#000000;"> 使用一个额外的 </font>`<div>`<font style="color:#000000;"> 包裹起来。这是很必要的，因为 Chosen 会紧挨着我们传递给它的 </font>`<select>`<font style="color:#000000;"> 节点追加另一个 DOM 元素。然而，对于 React 来说 </font>`<div>`<font style="color:#000000;"> 总是只有一个子节点。这样我们就能确保 React 更新不会和 Chosen 追加的额外 DOM 节点发生冲突。在 React 工作流之外修改 DOM 是非常重大的事情，你必须确保 React 没有理由去触碰那些节点。</font>
+
+```jsx
+class Chosen extends React.Component {
+  render() {
+    return (
+      <div>
+        <select className="Chosen-select" ref={el => this.el = el}>
+          {this.props.children}
+        </select>
+      </div>
+    );
+  }
+}
+```
+
+
+
+3. 生命周期中获取DOIM
+
+```jsx
+ componentDidMount() {
+    this.$el = $(this.el);
+    this.$el.chosen();
+
+   // 注册事件 和监听事件
+    this.handleChange = this.handleChange.bind(this);
+    this.$el.on('change', this.handleChange);
+  }
+  
+  componentWillUnmount() {
+    // 销毁chose 关闭事件监听
+    this.$el.off('change', this.handleChange);
+    this.$el.chosen('destroy');
+  }
+```
+
+4. 注册事件
+
+```jsx
+componentDidMount() {
+    this.$el = $(this.el);
+    this.$el.chosen();
+
+    this.handleChange = this.handleChange.bind(this);
+    this.$el.on('change', this.handleChange);
+  }
+  
+  componentDidUpdate(prevProps) {
+    
+    // 我们会让 React来管理在 <select> 中 this.props.children 的更新
+    // 在组件更新的时候判断一下chilredn DOM有没有更新和变化
+    if (prevProps.children !== this.props.children) {
+      this.$el.trigger("chosen:updated");
+    }
+  }
+
+  componentWillUnmount() {
+    this.$el.off('change', this.handleChange);
+    this.$el.chosen('destroy');
+  }
+  
+  handleChange(e) {
+    this.props.onChange(e.target.value);
+  }
+```
+
+完整代码：
+
+```jsx
+class Chosen extends React.Component {
+  componentDidMount() {
+    this.$el = $(this.el);
+    this.$el.chosen();
+
+    this.handleChange = this.handleChange.bind(this);
+    this.$el.on('change', this.handleChange);
+  }
+  
+  componentDidUpdate(prevProps) {
+    if (prevProps.children !== this.props.children) {
+      this.$el.trigger("chosen:updated");  // 这个是这个chosen的文档，自己去看哈，就更新了list
+    }
+  }
+
+  componentWillUnmount() {
+    this.$el.off('change', this.handleChange);
+    this.$el.chosen('destroy');
+  }
+  
+  handleChange(e) {
+    this.props.onChange(e.target.value);
+  }
+
+  render() {
+    return (
+      <div>
+        <select className="Chosen-select" ref={el => this.el = el}>
+          {this.props.children}
+        </select>
+      </div>
+    );
+  }
+}
+
+function Example() {
+  return (
+    <Chosen onChange={value => console.log(value)}>
+      <option>vanilla</option>
+      <option>chocolate</option>
+      <option>strawberry</option>
+    </Chosen>
+  );
+}
+
+ReactDOM.render(
+  <Example />,
+  document.getElementById('root')
+);
+```
+
+<font style="color:#000000;"></font>
+
+<font style="color:#000000;">以上就是与第三方库协同的例子。但是这不是react的最佳实践</font>
+
+## 深入jsx
+jsx实际上也非常的简单，这里我们不做过多的介绍，如果之前的教程中有说明，这就不过多的说明了，这里我们只是查漏补缺
+
+
+
+### 1.语法糖
+实际上，jsx只是一个语法糖，它的目的就是使得编写的组件更加直观，开发的效率更加的高效是js的语法扩展
+
+仅仅是<font style="color:#6D6D6D;"> </font>`React.createElement(component, props, ...children)函数的语法糖，通过bable编译成这种格式`
+
+比如下面的两个例子
+
+```jsx
+<MyButton color="blue" shadowSize={2}>
+  Click Me
+</MyButton>
+
+// 编译
+React.createElement(
+  MyButton,
+  {color: 'blue', shadowSize: 2},
+  'Click Me'
+)
+<div className="sidebar" />
+  
+ // 编译
+  React.createElement(
+  'div',
+  {className: 'sidebar'}
+)
+```
+
+### 2.作用域
+<font style="color:#000000;">由于 JSX 会编译为 </font>`React.createElement`<font style="color:#000000;"> 调用形式，所以 </font>`React`<font style="color:#000000;"> 库也必须包含在 JSX 代码作用域内。也就是说如果你写的jsx就必须包含react</font>
+
+<font style="color:#000000;"></font>
+
+### 3.动态组件
+首先是第一种动态组件的你可以这样写
+
+```jsx
+import React from 'react';
+
+const MyComponents = {
+  DatePicker: function DatePicker(props) {
+    return <div>Imagine a {props.color} datepicker here.</div>;
+  }
+}
+
+function BlueDatePicker() {
+  return <MyComponents.DatePicker color="blue" />;
+}
+
+```
+
+第二种动态组件你可以这样写
+
+```jsx
+import React from 'react';
+import { PhotoStory, VideoStory } from './stories';
+
+const components = {
+  photo: PhotoStory,
+  video: VideoStory
+};
+
+function Story(props) {
+  // 正确！JSX 类型可以是大写字母开头的变量。
+  const SpecificStory = components[props.storyType];
+  return <SpecificStory story={props.story} />;
+}
+```
+
+第三种使用commenjs规范的方式写
+
+```jsx
+{
+  let Gporps = { name:"laoli",age:22 }
+	let GolabComponents = require('path').default
+	<GolabComponents { ...Gporps} />
+}
+```
+
+
+
+### 4.有关于数组的小细节
+你可能写过这样的语法，但是吧...事实上这是不对的。只不过你没有发现
+
+```jsx
+<div>
+  {props.messages.length &&
+    <MessageList messages={props.messages} />
+  }
+</div>
+
+// 0  仍然会被渲染：
+```
+
+正确的写法是：
+
+```jsx
+<div>
+  {props.messages.length > 0 &&
+    <MessageList messages={props.messages} />
+  }
+</div>
+```
+
+## 性能优化
+### 1,打包-生产版本
+正确的构建react基础架构，是优化的重要环节，这里列举了下面的几种常用的打包工具，及其配置
+
+一个简单的命令就能打包你的应用，打包之后性能会好一些，这里主要原因就是开发环境和生成环境的不同造成的，提升性能的第一步就是处理好打包应用的时候做的生成环境配置，
+
+1. 使用create React App
+
+```shell
+# 打包就好了
+npm run build  
+```
+
+
+
+2. 单文件构建
+
+使用压缩mini版 ，和生成版文件,下面的文件可能由于国内原因，被墙，你可以找一些国内CDN镜像镜像加载
+
+```html
+<script src="https://unpkg.com/react@16/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
+```
+
+3. brunch
+
+·        <font style="color:#000000;">通过安装 </font>`[terser-brunch](https://github.com/brunch/terser-brunch)`<font style="color:#000000;"> 插件，来获得最高效的 Brunch 生产构建：</font>
+
+<font style="color:#000000;">brunch是什么？</font>
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1613277054467-f8ee63d4-05cd-44f2-b742-c2b22dd8de99.png)
+
+```shell
+# 如果你使用 npm
+npm install --save-dev terser-brunch
+
+# 如果你使用 Yarn
+yarn add --dev terser-brunch
+
+# 注意阿，-p仅仅是在打包构建的使用使用
+brunch build -p
+```
+
+<font style="color:#000000;"></font>
+
+4. browserfiy
+
+browserfiy是个啥？
+
+`browserify`<font style="color:#000000;background-color:#FEFEF2;">与</font>`webpack`<font style="color:#000000;background-color:#FEFEF2;">都是当下流行的commonjs模块(或es6模块)合并打包工具，打包后的js文件可以直接运行在浏览器环境中。</font>
+
+```shell
+# 如果你使用 npm
+npm install --save-dev envify terser uglifyify
+
+# 如果你使用 Yarn
+yarn add --dev envify terser uglifyify
+
+# 然后依次添加下面的依赖
+envify 转换器用于设置正确的环境变量。设置为全局 (-g)。
+uglifyify 转换器移除开发相关的引用代码。同样设置为全局 (-g)。
+最后，将产物传给 terser 并进行压缩（为什么要这么做？）
+```
+
+5. rollup
+
+这个是啥？和webpack一样，如果你使用的是<font style="color:#000000;">Rollup，那么请按照下面的方式进行配置</font>
+
+```shell
+# 如果你使用 npm
+npm install --save-dev rollup-plugin-commonjs rollup-plugin-replace rollup-plugin-terser
+
+# 如果你使用 Yarn
+yarn add --dev rollup-plugin-commonjs rollup-plugin-replace rollup-plugin-terser
+
+# 为了创建生产构建，确保你添加了以下插件 （顺序很重要）：
+replace 插件确保环境被正确设置。
+commonjs 插件用于支持 CommonJS。
+terser 插件用于压缩并生成最终的产物。
+```
+
+
+
+最后，如果你真的使用上面的工具进行react应用的构建，那就按照上面的方式配置就好。更多的细节，请去搜索百度 或者google看看，
+
+### 2.webpack
+大多数情况下，你并不会使用上面的东西去构建，而是会是使用webpack去进行构建
+
+这有一篇文章，你可以参考：
+
+[https://zhuanlan.zhihu.com/p/96103181?from_voters_page=true](https://zhuanlan.zhihu.com/p/96103181?from_voters_page=true)，非常有参考价值
+
+```markdown
+create-react-app是一款广泛使用的脚手架，默认它只能使用eject命令暴露出webpack配置，其实这样使用很不优雅，修改内容文件的话也不利于维护，react-app-rewired正式解决这样问题的工具，今天我们就好好学习下它的用法。
+
+1. 安装 react-app-rewired
+create-react-app 2.x with Webpack 4
+npm install react-app-rewired --save-dev
+create-react-app 1.x or react-scripts-ts with Webpack 3
+npm install react-app-rewired@1.6.2 --save-dev
+2. 根目录创建 config-overrides.js
+/* config-overrides.js */
+
+module.exports = function override(config, env) {
+  //do stuff with the webpack config...
+  return config;
+}
+当然我们也可以把config-overrides.js放到其他位置，比如我们要指向node_modules中某个第三方库提供的配置文件，就可以添加下面配置到package.json：
+
+"config-overrides-path": "node_modules/other-rewire"
+3. 替换 react-scripts
+打开package.json:
+
+/* package.json */
+
+  "scripts": {
+-   "start": "react-scripts start",
++   "start": "react-app-rewired start",
+-   "build": "react-scripts build",
++   "build": "react-app-rewired build",
+-   "test": "react-scripts test --env=jsdom",
++   "test": "react-app-rewired test --env=jsdom",
+    "eject": "react-scripts eject"
+}
+4. 配置
+定制 Webpack 配置
+webpack字段可以用来添加你的额外配置，当然这里面不包含Webpack Dev Server。
+
+const { override, overrideDevServer, fixBabelImports, addLessLoader, addWebpackAlias, addWebpackModuleRule } = require('customize-cra');
+
+const removeManifest = () => config => {
+    config.plugins = config.plugins.filter(
+        p => p.constructor.name !== "ManifestPlugin"
+    );
+    return config;
+};
+
+module.exports = {
+    webpack: override(
+        removeManifest(),
+        fixBabelImports('import', {
+            libraryName: 'antd',
+            libraryDirectory: 'es',
+            style: 'css',
+        }),
+        addLessLoader(),
+        addWebpackModuleRule({
+            test: require.resolve('snapsvg/dist/snap.svg.js'),
+            use: 'imports-loader?this=>window,fix=>module.exports=0',
+        },),
+        addWebpackAlias({
+            Snap: 'snapsvg/dist/snap.svg.js'
+        }),
+    ),
+    devServer: overrideDevServer(
+        ...
+    )
+}
+定制 Jest 配置 - Testing
+jest配置
+
+定制 Webpack Dev Server
+通过devServer我们可以做一些开发环境的配置，比如设置proxy代理，调整publicPath，通过disableHostCheck禁用转发域名检查等。
+
+从CRA 2.0开始，推荐搭配customize-cra使用，里面提供了一些常用的配置，可以方便我们直接使用。
+
+const { override, overrideDevServer, } = require('customize-cra');
+
+const addProxy = () => (configFunction) => {
+    configFunction.proxy = {
+        '/v2ex/': {
+            target: 'https://www.v2ex.com',
+            changeOrigin: true,
+            pathRewrite: { '^/v2ex': '/' },
+        },
+    };
+
+    return configFunction;
+}
+
+module.exports = {
+    webpack: override(
+        ...
+    ),
+    devServer: overrideDevServer(
+        addProxy()
+    )
+}
+Paths - 路径变量
+paths里面是create-react-app里面的一些路径变量，包含打包目录、dotenv配置地址、html模板地址等。
+
+module.exports = {
+  dotenv: resolveApp('.env'),
+  appPath: resolveApp('.'),
+  appBuild: resolveApp('build'),
+  appPublic: resolveApp('public'),
+  appHtml: resolveApp('public/index.html'),
+  appIndexJs: resolveModule(resolveApp, 'src/index'),
+  appPackageJson: resolveApp('package.json'),
+  appSrc: resolveApp('src'),
+  appTsConfig: resolveApp('tsconfig.json'),
+  appJsConfig: resolveApp('jsconfig.json'),
+  yarnLockFile: resolveApp('yarn.lock'),
+  testsSetup: resolveModule(resolveApp, 'src/setupTests'),
+  proxySetup: resolveApp('src/setupProxy.js'),
+  appNodeModules: resolveApp('node_modules'),
+  publicUrl: getPublicUrl(resolveApp('package.json')),
+  servedPath: getServedPath(resolveApp('package.json')),
+  // These properties only exist before ejecting:
+  ownPath: resolveOwn('.'),
+  ownNodeModules: resolveOwn('node_modules'), // This is empty on npm 3
+  appTypeDeclarations: resolveApp('src/react-app-env.d.ts'),
+  ownTypeDeclarations: resolveOwn('lib/react-app.d.ts'),
+};
+比如我们要修改appHtml即html模板的默认位置，可以这样做：
+
+const path = require('path');
+
+
+module.exports = {
+    paths: function (paths, env) {
+
+        // 指向根目录的test.html
+        paths.appHtml = path.resolve(__dirname, "test.html");
+
+        return paths;
+    },
+}
+5. 常用示例
+添加多页面入口
+首先安装react-app-rewire-multiple-entry。
+
+npm install react-app-rewire-multiple-entry --save-dev
+然后在config-overrides.js配置：
+
+const { override, overrideDevServer } = require('customize-cra');
+
+const multipleEntry = require('react-app-rewire-multiple-entry')([{
+    entry: 'src/pages/options.tsx',
+    template: 'public/options.html',
+    outPath: '/options.html',
+}]);
+
+const addEntry = () => config => {
+
+    multipleEntry.addMultiEntry(config);
+    return config;
+};
+
+const addEntryProxy = () => (configFunction) => {
+    multipleEntry.addEntryProxy(configFunction);
+    return configFunction;
+}
+
+module.exports = {
+    webpack: override(
+        addEntry(),
+    ),
+    devServer: overrideDevServer(
+        addEntryProxy(),
+    )
+}
+禁用 ManifestPlugin
+const { override, } = require('customize-cra');
+
+
+const removeManifest = () => config => {
+    config.plugins = config.plugins.filter(
+        p => p.constructor.name !== "ManifestPlugin"
+    );
+    return config;
+};
+
+
+module.exports = {
+    webpack: override(
+        removeManifest(),
+    ),
+}
+antd 按需加载 && less-loader
+const { override, fixBabelImports, addLessLoader } = require('customize-cra');
+
+module.exports = {
+    webpack: override(
+        fixBabelImports('import', {
+            libraryName: 'antd',
+            libraryDirectory: 'es',
+            style: 'css',
+        }),
+        addLessLoader(),
+    ),
+}
+antd-mobile PostCSS && rem 配置
+
+移动端使用 rem 布局时，会借助 PostCSS 处理 px 到 rem 单位的转换。
+
+const {
+    override,
+    addLessLoader,
+    addPostcssPlugins,
+    fixBabelImports,
+} = require("customize-cra");
+
+module.exports = override(
+    addLessLoader(),
+    addPostcssPlugins([require("postcss-px2rem-exclude")({
+        remUnit: 16,
+        propList: ['*'],
+        exclude: ''
+    })]),
+    fixBabelImports('import', {
+        libraryName: 'antd-mobile',
+        style: 'css',
+    }),
+);
+需要注意的是和 addLessLoader 一起使用时，addPostcssPlugins 要放在后面，这和直接使用 webpack 配置是一样的顺序。
+
+配置Proxy
+
+const { override, overrideDevServer } = require('customize-cra');
+
+const addProxy = () => (configFunction) => {
+    configFunction.proxy = {
+        '/v2ex/': {
+            target: 'https://www.v2ex.com',
+            changeOrigin: true,
+            pathRewrite: { '^/v2ex': '/' },
+        },
+    };
+
+    return configFunction;
+}
+
+module.exports = {
+    webpack: override(),
+    devServer: overrideDevServer(
+        addProxy()
+    )
+}
+```
+
+
+
+除此之外，下面的这篇也非常有参考价值 [https://yq.aliyun.com/articles/685935](https://yq.aliyun.com/articles/685935)
+
+
+
+除此之外还有很多的东西 ，比如native的工程化配置，c端网站的ssr工程化配置，为前端的工程化配置，taro的工程化配置，等等，在后续的文档中，老李会为大家一一解答
+
+### 3.虚拟化长列表
+是哟这个比较的简单，直接使用类库就好了
+
+[react-window](https://react-window.now.sh/)<font style="color:#000000;"> 和 </font>[react-virtualized](https://bvaughn.github.io/react-virtualized/)<font style="color:#000000;"> 是热门的虚拟滚动库。 它们提供了多种可复用的组件，用于展示列表、网格和表格数据。</font>
+
+
+
+### 4.shouldComponentUpdate
+这个就不多讲了，非常的简单
+
+### 5.不可变数据的力量
+使用合并对象的形式  + shouldComponentUpdate就好了，
+
+更多复杂的场景需要看一下这个东西: <font style="color:#000000;">当处理深层嵌套对象时，以 immutable （不可变）的方式更新它们令人费解。如遇到此类问题，请参阅 </font>[Immer](https://github.com/mweststrate/immer)<font style="color:#000000;"> 或 </font>[immutability-helper](https://github.com/kolodny/immutability-helper)<font style="color:#000000;">。这些库会帮助你编写高可读性的代码，且不会失去 immutability （不可变性）带来的好处。</font>
+
+<font style="color:#000000;"></font>
+
+## 挂载外dom节点，Portals
+这个东西实际上非常的简单，拉个代码来看看就好了,这个东西就是可以让你的组件不一定非得挂载app上，它可以挂载到别的dom上
+
+
+
+```html
+<div id="app-root"></div>
+<div id="modal-root"></div>
+```
+
+```css
+#app-root {
+  height: 10em;
+  width: 10em;
+  background: lightblue;
+  overflow: hidden;
+}
+
+#modal-root {
+  position: relative;
+  z-index: 999;
+}
+
+.modal {
+  background-color: rgba(0,0,0,0.5);
+  position: fixed;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+```
+
+```jsx
+// These two containers are siblings in the DOM
+const appRoot = document.getElementById('app-root');
+const modalRoot = document.getElementById('modal-root');
+
+class Modal extends React.Component {
+  constructor(props) {
+    super(props);
+    this.el = document.createElement('div');
+  }
+
+  componentDidMount() {
+    modalRoot.appendChild(this.el);
+  }
+
+  componentWillUnmount() {
+    modalRoot.removeChild(this.el);
+  }
+  
+  render() {
+    return ReactDOM.createPortal(
+      this.props.children,
+      this.el,
+    );
+  }
+}
+
+class Parent extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {clicks: 0};
+    this.handleClick = this.handleClick.bind(this);
+  }
+
+  handleClick() {
+    // This will fire when the button in Child is clicked,
+    // updating Parent's state, even though button
+    // is not direct descendant in the DOM. 
+    this.setState(prevState => ({
+      clicks: prevState.clicks + 1
+    }));
+  }
+
+  render() {
+    return (
+      <div onClick={this.handleClick}>
+        <p>Number of clicks: {this.state.clicks}</p>
+        <p>
+          Open up the browser DevTools
+          to observe that the button
+          is not a child of the div
+          with the onClick handler.
+        </p>
+        <Modal>
+          <Child />
+        </Modal>
+      </div>
+    );
+  }
+}
+
+function Child() {
+  // The click event on this button will bubble up to parent,
+  // because there is no 'onClick' attribute defined
+  return (
+    <div className="modal">
+      <button>Click</button>
+    </div>
+  );
+}
+
+ReactDOM.render(<Parent />, appRoot);
+
+```
+
+最后说明的是：实际上好像，我从业以来，未曾见过这种写法哈。
+
+## 性能统计Profiler
+还是使用代码做佐证,这个东西主要是来看看你的应用 redner需要的时间，从而找出可优化的点和方案
+
+```jsx
+render(
+  <App>
+    <Profiler id="Panel" onRender={callback}>
+      <Panel {...props}>
+        <Profiler id="Content" onRender={callback}>
+          <Content {...props} />
+        </Profiler>
+        <Profiler id="PreviewPane" onRender={callback}>
+          <PreviewPane {...props} />
+        </Profiler>
+      </Panel>
+    </Profiler>
+  </App>
+);
+
+# 下面的几是callback 了
+function onRenderCallback(
+  id, // 发生提交的 Profiler 树的 “id”
+  phase, // "mount" （如果组件树刚加载） 或者 "update" （如果它重渲染了）之一
+  actualDuration, // 本次更新 committed 花费的渲染时间
+  baseDuration, // 估计不使用 memoization 的情况下渲染整颗子树需要的时间
+  startTime, // 本次更新中 React 开始渲染的时间
+  commitTime, // 本次更新中 React committed 的时间
+  interactions // 属于本次更新的 interactions 的集合
+) {
+  // 合计或记录渲染时间。。。
+}
+
+
+```
+
+
+

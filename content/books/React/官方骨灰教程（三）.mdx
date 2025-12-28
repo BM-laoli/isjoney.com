@@ -1,0 +1,1050 @@
+---
+title: "React 高级功能详解：代码分割、Context 与高阶组件"
+date: "2024-12-19"
+summary: "深入探讨 React 中的高级特性，包括代码分割优化、Context API 使用、高阶组件设计模式以及性能优化技巧。"
+status: "completed"
+tech: ["React", "CodeSplitting", "HOC"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "React"
+---
+
+> 官方骨灰教程（三），这里主要是介绍了react中的高级功能，属于进阶内容
+>
+
+
+
+### 打包配置
+#### 简单的说明
+正如大多数的前端框架一样，react也是需要打包的。在react上并没有vue cli /ng cli那么方便的东西，不过正是因为如此。react才是高度可扩展的，我们可以使用任意的打包工具，来配置我们自己需要的打包结构
+
+当然了react官方也是有推荐的cli 比如 [Create React App](https://github.com/facebookincubator/create-react-app)<font style="color:#000000;">，</font>[Next.js](https://github.com/zeit/next.js/)<font style="color:#000000;">，</font>[Gatsby](https://www.gatsbyjs.org/)<font style="color:#000000;">，他们只需要写一个配置文件就好了，不需要再做其它的事情，如果你需要自己原生构建一个打包配置也是可以的。手动去配置就完了，我推荐使用webpack</font>
+
+<font style="color:#000000;"></font>
+
+#### 使用create-react-app  + webpack构件一个脚手架
+### 
+### 代码分割优化秘密
+当我们的app越来越大，如果都打包成一个bundle无疑是一个灾难，因此我们可以使用，代码分割来优化
+
+#### 动态引入
+看起来很NB，其实非常的简单，就是一个简单的import(  )就好了
+
++ 使用前
+
+```javascript
+import { add } form './math'
+console.log( add(16.4) )
+```
+
++ 使用后
+
+```javascript
+import( './math' ).then( math => {
+		console.log( add(16.4) )
+} )
+
+// 注意阿 这种语法和webpack是有关的，你应该先了解，webpack 相关的一些东西
+// 如果你使用了creat-react-app cli 就可以自动的使用了，他们给你配置好了，
+```
+
++ 动手干一波
+
+```jsx
+// 这里使用creat-react-app + webpack + balble
+// 设计模式使用高阶组件的方式
+1. 安装两个包
+cnpm i react-loadable babel-plugin-syntax-dynamic-import -D
+
+2. 配置bable .babelrc
+
+{
+  "presets": [
+    "react"
+  ],
+  "plugins": [
+    "syntax-dynamic-import"
+  ]
+}
+
+3. 如果你使用了eslint可以这样来玩 .eslintrc
+module.exports = {
+  //...若干配置
+
+  parser: "babel-eslint"
+}
+
+4. 封装一个高阶组件 loadable.jsx
+import React from 'react'
+import Loadable from 'react-loadable'
+
+const Loading = () => {
+  return <div>loading...</div>
+}
+
+export default (Loader) => {
+  const LoadableComponent = Loadable({
+    loader: Loader,
+    loading: Loading
+  })
+
+  return class LoadableHOC extends React.Component {
+    render () {
+      return <LoadableComponent></LoadableComponent>
+    }
+  }
+}
+
+5.这是一个需要动态加载的组件  Import.jsx
+import React from 'react'
+
+class Import extends React.Component {
+  render () {
+    return <div>import...</div>
+  }
+}
+
+export default Import
+
+6. 这是一个父容器 test.jsx
+import React from 'react'
+import loadable from '@/utils/loadable'
+
+const Import = loadable(() => import('@/components/Import'))
+
+class Test extends React.Component {
+  render () {
+    return (<div>
+      <Import></Import>
+    </div>)
+  }
+}
+
+export default Test
+
+6. mian中试一下
+import React from 'react'
+import ReactDom from 'react-dom'
+import Test from '@/components/Test'
+
+ReactDom.render(<Test />, document.getElementById('app')
+```
+
+#### React.lazy
+`React.lazy`<font style="color:#000000;"> 函数能让你像渲染常规组件一样处理动态引入（的组件）。</font>
+
+🔍 注意：`React.lazy`<font style="color:#000000;background-color:rgba(255, 229, 100, 0.3);"> 和 Suspense 技术还不支持服务端渲染。如果你想要在使用服务端渲染的应用中使用，我们推荐 </font>[Loadable Components](https://github.com/gregberge/loadable-components)<font style="color:#000000;background-color:rgba(255, 229, 100, 0.3);"> 这个库。它有一个很棒的</font>[服务端渲染打包指南](https://loadable-components.com/docs/server-side-rendering/)<font style="color:#000000;background-color:rgba(255, 229, 100, 0.3);">。</font>
+
+
+
++ 使用前
+
+```javascript
+import OtherComponent from './OtherComponent';
+```
+
++ 使用后 
+
+```javascript
+const OtherComponent = React.lazy(() => import('./OtherComponent'));
+
+// 此代码将会在组件首次渲染时，自动导入包含 OtherComponent 组件的包。
+注意这个lazy 接受有个promise函数，并且要求resolve一个defalut export的react组件
+
+```
+
++ 指示加载器
+
+这个是什么东西？这东西实际上就是一个 lazy的时候 用于loading的东西
+
+```jsx
+import React, { Suspense } from 'react';
+
+const OtherComponent = React.lazy(() => import('./OtherComponent'));
+const AnotherComponent = React.lazy(() => import('./AnotherComponent'));
+
+function MyComponent() {
+  return (
+    <div>
+      <Suspense fallback={<div>Loading...</div>}>
+        <section>
+          <OtherComponent />
+          <AnotherComponent />
+        </section>
+      </Suspense>
+    </div>
+  );
+}
+```
+
++ 注意：如果是服务端渲染建议使用这个库 [Loadable Components](https://github.com/gregberge/loadable-components) 配合lazy 后者nextjs 
+
+#### 模块加载异常怎么办？异常捕获边界
+有时候，模块会加载异常，这个时候你需要这样来配  ，实际上也是一个HOC设计模式的最佳践行
+
+```jsx
+import React, { Suspense } from 'react';
+import MyErrorBoundary from './ErrorBoundary';  
+
+const OtherComponent = React.lazy(() => import('./OtherComponent'));
+const AnotherComponent = React.lazy(() => import('./AnotherComponent'));
+
+const MyComponent = () => (
+  <div>
+    <MyErrorBoundary>
+      <Suspense fallback={<div>Loading...</div>}>
+        <section>
+          <OtherComponent />
+          <AnotherComponent />
+        </section>
+      </Suspense>
+    </MyErrorBoundary>
+  </div>
+);
+```
+
+```jsx
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    // 更新 state 使下一次渲染能够显示降级后的 UI
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    // 你同样可以将错误日志上报给服务器
+    logErrorToMyService(error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      // 你可以自定义降级后的 UI 并渲染
+      return <h1>Something went wrong.</h1>;
+    }
+
+    return this.props.children; 
+  }
+}
+```
+
+
+
+#### 命名导出
+这里有一个坑就是 lazy只能支持默认导出 default export 如果是使用name export需要使用一个中间，模块来处理
+
+```jsx
+// ManyComponents.js
+export const MyComponent = /* ... */;
+export const MyUnusedComponent = /* ... */;
+
+// MyComponent.js
+export { MyComponent as default } from "./ManyComponents.js";
+
+// MyApp.js
+import React, { lazy } from 'react';
+const MyComponent = lazy(() => import("./MyComponent.js"));
+```
+
+#### 基于路由的代码分割
+我们可以使用react-router 集合lazy进行留有的懒加载
+
+```jsx
+import React, { Suspense, lazy } from 'react';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+
+const Home = lazy(() => import('./routes/Home'));
+const About = lazy(() => import('./routes/About'));
+
+const App = () => (
+  <Router>
+    <Suspense fallback={<div>Loading...</div>}>
+      <Switch>
+        <Route exact path="/" component={Home}/>
+        <Route path="/about" component={About}/>
+      </Switch>
+    </Suspense>
+  </Router>
+);
+
+```
+
+### Context
+#### 说明时候使用它
+context 就是一个不断的往下穿透传递的prors ，如同vue中的provid
+
+#### API
++ creatContext
+
+```plain
+const MyContext = React.createContext(defaultValue);
+// 创建一个content 具有默认值value 注意阿 如果你传递了undefined 给value 就有问题，你的default value不会生效
+// 这个是双向绑定的，而且 shouldComponentUpdate 不能阻止 子组件的重新渲染，一旦context改变所有的消费者组件都将重新渲染
+```
+
++ class.contextType
+
+```jsx
+传统语法
+const MyContext = React.createContext(defaultValue);
+
+class MyClass extends React.Component {
+  componentDidMount() {
+    let value = this.context;
+    /* 在组件挂载完成后，使用 MyContext 组件的值来执行一些有副作用的操作 */
+  }
+  componentDidUpdate() {
+    let value = this.context;
+    /* ... */
+  }
+  componentWillUnmount() {
+    let value = this.context;
+    /* ... */
+  }
+  render() {
+    let value = this.context;
+    /* 基于 MyContext 组件的值进行渲染 */
+  }
+}
+MyClass.contextType = MyContext;
+
+
+便捷语法
+class MyClass extends React.Component {
+  static contextType = MyContext;
+  render() {
+    let value = this.context;
+    /* 基于这个值进行渲染工作 */
+  }
+}
+挂载在 class 上的 contextType 属性会被重赋值为一个由 React.createContext() 创建的 Context 对象。这能让你使用 this.context 来消费最近 Context 上的那个值。你可以在任何生命周期中访问到它，包括 render 函数中。
+```
+
++ context.consumer
+
+```jsx
+<MyContext.Consumer>
+  {value => /* 基于 context 值进行渲染*/}
+</MyContext.Consumer>
+// 如果是多级嵌套的之只拿里这个context最近的Provider提供的值，如果没有就是default value
+```
+
++ 下面这个api是对dev tools工具友好的
+
+```jsx
+// context 对象接受一个名为 displayName 的 property，类型为字符串。React DevTools 使用该字符串来确定 context 要显示的内容。
+
+const MyContext = React.createContext(/* some value */);
+MyContext.displayName = 'MyDisplayName';
+
+<MyContext.Provider> // "MyDisplayName.Provider" 在 DevTools 中
+<MyContext.Consumer> // "MyDisplayName.Consumer" 在 DevTools 中
+```
+
+#### 示例
+```jsx
+需求：我们要做一个主题可定制化的组件,要求就是会用context
+
+// theme-context.js
+export const themes = {
+  light: {
+    foreground: '#000000',
+    background: '#eeeeee',
+  },
+  dark: {
+    foreground: '#ffffff',
+    background: '#222222',
+  },
+};
+// 确保传递给 createContext 的默认值数据结构是调用的组件（consumers）所能匹配的！
+export const ThemeContext = React.createContext({
+  theme: themes.dark,// 默认值
+  toggleTheme: () => {},
+});
+
+
+// themed-button.js
+import {ThemeContext} from './theme-context';
+
+class ThemedButton extends React.Component {
+  render() {
+    let props = this.props;
+    let theme = this.context;
+    return (
+      <button
+        {...props}
+        style={{backgroundColor: theme.background}}
+      />
+    );
+  }
+}
+ThemedButton.contextType = ThemeContext;
+
+export default ThemedButton;
+
+
+// 从content中获取一个函数   theme-toggler-button.js
+
+import {ThemeContext} from './theme-context';
+
+function ThemeTogglerButton() {
+  // Theme Toggler 按钮不仅仅只获取 theme 值，它也从 context 中获取到一个 toggleTheme 函数
+  return (
+    <ThemeContext.Consumer>
+      {
+        ({theme, toggleTheme}) => (
+        <button          onClick={toggleTheme}
+          style={{backgroundColor: theme.background}}>
+          Toggle Theme
+        </button>
+      )
+      }
+    </ThemeContext.Consumer>
+  );
+}
+
+export default ThemeTogglerButton;
+
+
+// app.js
+import {ThemeContext, themes} from './theme-context';
+import ThemedButton from './themed-button';
+import ThemeTogglerButton from './theme-toggler-button';
+// 一个使用 ThemedButton 的中间组件
+function Toolbar(props) {
+  return (
+    <ThemedButton onClick={props.changeTheme}>
+      Change Theme
+    </ThemedButton>
+  );
+}
+
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      theme: themes.light,
+    };
+
+    this.toggleTheme = () => {
+      this.setState(state => ({
+        theme:
+          state.theme === themes.dark
+            ? themes.light
+            : themes.dark,
+      }));
+    };
+  }
+
+  render() {
+    // 在 ThemeProvider 内部的 ThemedButton 按钮组件使用 state 中的 theme 值，
+    // 而外部的组件使用默认的 theme 值
+    return (
+      <Page>
+        <ThemeContext.Provider value={this.state.theme}>
+          <Toolbar changeTheme={this.toggleTheme} />
+          <ThemeTogglerButton />
+        </ThemeContext.Provider>
+        <Section>
+          <ThemedButton />
+        </Section>
+      </Page>
+    );
+  }
+}
+
+ReactDOM.render(<App />, document.root);
+```
+
++ 消费多个值
+
+这东西不推荐，如果要消费多值，可以写到一个组件的渲染函数中去 calss.contextType那种
+
+```jsx
+// Theme context，默认的 theme 是 “light” 值
+const ThemeContext = React.createContext('light');
+
+// 用户登录 context
+const UserContext = React.createContext({
+  name: 'Guest',
+});
+
+class App extends React.Component {
+  render() {
+    const {signedInUser, theme} = this.props;
+
+    // 提供初始 context 值的 App 组件
+    return (
+      <ThemeContext.Provider value={theme}>
+        <UserContext.Provider value={signedInUser}>
+          <Layout />
+        </UserContext.Provider>
+      </ThemeContext.Provider>
+    );
+  }
+}
+
+function Layout() {
+  return (
+    <div>
+      <Sidebar />
+      <Content />
+    </div>
+  );
+}
+
+// 一个组件可能会消费多个 context
+function Content() {
+  return (
+    <ThemeContext.Consumer>
+      {theme => (
+        <UserContext.Consumer>
+          {user => (
+            <ProfilePage user={user} theme={theme} />
+          )}
+        </UserContext.Consumer>
+      )}
+    </ThemeContext.Consumer>
+  );
+}
+```
+
+#### 注意如何避免重新渲染的发生
+答案简单，就是把state提到父组件去
+
+```jsx
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      value: {something: 'something'},
+    };
+  }
+
+  render() {
+    return (
+      <Provider value={this.state.value}>
+        <Toolbar />
+      </Provider>
+    );
+  }
+}
+```
+
+
+
+
+
+### Ref有什么用？怎么用？
+这东西可以使你直接操作组件或者dom
+
+#### 直接换发到DOM上
+```jsx
+const FancyButton = React.forwardRef((props, ref) => (
+  <button ref={ref} className="FancyButton">
+    {props.children}
+  </button>
+));
+
+// 你可以直接获取 DOM button 的 ref：
+const ref = React.createRef();
+<FancyButton ref={ref}>Click me!</FancyButton>;
+
+
+```
+
+#### 注意
+#### 不推荐使用Ref
+### 
+### 非常简单的功能Fragments
+     这东西主要是解决这个问题
+
+```jsx
+class Columns extends React.Component {
+  render() {
+    return (
+      <div>
+        <td>Hello</td>
+        <td>World</td>
+      </div>
+    );
+  }
+}
+
+class Table extends React.Component {
+  render() {
+    return (
+      <table>
+        <tr>
+          <Columns />
+        </tr>
+      </table>
+    );
+  }
+}
+
+<table>
+  <tr>
+    <div>
+      <td>Hello</td>
+      <td>World</td>
+    </div>
+  </tr>
+</table>
+
+```
+
+
+
+如果是使用<font style="color:#000000;">Fragments </font>
+
+```jsx
+class Columns extends React.Component {
+  render() {
+    return (
+      <>
+        <td>Hello</td>
+        <td>World</td>
+      </>
+    );
+  }
+}
+
+// 如果你需要加key 你可以这样
+class Columns extends React.Component {
+  render() {
+    return (
+      <React.Fragment key={yourKey}>
+        <td>Hello</td>
+        <td>World</td>
+      <React.Fragment/>
+    );
+  }
+}
+
+```
+
+
+
+### 逻辑复用和UI复用（封装）
+> 高阶组件还是相对比较简单的东西，我们来这篇文档就够了
+>
+
+#### prop的几种常见的设计模式
+> render-props <font style="color:#000000;">它可以把特定行为或功能封装成一个组件，提供给其他组件使用让其他组件拥有这样的能力</font>
+>
+
+1. 要实现这样的方式设计方式，首先我们需要使用 拿到公用的组件的状态state，<font style="color:rgba(0, 0, 0, 0.75);">在使用组件时，添加一个值为函数的prop，通过函数参数来获取需要被提取出来公共的状态</font>
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597218050262-43e20f57-b6a3-4822-9c6c-55c3b27b9b73.png)
+
+2. 如何渲染任意的ui呢？也非常的简单，有了数据直接渲染就好了
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597218128831-be9bc5b9-8e90-4f6a-b331-8f954aa6c40a.png)
+
+```javascript
+class Mouse extends React.Component {
+    // 鼠标位置状态
+    state = {
+        x: 0,
+        y: 0
+    }
+
+    // 监听鼠标移动事件
+    componentDidMount(){
+        window.addEventListener('mousemove',this.handleMouseMove)
+    }
+    handleMouseMove = e => {
+        this.setState({
+            x: e.clientX,
+            y: e.clientY
+        })
+    }
+    render(){
+        // 向外界提供当前子组件里面的数据，重点，使用这个方法的返回值，就能渲染任意结构的ui了！秒啊，而且也为逻辑的操作都是内部实现的！完全解耦
+        return this.props.render(this.state)
+    }
+}
+class App extends React.Component {
+    render() {
+        return (
+            <div>
+                App
+                <Mouse render={mouse => {
+                    return <p>X{mouse.x}Y{mouse.y}</p>
+                }}/>
+            </div>
+        )
+    }
+}
+ReactDOM.render(<App />,document.getElementById('root'))
+```
+
+3. 优化注意事项
++ 我们一般使用children来代替redner属性名
++ 推荐把props添加上校验规则
++ 性能角度 ，组件销毁的时候要解绑事件
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597218348766-7a150ff5-8797-4018-aa45-5ad355646092.png)
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597218362434-f55e57a0-cc5c-44b1-9f17-e8815f10c978.png)
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597218396384-034dab15-231a-4136-857b-edc0e65f352b.png)
+
+```javascript
+class Mouse extends React.Component {
+    // 鼠标位置状态
+    state = {
+        x: 0,
+        y: 0
+    }
+
+    // 监听鼠标移动事件
+    componentDidMount(){
+        window.addEventListener('mousemove',this.handleMouseMove)
+    }
+    handleMouseMove = e => {
+        this.setState({
+            x: e.clientX,
+            y: e.clientY
+        })
+    },
+     componentWillUnmount(){
+			window.removeEvenListener("mousemove",this.handleMouserMove)
+     }
+    render(){
+        // 向外界提供当前子组件里面的数据，重点，使用这个方法的返回值，就能渲染任意结构的ui了！秒啊，而且也为逻辑的操作都是内部实现的！完全解耦
+        return this.props.children(this.state)
+    }
+     
+}
+class App extends React.Component {
+    render() {
+        return (
+            <div>
+                App
+                <Mouse children={mouse => {
+                    return <p>X{mouse.x}Y{mouse.y}</p>
+                }}/>
+            </div>
+        )
+    }
+}
+ReactDOM.render(<App />,document.getElementById('root'))
+```
+
+#### 高阶的组件封装
+> HOC高阶组件实际上是一个工具，<font style="color:rgba(0, 0, 0, 0.75);">实现状态逻辑复用，采取</font><font style="color:rgba(0, 0, 0, 0.75);">包装模式</font>
+>
+> <font style="color:rgba(0, 0, 0, 0.75);">高阶组件(HOC、Higher-Order Component) 是一个函数，接收要包装的组件，返回增强后的组件</font>
+>
+
+##### 核心技术
+    - <font style="color:rgba(0, 0, 0, 0.75);">接收要包装的组件，返回增强后的组件</font>
+    - ![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597218664266-1b8f8ac8-0ae4-4123-bfac-11333ff32102.png)
+    - 高级组件内部创建了一个类组件
+    - ![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597218694856-13116275-4b7d-4994-a691-b92b3952ba7c.png)
+
+##### 使用说明
++ 创建一个函数，名称约定以with开头
++ 指定函数参数，参数应该以大写字母开头
++ 在函数内部创建一个类组件，提供复用的状态逻辑代码，并返回
++ 在该组件中，渲染参数组件，同时将状态通过prop传递给参数组件
++ 调用该高阶组件，传入要增强的组件，通过返回值拿到增强后的组件，并将其渲染到页面
+
+
+
+包装函数
+
+```javascript
+// 定义一个函数，在函数内部创建一个相应类组件
+function withMouse(WrappedComponent) {
+    // 该组件提供复用状态逻辑
+    class Mouse extends React.Component {
+        state = {
+            x: 0,
+            y: 0
+        }
+        // 事件的处理函数
+        handleMouseMove = (e) => {
+            this.setState({
+                x: e.clientX,
+                y: e.clientY
+            })
+        }
+        // 当组件挂载的时候进行事件绑定
+        componentDidMount() {
+            window.addEventListener('mousemove', this.handleMouseMove)
+        }
+        // 当组件移除时候解绑事件
+        componentWillUnmount() {
+            window.removeEventListener('mousemove', this.handleMouseMove)
+        }
+        render() {
+            // 在render函数里面返回传递过来的组件，把当前组件的状态设置进去
+            return <WrappedComponent {...this.state} />
+        }
+    }
+    return Mouse
+}
+```
+
+<font style="color:rgba(0, 0, 0, 0.75);">加强组件</font>
+
+```javascript
+function Position(props) {
+    return (
+        <p> // 这里的prop实际上就是我们的高阶函数里的state
+            X:{props.x}
+            Y:{props.y}
+        </p>
+    )
+}
+// 把position 组件来进行包装
+let MousePosition = withMouse(Position)
+
+class App extends React.Component {
+    constructor(props) {
+        super(props)
+    }
+    render() {
+        return (
+            <div>
+                高阶组件
+                <MousePosition></MousePosition>
+            </div>
+        )
+    }
+}
+```
+
+##### 优化和改进
+> 使用高阶组件存在如下的问题,
+>
+
+1. 存在两个同名称的组件，没法区分（在dev-tools中）
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597219199569-59043615-d8ca-4285-9a70-c5570e56e95f.png)
+
+为什么出现这个问题？![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597219233222-8cdff7f8-c4ab-4335-8252-7b3006b8130c.png)
+
+```javascript
+           // 在render函数里面返回传递过来的组件，把当前组件的状态设置进去
+            return <WrappedComponent {...this.state} />
+        }
+    }
+    return Mouse  // 你看都返回了Mouse
+```
+
+解决方案，设置名字
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597219293077-206f870f-6df0-4e70-ab96-9a591dcaea0a.png)
+
+这里的name就是组件的名称，注意啊，这个getDispalyName是不写在外面的！写在index中
+
+```javascript
+import React from 'react'
+import ReactDOM from 'react-dom'
+
+/* 
+  高阶组件
+*/
+
+import img from './images/cat.png'
+
+// 创建高阶组件
+function withMouse(WrappedComponent) {
+  // 该组件提供复用的状态逻辑
+  class Mouse extends React.Component {
+    // 鼠标状态
+    state = {
+      x: 0,
+      y: 0
+    }
+
+    handleMouseMove = e => {
+      this.setState({
+        x: e.clientX,
+        y: e.clientY
+      })
+    }
+
+    // 控制鼠标状态的逻辑
+    componentDidMount() {
+      window.addEventListener('mousemove', this.handleMouseMove)
+    }
+
+    componentWillUnmount() {
+      window.removeEventListener('mousemove', this.handleMouseMove)
+    }
+
+    render() {
+      return <WrappedComponent {...this.state} />
+    }
+  }
+
+  // 设置displayName
+  Mouse.displayName = `WithMouse${getDisplayName(WrappedComponent)}`
+
+  return Mouse
+}
+
+function getDisplayName(WrappedComponent) {
+  return WrappedComponent.displayName || WrappedComponent.name || 'Component'
+}
+
+// 用来测试高阶组件
+const Position = props => (
+  <p>
+    鼠标当前位置：(x: {props.x}, y: {props.y})
+  </p>
+)
+
+// 猫捉老鼠的组件：
+const Cat = props => (
+  <img
+    src={img}
+    alt=""
+    style={{
+      position: 'absolute',
+      top: props.y - 64,
+      left: props.x - 64
+    }}
+  />
+)
+
+// 获取增强后的组件：
+const MousePosition = withMouse(Position)
+
+// 调用高阶组件来增强猫捉老鼠的组件：
+const MouseCat = withMouse(Cat)
+
+class App extends React.Component {
+  render() {
+    return (
+      <div>
+        <h1>高阶组件</h1>
+        {/* 渲染增强后的组件 */}
+        <MousePosition />
+        <MouseCat />
+      </div>
+    )
+  }
+}
+
+ReactDOM.render(<App />, document.getElementById('root'))
+
+```
+
+2. 我们还有问题，就是prop传参的是也是一个问题
++ 问题：如果没有传递props，会导致props丢失问题
++ 解决方式： 渲染WrappedComponent时，将state和props一起传递给组件
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597220461136-08b44bea-b36e-47ca-a753-e201d585df52.png)
+
+```javascript
+import React from 'react'
+import ReactDOM from 'react-dom'
+
+/* 
+  高阶组件
+*/
+
+// 创建高阶组件
+function withMouse(WrappedComponent) {
+  // 该组件提供复用的状态逻辑
+  class Mouse extends React.Component {
+    // 鼠标状态
+    state = {
+      x: 0,
+      y: 0
+    }
+
+    handleMouseMove = e => {
+      this.setState({
+        x: e.clientX,
+        y: e.clientY
+      })
+    }
+
+    // 控制鼠标状态的逻辑
+    componentDidMount() {
+      window.addEventListener('mousemove', this.handleMouseMove)
+    }
+
+    componentWillUnmount() {
+      window.removeEventListener('mousemove', this.handleMouseMove)
+    }
+
+    render() {
+      console.log('Mouse:', this.props)
+      return <WrappedComponent {...this.state} {...this.props} />
+    }
+  }
+
+  // 设置displayName
+  Mouse.displayName = `WithMouse${getDisplayName(WrappedComponent)}`
+
+  return Mouse
+}
+
+function getDisplayName(WrappedComponent) {
+  return WrappedComponent.displayName || WrappedComponent.name || 'Component'
+}
+
+// 用来测试高阶组件
+const Position = props => {
+  console.log('Position:', props)
+  return (
+    <p>
+      鼠标当前位置：(x: {props.x}, y: {props.y})
+    </p>
+  )
+}
+
+// 获取增强后的组件：
+const MousePosition = withMouse(Position)
+
+class App extends React.Component {
+  render() {
+    return (
+      <div>
+        <h1>高阶组件</h1>
+        <MousePosition a="1" />
+      </div>
+    )
+  }
+}
+
+ReactDOM.render(<App />, document.getElementById('root'))
+
+```
+
+#### 总结
++ 组件通讯是构建React应用必不可少的一环
++ props的灵活性让组件更加强大
++ 状态提升是React组件的常用模式
++ 组件生命周期有助于理解组件的运行过程
++ 钩子函数让开发者可以在特定的时机执行某些功能
++ render props 模式和高阶组件都可以实现组件状态逻辑的复用
++ 组件极简模型： (state,props) => UI
+
+
+
+#### 关于部分的性能优化问题
+> 我们可以通过一个特殊的生命周期函数，解决render多次非必要渲染所带来的性能问题，
+>
+
+shoulCompentUpadta（）{}
+
+如果这个函数返回的是fasle表示不会调用render函数进行页面的重新渲染，这个函数有两个参数
+
+上一个的prop，最新的prop，我们只需要对比两个是不是一样就好了，不一样就渲染，一样就不渲染
+
+
+
+目前这个东西，在React的更高版本中，好像是不能用了，于是还有另外的技术手段来解决这个问题
+

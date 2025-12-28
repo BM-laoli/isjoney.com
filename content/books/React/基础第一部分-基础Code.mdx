@@ -1,0 +1,893 @@
+---
+title: "React 基础入门：脚手架、JSX、组件与状态管理"
+date: "2024-12-19"
+summary: "系统学习 React 基础知识，包括脚手架使用、JSX 语法、组件创建、状态管理和事件处理，通过实战案例掌握 React 开发核心技能。"
+status: "completed"
+tech: ["React", "JavaScript", "JSX"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "React"
+---
+
+> 在React基础中，我们需要完成如下的学习
+>
+> + 脚手架使用 。
+> + jsx    
+> + 组件，
+> + 状态，
+> + 事件，
+> + 案例
+>
+
+## 一，入门&&脚手架
+### React是什么
+> 是什么？
+>
+> 1. 一个构件V的层面，不是一个完成的MVC，一个构建用户界面的库
+>
+> 
+>
+> 特点？
+>
+> 1. 声明式：你只需要描述UI长什么样就好了/
+> 2. **<font style="color:#F5222D;">基础组件</font>**： 最重要的内容，
+> 3. 到处跑：原生应用可以，vr可以 ，
+>
+
+### 基础的使用
+> 是安装脚手架
+>
+
+```shell
+npm i recat rect-dom 
+第一个是核心包，提供创建元素，组件等功能
+第二个是一个提供DOM相关的包
+```
+
+1. 引入recat 还有 recat-dom
+2. 创建recat元素
+3. 渲染recat到页面中
+
+```javascript
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  
+  <script src="https://cdn.bootcdn.net/ajax/libs/react/17.0.1/umd/react.development.js"></script>
+  <script src="https://cdn.bootcdn.net/ajax/libs/react-dom/17.0.1/umd/react-dom.development.js"></script>
+  
+  <!-- 为了使用jsx我们需需要用bable进行预编译 -->
+  <script src="https://cdn.bootcss.com/babel-core/5.8.34/browser.min.js"></script>
+
+  <body>
+    <div id="app"></div>
+    <div id="app2"></div>
+  </body>
+
+  <script type="text/babel">
+    const CommonA = () => {
+      return <a>123</a>;
+    };
+    ReactDOM.render(<CommonA></CommonA>, document.getElementById("app2"));
+  </script>
+</html>
+
+```
+
+### 脚手架
+> 以前我们都是直接使用cli但是我们都不知道为什么要使用cli接下里，听老夫吹水一波
+>
+> 1. 是现代开发必备的
+> 2. 充分的利用了各种工具webpack bable  eslint等，辅助开发
+> 3. 零配置，无序配置，关注的是代码业务 而不是配置
+>
+
+1. 执行命令创建项目
+
+```typescript
+npx create-react-app my-app
+npx 是5.2的东西，npm不需要安装脚手架，可以直接用。create-react-app是脚手架的名称 
+```
+
+2. 运行 start就好了
+
+### 在Reatc脚手架项目中配置项目
+> 实际上的效果是没有任何变化的
+>
+
+```javascript
+import React from 'react'  
+import ReactDOM from 'react-dom'  // z注意，如果你做的原生app用的就是零个RN去渲染，而不是ReactDOM
+
+const title = React.createElement( 'h1',null,'hellwe!')
+
+// 注意这个root是再public下的index中的根元素的
+ReactDOM.render( title,document.getElementById('root') )
+```
+
+## 二、JSX 核心
+> 首先我们来介绍如下的学习目标
+>
+> 1. jsx基础的使用
+> 2. jsx中的js表达式
+> 3. jsx中的条件渲染
+> 4. jsx中的列表渲染
+> 5. jsx中的演示处理
+> 6. 手写太累了？建议试一下vs的提示代码插件，完美提升开发速度
+>
+
+
+
+### jsx基础使用
+> 实际上就是js版的html，jsx是JavaScript xml 表示在js中写xml和html内容
+>
+
+```javascript
+import React from 'react'
+import ReactDOM from 'react-dom'
+
+// const title = React.createElement( 'h1',null,'hellwe!')
+// 使用jsx
+const title = <h1>hellow jsx</h1>
+
+
+// 注意这个root是再public下的index中的根元素的
+ReactDOM.render( title,document.getElementById('root') )
+```
+
+### 为什么脚手架中    直接写可以html？
+> 注意脚手架内部做了转化bable @bable/preset-reacle    
+>
+
+### 注意事项：在jsx中注意实现
+1. {}中可以使用js语法
+2. jsx自己页是一个变量 可以插入
+3. jsx中对象是一个例外，不能插入
+4. 注意{}中不能出现体语句，if/for
+
+```typescript
+
+const name = 'zs'
+const age = 18
+const gender = 'man'
+
+const div = (
+  <div>我是一个div</div>
+)
+
+const title = (
+  // 注意属性名需要用小驼峰
+  // 注意一些特殊的属性名，class => calssName  for => htmlFor。。。。
+  // 建议使用小括号包裹起来jsx
+  <h1 className="title">
+
+
+    姓名：{name}
+    <br />
+    年龄：{age}
+    <br />
+    行呗：{gender + 5}
+    {div}  
+  </h1>
+
+  
+)
+```
+
+### 条件渲染& 列表渲染
+> 注意，这个就是React中的特点，用正确的方式做正确的事情，
+>
+> 
+>
+> 1. 使用函数去判断，完成条件渲染
+> 2. 使用map方法去做隐射，注意要谢上key
+>
+
+```javascript
+const loadData = () => {
+    return isloading && (<div>显示完成~</div>)
+}
+
+
+// 列表渲染
+const list = [
+  {id:1,name:'zs'},
+  {id:2,name:'ls'},
+  {id:3,name:'ww'}
+]
+
+const title = (
+  <div>
+    <h2>
+      {loadData()}
+    </h2>
+    <div>
+      <ul>
+        {list.map( v => <li key={v.id} > {v.name} </li>  )}
+      </ul>
+    </div>
+  </div>
+)
+```
+
+### jsx中的样式绑定
+> 实际上非常的容易，两种方式styel内嵌还有映入文件，挂类名的
+>
+
+```javascript
+import './index.css'
+
+const text= (
+  <div className="title" style={{'color':'red','backgroundColor':'pink'}}>
+    点击
+  </div>  
+)
+```
+
+
+
+> <font style="color:#F5222D;background-color:#FADB14;">总结 Resct完全使用js语言，来编写ui，而不是找轮子增强HTML功能！在React中能用js的地方绝对不增加新的语法</font>
+>
+
+## 三、组件
+> react中的组件的非常重要的东西。
+>
+
+### 基础的使用
+> 组价就是recat的核心，独立性，组合型，可组合可以复用
+>
+
++ 使用组件有两种方式，函数式（不常用），箭头函数也是ok的，但是后续有问题的，我们后面再说，
+
+> 为什么要使用大写？因为可以区分是组件还是元素
+>
+
+```typescript
+
+function Hellow () {
+  return ( <h1>helloe 我是一个函数组件</h1> )
+}
+
+
+// 注意这个root是再public下的index中的根元素的
+ReactDOM.render( <Hellow />,document.getElementById('root') )
+```
+
+
+
++ 使用类来创建（常用）
++ _**<font style="color:#F5222D;">React.Component必须继承 必须由返回值，必须由值</font>**_
+
+```javascript
+//  React.Component必须继承 必须由返回值，必须由值
+class Hello extends React.Component {
+  render() {
+    return ( <h1>是我了，没错了！</h1> )
+  }
+}
+
+
+// 注意这个root是再public下的index中的根元素的
+ReactDOM.render( <Hello />,document.getElementById('root') )
+```
+
+### 单独抽离组件
+> 这个很重要，直接抽离出去就好了,做起来也非常的好，直接抽出来就好了
+>
+
+
+
+hello.js
+
+```javascript
+import React from 'react'
+
+class Hello extends React.Component {
+    render() {
+      return ( <h1>是我了，没错了！</h1> )
+    }
+}
+
+export default Hello
+
+
+
+// 这样就好了
+import Hello from './hello'
+
+
+// 注意这个root是再public下的index中的根元素的
+ReactDOM.render( <Hello />,document.getElementById('root') )
+```
+
+### 事件处理&事件对象
+1. 我们先来看看如何进行事件的绑定，事件的搬定是非常简单的，只需要
+
+> 注意啊。class组件是this 而，函数组件是没有this的！
+>
+
+```javascript
+import React from 'react'
+
+class Hello extends React.Component {
+  hander(){
+    console.log('点击了我！');
+  }
+  render() {
+    // 这里需要注意的点是onclick必须是小驼峰的
+      return ( <button onClick={this.hander}> 点击我</button> )
+    }
+}
+
+export default Hello
+```
+
+2. 事件对象
+
+```javascript
+  hander(e){
+    // 注意这个e是跨平台的！,这个e也叫“作合成事件”
+    e.preventDefault()
+    console.log('点击了我！');
+  }
+```
+
+## 四 、状态
+### 有、无状态state
+
+
+事实上，有非常简单的理解就是有状态组件就是指的是class的组件
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1596255887227-4ed977d9-484d-48a7-96af-845c32d4c0db.png)
+
+### 状态到底是什么？
+> ### 实际上状态就是data数据（类似于vue中的data）
+
+1. 我们来定义一个数据
+
+```javascript
+
+class Hello extends React.Component {
+  // constructor(){
+  //   super()
+
+  //   this.state = {
+  //     count  = 0
+  //   }
+  // }
+  state = {
+    count : 0
+  }
+
+  hander = (e) => {  // 注意这里的this问题 箭头函数可以，bind也可以
+    this.setState({
+      count : this.state.count + 1
+    })
+  }
+  render() {
+    // 这里需要注意的点是onclick必须是小驼峰的
+
+      return ( 
+      <div>
+        <h1>{this.state.count}</h1>
+        <button onClick={this.hander}> 点击我可以+1</button>
+      </div> )
+    }
+}
+```
+
+2. 我们来改变一个数据（React中默认支持响应mvvm） 详细的代码如上已经给出
+
+### 
+## 五、事件
+## 受控组件还有非受控组件
+> 所谓的受控组件，就是有recate的state控制的组件，默认的情况下，html有自己的状态，比如input框，可以自己输入，
+>
+> 但是recate希望由自己的state控制，于是就有了受控组件，实现一个受控组件
+>
+
+1. 实现一个最简单的受控组件input进行双向的数据绑定
+
+```javascript
+  state = {
+    text :'',
+  }
+
+  // 事件
+  hander = (e) => {  // 注意这里的this问题
+    this.setState({
+      text : e.target.value,
+
+    })
+  }
+ <div>
+   <h1>{this.state.text}</h1>
+	 <input value={this.state.text} onChange={this.hander}></input>
+</div>
+```
+
+2. 实现多个受控的组件
+
+```javascript
+import React from 'react'
+
+class Hello extends React.Component {
+  // constructor(){
+  //   super()
+
+  //   this.state = {
+  //     count  = 0
+  //   }
+  // }
+  state = {
+    text :'',
+    content:'',
+    city:'bj',
+    checked:false
+  }
+
+  // 事件
+  hander = (e) => {  // 注意这里的this问题
+    this.setState({
+      text : e.target.value,
+
+    })
+  }
+
+  handerContet = (e) => {  // 注意这里的this问题
+    this.setState({
+      content : e.target.value,
+
+    })
+  }
+
+  handerCity = (e) => {  // 注意这里的this问题
+    this.setState({
+      city : e.target.value,
+
+    })
+  }
+
+  handerCheckebox = (e) => {  // 注意这里的this问题
+    this.setState({
+      checked : e.target.checked,
+
+    })
+  }
+  render() {
+      return ( 
+      <div>
+        {/* input简单的受控组件 */}
+        <div>
+          <h1>{this.state.text}</h1>
+          <input value={this.state.text} onChange={this.hander}></input>
+        </div>
+        {/* 富文本受控组件 */}
+        <div>
+          <textarea value={this.state.content} onChange={this.handerContet}></textarea>
+        </div>
+        {/* 下拉选择受控组件 */}
+        <div>
+          <select value={this.state.city} onChange={this.handerCity}>
+            <option value="sh">上海</option>
+            <option value="gz">官洲</option>
+            <option value="bj">北京</option>
+          </select>
+        </div>
+      </div> )
+    }
+}
+
+export default Hello
+```
+
+
+
+### 多表单元素的优化
+> 使用一个处理程序，处理多个事件，实际上，这个也是一个造轮子的过程,我们给选框，打一个记号，然后根据记号，改变值
+>
+
+```javascript
+import React from 'react'
+
+class Hello extends React.Component {
+  // constructor(){
+  //   super()
+
+  //   this.state = {
+  //     count  = 0
+  //   }
+  // }
+  state = {
+    text :'',
+    content:'',
+    city:'bj',
+    checked:false
+  }
+
+  // 事件
+  handerFrom = (e) => {  // 注意这里的this问题
+    let target =  e.target
+     let value =  target.type === "checkbox"
+     ? target.checked 
+     : target.value
+
+     let name = target.name
+    this.setState({
+      [name] : value
+
+    })
+  }
+  render() {
+      return ( 
+      <div>
+        {/* input简单的受控组件 */}
+        <div>
+          <h1>{this.state.text}</h1>
+          <input name="text" value={this.state.text} onChange={this.handerFrom}></input>
+        </div>
+        {/* 富文本受控组件 */}
+        <div>
+          <textarea name="content" value={this.state.content} onChange={this.handerFrom}></textarea>
+        </div>
+        {/* 下拉选择受控组件 */}
+        <div>
+          <select name="select" value={this.state.city} onChange={this.handerFrom}>
+            <option value="sh">上海</option>
+            <option value="gz">官洲</option>
+            <option value="bj">北京</option>
+          </select>
+        </div>
+      </div> )
+    }
+}
+
+export default Hello
+```
+
+### 非受控组件
+> 这个知识点，我们了解就好了，在react中是不推荐直接操作dom的
+>
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1596445067888-2749fdef-865c-4f22-ab3f-6d651aac2b78.png)
+
+### React中的组件基础总结
+![画板](https://cdn.nlark.com/yuque/0/2020/png/1627571/1602641834964-9c525e50-426c-40e3-9e7d-4b2e7285fe7d.png)
+
+## 六、综合练习
+1. 渲染列表
+
+<font style="color:#F5222D;">列表渲染，条件渲染</font>
+
+> 有关于列表的渲染还是非常的简单的，只需要渲染遍历map就好了
+>
+
+```javascript
+
+import React from 'react'
+class Commont extends  React.Component {
+
+  state =  {
+    comment:[
+      { id:1, name:'jack', content:'沙发！！！' },
+      { id:2, name:'roes', content:'heieh' },
+      { id:3, name:'tom', content:'板凳' },
+      { id:4, name:'JRET', content:'有点意思~' }
+    ]
+  }
+  render() {
+    return (
+      <div className="app">
+        {/* 顶部盒子 */}
+        <div>
+          <input  className="user" type='text' placeholder="请输入评论人" />
+          <br />
+          <textarea
+            className="content"
+            cols="30"
+            rows="10"
+            placeholder="请输入评论内容"
+          />
+          <br />
+          <button>发布评论</button>
+        </div>
+      
+        {/* 中间盒子 */}
+        <div className="no-comment">暂无评论，快去评论吧</div>
+        {/* 品论额列表 */}
+			//核心代码
+        <ul>
+          {
+            this.state.comment.map(item => (
+              <li key={item.id}>
+                <h3>评论人： {item.name} </h3>
+                <p> 评论内容：{item.content} </p>
+              </li>
+            ) ) 
+          }
+        </ul>
+      </div>
+      
+    )
+  }
+
+}
+export {Commont}
+```
+
+> 做好写死的渲染之后，现在我们“活起来”尝试使用一下条件渲染吧~（ 又是一个造轮子的过程，注意啊，我们不允许在jsx中出现语句，形入if/else不允许出现）
+>
+
+```javascript
+// 这里只是给出核心代码，三元表达式那是真的香啊！！！ 
+
+{
+        this.state.comment.length === 0
+        ? (
+          <div className="no-comment">暂无评论，快去评论吧</div>
+        )
+        : (
+            <ul>
+            {
+              this.state.comment.map(item => (
+                <li key={item.id}>
+                  <h3>评论人： {item.name} </h3>
+                  <p> 评论内容：{item.content} </p>
+                </li>
+              ) ) 
+            }
+          </ul>
+        )
+       }
+```
+
+> 功能是可以并且允许 无限的优化的。接下来，我们丢带方法里去
+>
+
+```javascript
+
+renderList() {
+	
+ 	if( this.state.comment.length === 0 ){ 
+  	return  ( <div className="no-comment">暂无评论，快去评论吧</div> )   
+     }
+
+  return (
+
+      this.state.comment.map(item => (
+                  <li key={item.id}>
+                    <h3>评论人： {item.name} </h3>
+                    <p> 评论内容：{item.content} </p>
+                  </li>
+                ) ) 
+  )
+}
+```
+
+2. 发布评论功能
+
+<font style="color:#F5222D;">受控组件，更新状态</font>
+
+> 准备数据，实现受控组件，注意这里的   属性名表达式（ES6的语法），这个也是非常重要的一点！
+>
+
+```javascript
+// 注意，这里只是列举了一些核心的代码块
+  state =  {
+    comment:[
+      { id:1, name:'jack', content:'沙发！！！' },
+      { id:2, name:'roes', content:'heieh' },
+      { id:3, name:'tom', content:'板凳' },
+      { id:4, name:'JRET', content:'有点意思~' }
+    ],
+    userName:'',
+    userContent:''
+  }
+
+
+  // 首先双向的数据搬定方式,注意this问题！
+  handleChange = (e) => {
+    const { name,value } = e.target
+    this.setState({
+      [name]:value
+    })
+  }
+  
+  // DOM的互动
+     <div className="app">
+        <div>
+          <input  
+            className="user" 
+            type='text' 
+            placeholder="请输入评论人" 
+            value={userName}
+            name='userName'
+            onChange={this.handleChange}
+            />
+          <br />
+          <textarea
+            className="content"
+            cols="30"
+            rows="10"
+            placeholder="请输入评论内容"
+            value={userContent}
+            name='userContent'
+            onChange={this.handleChange}
+          />
+```
+
+> 接下俩的事情久是水到渠成了！获取数据更新数组列表就完事了！
+>
+> ![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1596457823474-6d4e6950-4b16-42bb-a8d7-a03cb869c6e1.png)
+>
+
+```javascript
+// 这里只是列举出几个核心的代码.注意这里的结构赋值很重要！,数组的往前的添加方法666的写法
+	
+  // 点击按钮添加数据
+  addCommet = () => {
+    const { userContent,userName,comment } = this.state
+    
+    let newComment = [ {  
+      id:comment[comment.length-1].id + 1, // id自增
+      name:userName,
+      content:userContent 
+     } ,...comment ]
+     
+     this.setState({
+       comment:newComment
+     })
+  }
+
+
+
+ <button onClick={this.addCommet}>发布评论</button>
+```
+
+> 完善组件的功能
+>
+
+```javascript
+ // 点击按钮添加数据
+  addCommet = () => {
+    const { userContent,userName,comment } = this.state
+    
+
+    // 做一些数据校验的工作
+    if(userContent.trim() === '' || userName.trim() === ''  ){
+      alert('请输入评论人/品论内容')
+      return
+    }
+
+
+    let newComment = [ {  
+      id:Math.random(), 
+      name:userName,
+      content:userContent 
+     } ,...comment ]
+     
+     this.setState({
+       comment:newComment,
+      //  优化，点击之后清空表单
+      userContent:'',
+      userName:''
+     })
+  }
+```
+
+## 代码集合
+> 渲染的逻辑这里就不写了，直接拿出去渲染就是了
+>
+
+```javascript
+import React from 'react'
+class Commont extends  React.Component {
+
+  state =  {
+    comment:[
+      { id:1, name:'jack', content:'沙发！！！' },
+      { id:2, name:'roes', content:'heieh' },
+      { id:3, name:'tom', content:'板凳' },
+      { id:4, name:'JRET', content:'有点意思~' }
+    ],
+    userName:'',
+    userContent:''
+  }
+  
+  // 条件渲染列表组件
+  renderList () {
+    if( this.state.comment.length === 0 ) {
+      return (   <div className="no-comment">暂无评论，快去评论吧</div> )
+    }
+
+    return ( 
+        this.state.comment.map(item => (
+          <li key={item.id}>
+            <h3>评论人： {item.name} </h3>
+            <p> 评论内容：{item.content} </p>
+          </li>
+        ) ) 
+     )
+  }
+
+  // 首先双向的数据搬定方式,注意this问题！
+  handleChange = (e) => {
+    const { name,value } = e.target
+    this.setState({
+      [name]:value
+    })
+  }
+  
+  // 点击按钮添加数据
+  addCommet = () => {
+    const { userContent,userName,comment } = this.state
+    
+
+    // 做一些数据校验的工作
+    if(userContent.trim() === '' || userName.trim() === ''  ){
+      alert('请输入评论人/品论内容')
+      return
+    }
+
+
+    let newComment = [ {  
+      id:Math.random(), 
+      name:userName,
+      content:userContent 
+     } ,...comment ]
+     
+     this.setState({
+       comment:newComment,
+      //  优化，点击之后清空表单
+      userContent:'',
+      userName:''
+     })
+  }
+
+  
+  // 正式的返回值
+  render() {
+    // 先进行结构。使得结构看起来更加的清晰
+    const { userName,userContent } = this.state
+    return (
+      <div className="app">
+        <div>
+          <input  
+            className="user" 
+            type='text' 
+            placeholder="请输入评论人" 
+            value={userName}
+            name='userName'
+            onChange={this.handleChange}
+            />
+          <br />
+          <textarea
+            className="content"
+            cols="30"
+            rows="10"
+            placeholder="请输入评论内容"
+            value={userContent}
+            name='userContent'
+            onChange={this.handleChange}
+          />
+          <br />
+          <button onClick={this.addCommet}>发布评论</button>
+        </div>
+       
+       {this.renderList()}
+        
+      </div>
+      
+    )
+  }
+
+}
+export {Commont}
+```
+
+![](https://cdn.nlark.com/yuque/__puml/48a1408972f20bc1f4837aa807254692.svg)
+

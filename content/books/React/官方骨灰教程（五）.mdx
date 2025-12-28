@@ -1,0 +1,1056 @@
+---
+title: "React 核心技术：Ref、Hook 与组件设计模式"
+date: "2024-12-19"
+summary: "深入解析 React Ref 使用场景、Hook 原理与高级用法、组件设计模式及类型检查方案，涵盖函数组件与类组件的完整开发指南。"
+status: "completed"
+tech: ["React", "JavaScript", "TypeScript"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "React"
+---
+
+## ref和DOM
+> 在众多的组件库中，ref是非常重要的，对于一些特殊场景和 陈旧组件，ref有大用处，
+>
+
+
+
+### 为什么使用ref和注意事项
+当前，我们学习 父子组件的交互仅仅是通过props控制的，但是props会带来重新渲染，有时候会影响性能，或者在一些特定的场景下，props并不是非常我们进行代码组织，这时候ref就有用了
+
+比如如下的场景使用ref就非常的合适
+
++ 管理焦点，文本选择或媒体播放。
++ <font style="color:#1A1A1A;">触发强制动画</font>
++ 集成第三方 DOM 库。
+
+但是也需要避免过度使用ref。反而使用状态提升也是不错的方式
+
+### 使用指南
+#### 场景1-给DOM加ref
+```jsx
+class CustomTextInput extends React.Component {
+  constructor(props) {
+    super(props);
+    // 创建一个 ref 来存储 textInput 的 DOM 元素
+    this.textInput = React.createRef();
+    this.focusTextInput = this.focusTextInput.bind(this);
+  }
+
+  focusTextInput() {
+    // 直接使用原生 API 使 text 输入框获得焦点
+    // 注意：我们通过 "current" 来访问 DOM 节点
+    this.textInput.current.focus();
+  }
+
+  render() {
+    // 告诉 React 我们想把 <input> ref 关联到
+    // 构造器里创建的 `textInput` 上
+    return (
+      <div>
+        <input
+          type="text"
+          ref={this.textInput} />
+        <input
+          type="button"
+          value="Focus the text input"
+          onClick={this.focusTextInput}
+        />
+      </div>
+    );
+  }
+}
+
+// react会在 组件挂载时给给ref 中的current赋值存入的DOM元素，在卸载的时候传入null，ref优先于
+ componentDidMount 或 componentDidUpdate更新
+```
+
+#### 场景2-给Class组件加ref
+```jsx
+class CustomTextInput extends React.Component {
+  constructor(props) {
+    super(props);
+    // 创建一个 ref 来存储 textInput 的 DOM 元素
+    this.textInput = React.createRef();
+    this.focusTextInput = this.focusTextInput.bind(this);
+  }
+
+  focusTextInput() {
+    // 直接使用原生 API 使 text 输入框获得焦点
+    // 注意：我们通过 "current" 来访问 DOM 节点
+    this.textInput.current.focus();
+  }
+
+  render() {
+    // 告诉 React 我们想把 <input> ref 关联到
+    // 构造器里创建的 `textInput` 上
+    return (
+      <div>
+        <input
+          type="text"
+          ref={this.textInput} />
+        <input
+          type="button"
+          value="Focus the text input"
+          onClick={this.focusTextInput}
+        />
+      </div>
+    );
+  }
+}
+
+// 给class
+class AutoFocusTextInput extends React.Component {
+  constructor(props) {
+    super(props);
+    this.textInput = React.createRef();
+  }
+
+  componentDidMount() {
+    this.textInput.current.focusTextInput();
+  }
+
+  render() {
+    return (
+      <CustomTextInput ref={this.textInput} />
+    );
+  }
+}
+```
+
+#### 函数组件就没有机会了吗？
+有机会！但是不能直接给ref需要转化，并且结合hook
+
+  // 这个博客写的内容和实在
+
+  [函数组件的Rrf如何写？](https://www.cnblogs.com/yky-iris/p/12355243.html#:~:text=%E5%A4%A7%E5%AE%B6%E9%83%BD%E7%9F%A5%E9%81%93React%E4%B8%AD%E7%9A%84%20ref%20%E5%B1%9E%E6%80%A7%E5%8F%AF%E4%BB%A5%E5%B8%AE%E5%8A%A9%E6%88%91%E4%BB%AC%E8%8E%B7%E5%8F%96%E5%AD%90%E7%BB%84%E4%BB%B6%E7%9A%84%E5%AE%9E%E4%BE%8B%E6%88%96%E8%80%85Dom%E5%AF%B9%E8%B1%A1%EF%BC%8C%E8%BF%9B%E8%80%8C%E5%AF%B9%E5%AD%90%E7%BB%84%E4%BB%B6%E8%BF%9B%E8%A1%8C%E4%BF%AE%E6%94%B9%EF%BC%8C%E6%98%AF%E4%B8%80%E4%B8%AA%E5%BE%88%E6%96%B9%E4%BE%BF%E7%9A%84%E7%89%B9%E6%80%A7%E3%80%82%20%E5%9C%A8%E4%BC%A0%E7%BB%9F%E7%B1%BB%E7%BB%84%E4%BB%B6%E4%B8%AD%EF%BC%8C%E6%88%91%E4%BB%AC%E9%80%9A%E8%BF%87%E4%BD%BF%E7%94%A8%20React.createRef%20%28%29,%E5%88%9B%E5%BB%BA%E7%9A%84%EF%BC%8C%E5%B9%B6%E9%80%9A%E8%BF%87%20ref%20%E5%B1%9E%E6%80%A7%E9%99%84%E5%8A%A0%E5%88%B0%20React%20%E5%85%83%E7%B4%A0%20%E6%9D%A5%E4%BD%BF%E7%94%A8%E3%80%82)
+
+```jsx
+function FancyInput(props, ref) {
+  const inputRef = useRef();
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      inputRef.current.focus();
+    }
+  }));
+  return <input ref={inputRef} ... />;
+}
+FancyInput = forwardRef(FancyInput);
+
+// forwardRef方法是react中的，具体用于透传ref
+// 父组件如何调用指南
+<FancyInput ref={inputRef} />
+  inputRef.current.focus()。
+  
+  
+
+  
+
+
+```
+
+#### 
+
+
+### 组件中某些DOM暴露ref给父组件
+> #### 关于转发ref 很重要！，具体在前文  骨灰教程三中有详细描述，这个自己暴露的实现 主要还是依赖转发，在HOC中的实现代码如下,在antd中的部分源码也是使用该方式
+
+```jsx
+// hoc中的实现
+function logProps(Component) {
+  class LogProps extends React.Component {
+    componentDidUpdate(prevProps) {
+      console.log('old props:', prevProps);
+      console.log('new props:', this.props);
+    }
+
+    render() {
+      const {forwardedRef, ...rest} = this.props;
+
+      // 将自定义的 prop 属性 “forwardedRef” 定义为 ref
+      return <Component ref={forwardedRef} {...rest} />;
+    }
+  }
+
+
+
+  
+  // 注意 React.forwardRef 回调的第二个参数 “ref”。
+  // 我们可以将其作为常规 prop 属性传递给 LogProps，例如 “forwardedRef”
+  // 然后它就可以被挂载到被 LogProps 包裹的子组件上。
+  return React.forwardRef((props, ref) => {
+    return <LogProps {...props} forwardedRef={ref} />;
+  });
+}
+
+// fc中的实现
+
+```
+
+### 回调的形式使用ref
+这种形式不常见，
+
+```jsx
+// 这里列举了两种哈 一种是class组件的一种是FN组件的
+// 作用就是确保refs是最新的，在组件挂载之前可以拿到最新的refs
+class CustomTextInput extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.textInput = null;
+
+    this.setTextInputRef = element => {
+      this.textInput = element;
+    };
+
+    this.focusTextInput = () => {
+      // 使用原生 DOM API 使 text 输入框获得焦点
+      if (this.textInput) this.textInput.focus();
+    };
+  }
+
+  componentDidMount() {
+    // 组件挂载后，让文本框自动获得焦点
+    this.focusTextInput();
+  }
+
+  render() {
+    // 使用 `ref` 的回调函数将 text 输入框 DOM 节点的引用存储到 React
+    // 实例上（比如 this.textInput）
+    return (
+      <div>
+        <input
+          type="text"
+          ref={this.setTextInputRef}
+        />
+        <input
+          type="button"
+          value="Focus the text input"
+          onClick={this.focusTextInput}
+        />
+      </div>
+    );
+  }
+}
+
+
+
+function CustomTextInput(props) {
+  return (
+    <div>
+      <input ref={props.inputRef} />
+    </div>
+  );
+}
+
+class Parent extends React.Component {
+  render() {
+    return (
+      <CustomTextInput
+        inputRef={el => this.inputElement = el}
+      />
+    );
+  }
+}
+```
+
+## 协调react内部的一些算法
+在官方的文档中，一大幅文字的形式，解释了react内部是如何进行<font style="color:#6D6D6D;">diffing算法计算的，我们这里引用了一篇优秀博客来讲解，这里不打算将哈，打算新开一个解析react源码系列进行讲解，</font>
+
+<font style="color:#6D6D6D;"></font>
+
+## 严格模式和静态类型检查以及PropTypes类型检查
+
+
+### 静态类型检查Flow
+首先哈Flow是<font style="color:#000000;">Facebook 研发的，用于对js进行静态类型检查，使用方式如下，</font>
+
+需要注意的是，我们都是在create-react-app下进行的操作，由于Flow属于js语法拓展。浏览器并不支持它，你需要在构建的时候去掉它，但是好消息是，create-react-app内部已经去掉了，如果你不是用create-react-app，你需要百度一下了哈，
+
+1. 安装Flow
+
+```shell
+yarn add --dev flow-bin
+
+npm install --save-dev flow-bin
+```
+
+2. 添加一个script
+
+packjson中
+
+```json
+{
+  // ...
+  "scripts": {
+    "flow": "flow",
+    // ...
+  },
+  // ...
+}
+```
+
+3. 初始化
+
+```shell
+yarn run flow init
+npm run flow init
+
+# 完成初始化会生成一个flow配置文件，
+```
+
+4. 运行检查器
+
+```jsx
+yarn flow
+npm run flow
+
+如果你看到了该信息，说明，已经检查通过
+No errors!
+✨  Done in 0.17s.
+```
+
+5. 一些简单语法。如 类型注释
+
+```javascript
+// @flow
+function concat(a: string, b: string) {
+  return a + b;
+}
+
+concat("A", "B"); // Works!
+concat(1, 2); // Error!
+
+```
+
+### create-react-app 下配置Typescript
+在大型项目中我们更推荐是哟ts，而不是这些各种各样的检测器，ts也是未来js的方向！
+
+主要安装要点
+
++ 将 TypeScript 添加到你的项目依赖中。
++ 配置 TypeScript 编译选项
++ 使用正确的文件扩展名
++ 为你使用的库添加定义
+
+
+
+#### 直接使用cli内置的模板，这样最方便哈
+```shell
+npx create-react-app my-app --template typescript
+# 这样就好了！
+```
+
+#### 如果是后加呢？
+1. 安装ts
+
+```shell
+yarn add --dev typescript
+npm install --save-dev typescript
+```
+
+注意阿，还没有完，在编译的时候，我们build是需要执行tsc编译ts文件的，因此需要给build的script加上tsc命令,packjson中
+
+```json
+{
+  // ...
+  "scripts": {
+    "build": "tsc",
+    // ...
+  },
+  // ...
+}
+```
+
+
+
+2. 配置tsc编译的时候去编译ts
+
+如果没有tsc配置文件，那么tsc将会是毫无卵用的，
+
+```shell
+yarn run tsc --init
+npx tsc --init
+```
+
+执行上述命令会在项目根目录初始化一个`tsconfig.json`<font style="color:#000000;"> 文件，配置它很重要,下面是一般的配置,个性化配置需要看文档 </font>`tsconfig文档 [tsconfig](https://www.typescriptlang.org/docs/handbook/tsconfig-json.html)`
+
+```json
+// tsconfig.json
+
+{
+  "compilerOptions": {
+    // ...
+    "rootDir": "src",  需要tsc编译的文件来自 src下
+    "outDir": "build"  编译输出到 build下
+    // ...
+  },
+}
+
+
+// antdProp的tsconfig.json
+{
+  "compilerOptions": {
+    "outDir": "build/dist",
+    "module": "esnext",
+    "target": "esnext",
+    "lib": ["esnext", "dom"],
+    "sourceMap": true,
+    "baseUrl": ".",
+    "jsx": "react",
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "node",
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitReturns": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "noUnusedLocals": true,
+    "allowJs": true,
+    "skipLibCheck": true,
+    "experimentalDecorators": true,
+    "strict": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@@/*": ["./src/.umi/*"]
+    }
+  },
+  "exclude": ["node_modules", "build", "dist", "scripts", "src/.umi/*", "webpack", "jest"]
+}
+
+```
+
+之后就是正常开发使用.ts  使用tsx.打包一样打，运行一样run  start
+
+
+
+安装react的types声明,更多的声明文件type上看它和npm类似
+
+```shell
+# yarn
+yarn add --dev @types/react
+
+# npm
+npm i --save-dev @types/react
+```
+
+如果没有你需要的声明文件，那你需要自己定义一个
+
+具体方法
+
+1. 新建`declarations.d.ts`<font style="color:#000000;"> </font>
+2. 编码
+
+```typescript
+declare module 'querystring' {
+  export function stringify(val: object): string
+  export function parse(val: string): object
+}
+```
+
+### 其它扩展
+基于社区的，我们还有很多扩展。这里不详细的说明了，感兴趣的同学可以去看看react官方文档，
+
+### PropsTypes类型检查
+ 实际上这个我们现在用的比较少了，基本来都往ts上走,这里不过多说明，在基础教程里有说明
+
+
+
+### 严格模式
+<font style="color:#6D6D6D;">用来突出显示应用程序中潜在问题的工具,这里不过多讲解，实际项目中很少应用</font>
+
+
+
+## 非受控组件设计模式
+大多数情况下我们是不推荐使用非受控组件来干，受控组件干的事，但是偏要实现也是有方法的。那就是让DOM来完成，看下面的例子
+
+```jsx
+class NameForm extends React.Component {
+  constructor(props) {
+    super(props);
+    this.handleSubmit = this.handleSubmit.bind(this);
+    this.input = React.createRef();
+  }
+
+  handleSubmit(event) {
+    alert('A name was submitted: ' + this.input.current.value);
+    event.preventDefault();
+  }
+
+  render() {
+    return (
+      <form onSubmit={this.handleSubmit}>
+        <label>
+          Name:
+          <input type="text" ref={this.input} />
+        </label>
+        <input type="submit" value="Submit" />
+      </form>
+    );
+  }
+}
+
+// 还有更多的方式你应该值得注意，比如select上的默认value不是value，input为file；类型时如何处理等问题。
+下面还有一个例子就是其实现
+class FileInput extends React.Component {
+  constructor(props) {
+    super(props);
+    this.handleSubmit = this.handleSubmit.bind(this);
+    this.fileInput = React.createRef();
+  }
+  handleSubmit(event) {
+    event.preventDefault();
+    alert(
+      `Selected file - ${this.fileInput.current.files[0].name}`
+    );
+  }
+
+  render() {
+    return (
+      <form onSubmit={this.handleSubmit}>
+        <label>
+          Upload file:
+          <input type="file" ref={this.fileInput} />
+        </label>
+        <br />
+        <button type="submit">Submit</button>
+      </form>
+    );
+  }
+}
+
+ReactDOM.render(
+  <FileInput />,
+  document.getElementById('root')
+);
+```
+
+## 
+## web Componets
+wC实际上是一个基于html的Components。详细请查看MDN或者软大大的教程,说白了就是用户自定义标签
+
+react 和vue和wC所运用的场景不一样，没有谁最NB。下面的例子我们来讲解一下react中如何使用使用wc wc中如何使用react
+
+```jsx
+// react中使用wc
+
+// 注意class="demo"是对的不是classname哈！
+function BrickFlipbox() {
+  return (
+    <brick-flipbox class="demo">
+      <div>front</div>
+      <div>back</div>
+    </brick-flipbox>
+  );
+}
+
+class HelloMessage extends React.Component {
+  render() {
+    return <div>Hello <x-search>{this.props.name}</x-search>!</div>;
+  }
+}
+
+
+//wc中使用react 
+class XSearch extends HTMLElement {
+  connectedCallback() {
+    const mountPoint = document.createElement('span');
+    this.attachShadow({ mode: 'open' }).appendChild(mountPoint);
+
+    const name = this.getAttribute('name');
+    const url = 'https://www.google.com/search?q=' + encodeURIComponent(name);
+    ReactDOM.render(<a href={url}>{name}</a>, mountPoint);
+  }
+}
+customElements.define('x-search', XSearch);
+
+```
+
+
+
+## Hook介绍和基础原理
+hook实际上是16.8出来的新特性，让fn也可以管理state这样一来，传统的oop的心智模式将会发生变化，FN变炒成了主流，详细的对比我再 ===>  面试篇中有讲可以点击这里进行翻阅 [链接](https://www.yuque.com/bmlaoli/sac8v7/nmpgdn#vdOX9)
+
+## 基础hook
+基础hook的用法十分的简单，这里呢，直接上代码
+
+### useState
+```jsx
+function Counter({initialCount}) {
+  const [count, setCount] = useState(initialCount);	
+  return (
+    <>
+      Count: {count}
+      <button onClick={() => setCount(initialCount)}>Reset</button>
+      <button onClick={() => setCount(prevCount => prevCount - 1)}>-</button>
+      <button onClick={() => setCount(prevCount => prevCount + 1)}>+</button>
+            <button onClick={() => setCount(
+          		( prevCount,crerruntCount ) =>{
+              retrun prevCount + crerruntCount + ''
+          	  }
+            )
+    			}>
+              +</button>
+    </>
+  );
+}
+
+
+// 需要强调的一个点就是，这里的useState的源码是如何运作的需要了解一下下
+// 自己实现一个useState
+```
+
+### useEffect
+```plain
+useEffect(
+  () => {
+    const subscription = props.source.subscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
+  },
+  [props.source],
+);
+
+// 这个实际上也是接受两个参数，第一个是函数，第二个依赖也就是distance，当依赖有变就去调用函数
+
+第一个函数retrun出来的函数会在，组件销毁时调用，如果只想初始化的时候调用一次那么跨域传递一个空数组给到这个
+
+依赖 []  类似于下面这样
+
+useEffect(
+  () => {
+   fetch.....
+  },
+  [],
+);
+
+
+
+// 非常常见的面试题就是useEffect和useLayout的区别，实际上useEffect是异步的，。useLayoutEffect是在DOM 更新完之后触发的。就像next.tick一样，
+```
+
+## 
+### useContext
+```jsx
+// 实际上这个东西就是为了践行，Provider  consumer 模式，
+
+
+const themes = {
+  light: {
+    foreground: "#000000",
+    background: "#eeeeee"
+  },
+  dark: {
+    foreground: "#ffffff",
+    background: "#222222"
+  }
+};
+
+const ThemeContext = React.createContext(themes.light);
+
+function App() {
+  return (
+    <ThemeContext.Provider value={themes.dark}>
+      <Toolbar />
+    </ThemeContext.Provider>
+  );
+}
+
+function Toolbar(props) {
+  return (
+    <div>
+      <ThemedButton />
+    </div>
+  );
+}
+
+function ThemedButton() {
+  const theme = useContext(ThemeContext);
+  return (
+    <button style={{ background: theme.background, color: theme.foreground }}>
+      I am styled by theme context!
+    </button>
+  );
+}
+```
+
+## 扩展hook
+### useReducer
+```jsx
+// 注意，如果你希望了解该内容，那么你需要先来了解Redux ,该hook是是使用是特殊场景下的useState替代方案
+// 该案例使用惰性加载，好处就是：将用于计算 state 的逻辑提取到 reducer 外部，这也为将来对重置 state 的 action 做处理提供了便利：
+
+function init(initialCount) {
+  return {count: initialCount};
+}
+
+function reducer(state, action) {
+  switch (action.type) {
+    case 'increment':
+      return {count: state.count + 1};
+    case 'decrement':
+      return {count: state.count - 1};
+    case 'reset':
+      return init(action.payload);
+    default:
+      throw new Error();
+  }
+}
+
+function Counter({initialCount}) {
+  const [state, dispatch] = useReducer(reducer, initialCount, init);
+  return (
+    <>
+      Count: {state.count}
+      <button
+        onClick={() => dispatch({type: 'reset', payload: initialCount})}>
+        Reset
+      </button>
+      <button onClick={() => dispatch({type: 'decrement'})}>-</button>
+      <button onClick={() => dispatch({type: 'increment'})}>+</button>
+    </>
+  );
+}
+
+```
+
+### userReducer + useContext 
+> 使用这两个API 可以在一定的范围之内，创建一个非常简单且完善 “状态管理器”
+>
+> 最好的例子 详情 这个文章 [React hooks（useContext、useReducer、自定义hooks） - 掘金](https://juejin.cn/post/7125780103472087077)
+>
+
+```tsx
+import React, { useReducer, useContext } from 'react'
+
+const InitStateContext = createContext({
+  name: '',
+  page: '', 
+  message: '',
+  list: [],
+  data: '',
+});
+
+const reducer = (state, action) => {
+  switch (action.type) {
+    case 'changeTheme':
+      return {
+        ...state,
+        ...action.payload,
+      };
+    default:
+      return {
+        ...state,
+        ...action.payload,
+      };
+  }
+};
+
+const useInitState = () => {
+  const initStateCtx = useContext(InitStateContext);
+  const [state = {}, dispatch = null] = initStateCtx;
+  return [state, dispatch];
+};
+
+
+const GlobalContext = React.createContext()
+
+export default function App() {
+  const [state, dispatch] = useReducer(reducer, {});
+
+
+  return (
+    <InitStateContext.Provider value={[state, dispatch]}>  
+        <div>
+            <Child1></Child1>
+            <Child2></Child2>
+            <Child3></Child3>
+        </div>
+    </InitStateContext.Provider>
+  )
+}
+
+function Child1() {
+    const [dispatch] = useInitState();
+    return (
+        <div>
+            <button onClick={() => {
+                dispatch({
+                    type: 'child2'
+                })
+            }}>改变child2</button>
+            <button onClick={() => {
+                dispatch({
+                    type: 'child3'
+                })
+            }}>改变child3</button>
+        </div>
+    )
+}
+
+function Child2() {
+     const [state] = useInitState();
+
+    return (
+        <div>
+            {state.name}
+        </div>
+    )
+}
+
+function Child3() {
+       const [state] = useInitState();
+
+    return (
+        <div>
+            {state.name}
+        </div>
+    )
+}
+
+
+// 如果更近一步，我们还可以简化成自定义的 hook 
+// 也就是可以子啊hooks 中直接使用 
+```
+
+###  useCallback
+```jsx
+// 这个东西做优化的时候非常有用。具体的用法如下，仅仅有a,b这些依赖，发生变化时采取调用函数
+// 返回一个函数 但是不会执行它！
+
+const memoizedCallback = useCallback(
+  () => {
+    doSomething(a, b);
+  },
+  [a, b],
+);
+```
+
+### useMemo
+```jsx
+// 同样的，这个hook作为优化手段也是有奇效，
+// 该函数会在render期间 执行， 不能在这个函数中做其他与渲染进程无关的操作。返回的是 一个值，这个值它可以是组件
+
+// 调用函数，并且返回函数的执行知乎的结果
+const memoizedValue = useMemo(
+  () => computeExpensiveValue(a, b),
+  [a, b]);
+```
+
+###  useRef
+```jsx
+// 一个令人头疼的问题在于，fn组件中，ref是不能传递的，要使用ref就要挂载到指定的dom上
+
+function TextInputWithFocusButton() {
+  const inputEl = useRef(null);  // 返回一个不可变的ref对象
+  const onButtonClick = () => {
+    // `current` 指向已挂载到 DOM 上的文本输入元素
+    inputEl.current.focus();
+  };
+  return (
+    <>
+      <input ref={inputEl} type="text" />
+      <button onClick={onButtonClick}>Focus the input</button>
+    </>
+  );
+}
+```
+
+### useImperativeHandle
+```jsx
+// 可以让你在使用 ref 时，自定义暴露给父组件的实例值。
+
+function FancyInput(props, ref) {
+  const inputRef = useRef();
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      inputRef.current.focus();
+    }
+  }));
+  return <input ref={inputRef} ... />;
+}
+FancyInput = forwardRef(FancyInput);
+
+// 在父组件上，父组件就能调用，子组件的focus方法
+inputRef.current.focus()。
+
+
+```
+
+### useDebugValue
+```jsx
+// 可用于在 React 开发者工具中显示自定义 hook 的标签，我们不推荐你向每个自定义 Hook 添加 debug 值。当它作为共享库的一部分时才最有价值。当然了再deBug时也有奇效
+// 注意，这个东西只有在自定义hook组件上有用
+function useFriendStatus(friendID) {
+  const [isOnline, setIsOnline] = useState(null);
+
+  // ...
+
+  // 在开发者工具中的这个 Hook 旁边显示标签
+  // e.g. "FriendStatus: Online"
+  useDebugValue(isOnline ? 'Online' : 'Offline');
+
+  return isOnline;
+}
+
+
+```
+
+## 来点高级的自定义hook
+自定义的hooks还是比较好玩的
+
+这里只是列举了相对比较常见的的方式，也是官方给出的，当然了社区中也出现了很多各种花里胡哨的封装，但是逻辑实际上是差不多的，
+
+
+
+### 简单的封装   
+这里的场景还是官方的提供的，有两个组件，他们都想中的各自的“好友”是否在线，于是最初的版本
+
+```jsx
+import React, { useState, useEffect } from 'react';
+
+function FriendStatus(props) {
+  const [isOnline, setIsOnline] = useState(null);
+  useEffect(() => {
+    function handleStatusChange(status) {
+      setIsOnline(status.isOnline);
+    }
+    ChatAPI.subscribeToFriendStatus(props.friend.id, handleStatusChange);
+    return () => {
+      ChatAPI.unsubscribeFromFriendStatus(props.friend.id, handleStatusChange);
+    };
+  });
+
+  if (isOnline === null) {
+    return 'Loading...';
+  }
+  return isOnline ? 'Online' : 'Offline';
+}
+
+// 组件2
+import React, { useState, useEffect } from 'react';
+
+function FriendListItem(props) {
+  const [isOnline, setIsOnline] = useState(null);
+  useEffect(() => {
+    function handleStatusChange(status) {
+      setIsOnline(status.isOnline);
+    }
+    ChatAPI.subscribeToFriendStatus(props.friend.id, handleStatusChange);
+    return () => {
+      ChatAPI.unsubscribeFromFriendStatus(props.friend.id, handleStatusChange);
+    };
+  });
+
+  return (
+    <li style={{ color: isOnline ? 'green' : 'black' }}>
+      {props.friend.name}
+    </li>
+  );
+}
+```
+
+使用自定义hook可以抽取公用逻辑
+
+```jsx
+// 自定义的封装hook
+import { useState, useEffect } from 'react';
+
+function useFriendStatus(friendID) {
+  const [isOnline, setIsOnline] = useState(null);
+
+  useEffect(() => {
+    function handleStatusChange(status) {
+      setIsOnline(status.isOnline);
+    }
+
+    ChatAPI.subscribeToFriendStatus(friendID, handleStatusChange);
+    return () => {
+      ChatAPI.unsubscribeFromFriendStatus(friendID, handleStatusChange);
+    };
+  });
+
+  return isOnline;
+
+  // 改造后的两个组件
+  function FriendStatus(props) {
+  const isOnline = useFriendStatus(props.friend.id);
+
+  if (isOnline === null) {
+    return 'Loading...';
+  }
+  return isOnline ? 'Online' : 'Offline';
+}
+  
+  function FriendListItem(props) {
+  const isOnline = useFriendStatus(props.friend.id);
+
+  return (
+    <li style={{ color: isOnline ? 'green' : 'black' }}>
+      {props.friend.name}
+    </li>
+  );
+}
+```
+
+hook实际上就是函数，所以可以和组件自己的进行通信，而且要注意的是由于函数是天生的无状态，所以，这里的hook实际上是两个不同的“状态快照”，而不是一个，需要特别说明，两个组件用的不是一个
+
+```jsx
+const friendList = [
+  { id: 1, name: 'Phoebe' },
+  { id: 2, name: 'Rachel' },
+  { id: 3, name: 'Ross' },
+];
+
+function ChatRecipientPicker() {
+  const [recipientID, setRecipientID] = useState(1);
+  const isRecipientOnline = useFriendStatus(recipientID);
+
+  return (
+    <>
+      <Circle color={isRecipientOnline ? 'green' : 'red'} />
+      <select
+        value={recipientID}
+        onChange={e => setRecipientID(Number(e.target.value))}
+      >
+        {friendList.map(friend => (
+          <option key={friend.id} value={friend.id}>
+            {friend.name}
+          </option>
+        ))}
+      </select>
+    </>
+  );
+}
+```
+
+### 集成reducer
+如果要实现比较复杂的抽离封装，我们可以使用reducer，这样在小范围内还是比较nice的，但是！如果你选择大面积使用，那么你应该引入 全局的状态管理器，入rxjs  dva mbox等
+
+```jsx
+function useReducer(reducer, initialState) {
+  const [state, setState] = useState(initialState);
+
+  // 继续使用reducer进行更多的复杂操作
+  function dispatch(action) {
+    const nextState = reducer(state, action);
+    setState(nextState);
+  }
+
+  return [state, dispatch];
+}
+
+function Todos() {
+  const [todos, dispatch] = useReducer(todosReducer, []);
+
+  function handleAddClick(text) {
+    dispatch({ type: 'add', text });
+  }
+
+  // ...
+}
+```
+
+
+
+
+

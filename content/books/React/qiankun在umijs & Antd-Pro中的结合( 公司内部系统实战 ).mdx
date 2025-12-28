@@ -1,0 +1,234 @@
+---
+title: "微前端集成：qiankunjs 在 React Antd-Pro 项目中的实践"
+date: "2024-12-19"
+summary: "详细介绍如何在 React Antd-Pro 项目中集成阿里 qiankunjs 微前端框架，实现单页应用式切换、token 验证、头部保留等功能，包含子应用配置和微组件加载方案。"
+status: "completed"
+tech: ["React", "qiankun", "Antd-Pro", "微前端"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "React"
+---
+
+> 文档说明
+>
+
+
+
+# 明确目标和效果
+     我们需要把微前端工具-来自阿里家的qiankunjs 集成到我们的react Antd-Pro项目中去，并且实现这样的效果
+
+**<font style="color:#F5222D;"></font>**
+
+![](https://cdn.nlark.com/yuque/0/2021/gif/1627571/1615793041549-bcbae99e-b699-4053-90bb-95348987b5d5.gif)
+
+**<font style="color:#F5222D;"></font>**
+
+**<font style="color:#F5222D;">功能点提炼如下</font>**
+
+- [x] 在业务中台中进行 单页应用式 的切换到不同的平台，而且要保证token的验证是有效的
+- [x] 切换的时候页面上部分的中台头部需要保留，下面的内容跟着子应用走
+
+# 开始去做
+## 首先我们需要个每一个的子应用都下载qiankunjs
+     由于我们这里使用Antd-Pro，这个脚手架是基于umijs构建的，所以只需要下载umijs中的qiankun-plugin就好了，可以做到零配置，马上运行
+
+```shell
+yarn add @umijs/plugin-qiankun -D
+```
+
+## 然后我们需要先到中台进行配置
+qiankunjs在umijs中有两种方式，一是路由式配置式，二是组件式，我们实现上面的功能和效果，我们使用配置式路由就好了
+
+
+
+Config/config.ts中
+
+```javascript
+...
+{
+      path: '/tcms-auth-provider',  // 路由匹配到之后就会去加载对应的子应用
+      microApp: 'tcms-auth-provider',  // 子应用的名称
+    },
+    {
+      path: '/itcc-monitor-provider',
+      microApp: 'itcc-monitor-provider',
+    },
+    {
+      path: '/itcc-ops-provider',
+      microApp: 'itcc-ops-provider',
+    },
+    {
+      path: '/itcc-cmp-provider',
+      microApp: 'itcc-cmp-provider',
+    },
+    {
+      path: '/itcc-ai-provider',
+      microApp: 'itcc-ai-provider',
+    },
+    {
+      path: '/itcc-topo-provider',
+      microApp: 'itcc-topo-provider',
+    },
+    {
+```
+
+
+
+上面的是配置打开方式，下面就是去注册,在appjs下就能进行注册，如果你不知道app.js干什么的，请去阅读umijs文档，app.js是运行时配置（会稍微影响性能），我们的微应用的地址和name都是由后端传入的！
+
+/src/app.js
+
+```javascript
+// 导出qiankun这个函数，umijs就可以自动去进行配置
+export const qiankun = (props) => {
+  // 监听 加载完毕之后取消loading
+  return queryCurrent().then(res => {
+    if (res && res.success) {
+      const apps = res.data.menus.map(menu => ({
+        name: menu.serviceId,
+        entry: menu.href,
+        to: menu.serviceId,
+      }))
+      // 请参阅umijs-qiankun-plugin
+      return {
+        apps,
+        lifeCycles: {
+
+          beforeLoad: (a, b, c) => {
+            // console.log('子应用加载之前', a, b, c);
+          },
+          beforeMount: (a, b, c) => {
+            // console.log('子应用加载完成！', a, b, c);
+          },
+          afterMount: (a, b, c) => {
+            // console.log('子应用加载之后', a, b, c);
+          },
+          beforeUnmount: (a, b, c) => {
+            // console.log('子应用销毁之前！', a, b, c);
+          },
+          afterUnmount: (a, b, c) => {
+            // console.log('子应用销毁之后！', a, b, c);
+          }
+
+        }
+      }
+    }
+    return { apps: [] }
+  });
+}
+....
+```
+
+## 再去子应用进行配置
+        对于qiankun + umijs 来说子应用的配置非常非常的简单
+
+/config/config.ts
+
+```typescript
+// https://umijs.org/config/
+import { defineConfig } from 'umi';
+import defaultSettings from './defaultSettings';
+
+export default defineConfig({
+  hash: true,
+  antd: {},
+  dva: {
+    hmr: true,
+  },
+  qiankun: {
+    slave: {},  // 配置好这个就好了
+  },
+ ....
+```
+
+
+
+## 去掉子应用的头部和LOGO
+   现在我们需要去掉我们的LOGO和子应用自带的头部，要不然，子应用会把主应用覆盖掉, 在子应用中，修改样式和umijs的默认layout-pluagin自动生成的布局结构 就好了
+
+/src/global.less
+
+```javascript
+...
+.ant-layout-sider {
+  position:fixed!important;
+  margin-top: 48px!important;
+}
+
+.ant-pro-sider-logo {
+  display: none!important;
+}
+
+```
+
+    /config/config.ts
+
+```typescript
+import { Settings as LayoutSettings } from '@ant-design/pro-layout';
+
+export default {
+  navTheme: 'light',
+  // 拂晓蓝
+  primaryColor: '#1890ff',
+  layout: 'sild',   // 使用sild布局
+  contentWidth: 'Fluid',
+  fixedHeader: false,
+  fixSiderbar: true,
+  colorWeak: false,
+   headerHeight: 0,  // 设置头部高度,去除掉子应用自己的头部就好了
+  menu: {
+    locale: false,
+  },
+  title: '运维中心',
+```
+
+
+
+## 如果需要引入子应用的某一个组件怎么办？
+### 1,.子应用暴露出去
+如果你需要引入子应用的某一个组件，可以使用这样的方式,  在子应用中写一个路由，并且匹配到你自己的需要暴露出去的子应用中的某一个组件,
+
+比如我需要暴露一个monitor中得图表
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1615794351371-73b3fd6b-e024-46e0-86e5-6565ee304468.png)
+
+那么我们可以写一个路由独立的去匹配到它
+
+config/config.ts
+
+```javascript
++++   
+{
+      path: '/MicorComponent',
+      name: '任务管理',
+      layout:false,
+      component: './event/Statistics/components/Trend',
+    },
++++
+```
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1615794604999-8af0ae15-5e3b-4e6b-8813-ff5b331b2d2a.png)
+
+### 2.主要有通过qiankun的微组件加载到它
+```javascript
+import { MicroAppWithMemoHistory } from 'umi';
+
+export function MyPage() {
+
+  return (
+    <div>
+      <div>
+ <MicroAppWithMemoHistory 
+    		name="app2" // 你的微应用的name
+    url="/MicorComponent" />  // 你的微应用中的组件路由地址
+      </div>
+    </div>
+  )
+}
+```
+
+## 如果子应用需要独立发布怎么办？
+**目前的方案是把原来里面的几行硬编码去掉就好了****😥**
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1615794973093-0bd6f6e5-3694-4db9-b1bb-86309d7a9bbb.png)
+

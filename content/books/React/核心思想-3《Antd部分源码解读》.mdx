@@ -1,0 +1,71 @@
+---
+title: "Antd 组件源码解析：Button 与 Card 组件实现"
+date: "2024-12-19"
+summary: "深入分析 Antd 组件库中 Button 和 Card 组件的源码实现，探讨组件代理模式、组件封装技巧以及源码阅读方法。"
+status: "completed"
+tech: ["React", "Antd", "SourceCode"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "React"
+---
+
+## 前言
+这一讲，我们来探讨一下antd组件的内部一些源代码的实现，来帮助大家阅读组件库源代码，更多的启发大家看源代码的方式！
+
+先介绍大家一款看github源代码的工具，它就是这个 github1s ，名字有点奇怪哈，但是确实实用性很强。   
+
+具体的方法就是在源码仓库后缀上加上一个1s就能够以vscode类似的方式查看这个这个仓库的源码。其提供的可折叠式公斤，对我们阅读还是有帮助的，如果你需要对源码进行调试，那么还是离不开clone源码哈、
+
+## ![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1613906129492-47ce7803-d619-4100-997c-cf0d34a5b7c4.png)
+## 在正式的开始阅读antd的源代码前，我们先看一下项目结构
+实际上也没有多少，我们这里讲一下主要的配置哈
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1613906816613-ccc35b8d-3176-4d03-9e35-b971409c81bf.png)
+
+## Button组件的封装
+关于button的封装，我们直接入主题，先看一些我们这里的源码,我们呢，主要分析三个组件，虽然说是三个实际上也就一个就是button就没了
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1613906951545-1025fb44-c338-4144-8cc6-60f93e30fd7c.png),
+
+先来看一些别人写的文档,看一下文档很重要，这可以让你理解作者的意图
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1613907024031-07da5706-1458-4bf1-8369-41d5a3cde791.png)
+
+
+
+### index.tsx
+这个组件使用了组件设计模式中的 组件代理模式
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1613907092319-6478505b-010e-4742-a461-d2220d857507.png)
+
+### button
+我们先理清楚，组件内部的一些方法分别是做什么事的
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1613907230269-3c18d10e-3970-4904-bbe1-057d1a50df90.png)
+
+
+
+其中的一些不涉及核心的地方我们就略过，我们直接看最核心的部分    
+
+
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1613907289081-419b15b0-b2c6-46d4-a269-7428bd65c587.png)
+
+我们进入的组件中，进行分析
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1613907394126-ebc73631-5b6e-46d0-8f7d-8b3587bf317a.png)
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1613907400218-8df6079d-3355-4ad9-8945-1cda8f11839e.png)
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1613907403689-5efbec14-a252-489e-a648-acb886dbacde.png)
+
+### button-group
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1613907989352-dac25f4e-7558-4742-82e4-fde3b4a924ab.png)
+
+## Card组件的封装
+与button同理
+
+## 来看一个套壳的山寨阿里antd哈
+国内一个it外包企业。汉得 详见github哈[https://github.com/open-hand](https://github.com/open-hand)
+
+## 

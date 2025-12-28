@@ -1,0 +1,844 @@
+---
+title: "React 核心概念与实践指南"
+date: "2024-12-19"
+summary: "深入讲解 React 基础知识，包括 JSX 语法、组件生命周期、状态管理、事件处理、表单处理及 React 哲学等核心概念。"
+status: "completed"
+tech: ["React", "JavaScript", "JSX"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "React"
+---
+
+> 这个是官方的文档，我们这一讲来讲解一些核心概念，主要是深入一些和记录一下重要的东西，这是对自己的查漏补缺
+>
+
+## 开始安装
+> 我们给出了所有的文件和资源参考，帮助你开发
+>
+
+### 在html中使用react
++ 与vue类似，react也可以这样来玩
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+
+<script src="https://cdn.bootcdn.net/ajax/libs/react/17.0.1/umd/react.development.js"></script>
+  <script src="https://cdn.bootcdn.net/ajax/libs/react-dom/17.0.1/umd/react-dom.development.js"></script>
+
+</body>
+
+</html>
+```
+
++ 以下的一些资源没准是你需要的
+    - [x] 在线的代码编辑器
+        - [x] [CodePen](https://react.docschina.org/redirect-to-codepen/hello-world)，[CodeSandbox](https://codesandbox.io/s/new)，[Glitch](https://glitch.com/edit/#!/remix/starter-react-template),  [Stackblitz](https://stackblitz.com/fork/react)
+    - [x] react的官方demo（设计很精妙！）
+        - [x] [这些资源](http://reactfordesigners.com/)
+    - [x] react哲学很重要！先进的设计理念
+        - [x] [React 哲学](https://react.docschina.org/docs/thinking-in-react.html)，这是react核心！
+
+
+
+### 如何在你的应用中添加react 
++ 上面的段落中提到了，再html中引入react 的例子，下面我们就来看看，具体的使用
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <div id="app"></div>
+</body>
+
+<script src="https://cdn.bootcdn.net/ajax/libs/react/17.0.1/umd/react.development.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/react-dom/17.0.1/umd/react-dom.development.js"></script>
+
+<script>
+  // 定义，注意第一个是标签，第二个是参数，第三个开始都是其子节点
+  const title = React.createElement('h1', null, 'hello ', React.createElement('span', null, '我是ReactDomy元素'))
+  // 挂载，
+  ReactDOM.render(title, document.getElementById('app'))
+
+</script>
+
+</html>
+```
+
+特别需要注意的一点！，上述的都是会用development版本，上线的时候我们需要使用上线的时候的版本！xxx.min.js
+
++ 更加NB 的事情来了，我们还可以写jsx
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <div id="app"></div>
+</body>
+
+
+<!-- 为了使用jsx我们需需要用bable进行预编译 -->
+<script src="https://cdn.bootcdn.net/ajax/libs/babel-standalone/7.0.0-beta.3/babel.js"></script>
+
+<script src="https://cdn.bootcdn.net/ajax/libs/react/17.0.1/umd/react.development.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/react-dom/17.0.1/umd/react-dom.development.js"></script>
+
+
+<script type="text/babel">
+  const CommonA = () => {
+    return <a>123</a>
+  }
+  ReactDOM.render(<CommonA></CommonA>, document.getElementById('app'))
+</script>
+
+</html>
+```
+
+
+
+### 创建新的React应用
+ 我们推荐使用creat-react-app 来构建基础的应用（初学者），这个章节，主要是讲一下如何使用create-react-app脚手架来构建ReactApp，和介绍一些负责的“工具链”
+
++ 工具链
+- [x] 单页应用的脚手架 [Create React App](https://react.docschina.org/docs/create-a-new-react-app.html#create-react-app)。
+- [x] 服务端SSR方案 [Next.js](https://react.docschina.org/docs/create-a-new-react-app.html#nextjs)。
+- [x] 面向内容的静态网站 [Gatsby](https://react.docschina.org/docs/create-a-new-react-app.html#gatsby)。  是用 React 创建**静态网站**的最佳方式。它让你能使用 React 组件，但输出预渲染的 HTML 和 CSS 以保证最快的加载速度。
+- [x] 构建底层组件的工具链
+    - [x] [**Neutrino**](https://neutrinojs.org/) 把 [webpack](https://webpack.js.org/) 的强大功能和简单预设结合在一起。并且包括了 [React 应用](https://neutrinojs.org/packages/react/)和 [React 组件](https://neutrinojs.org/packages/react-components/)的预设
+    - [x] [**Parcel**](https://parceljs.org/) 是一个快速的、零配置的网页应用打包器，并且可以[搭配 React 一起工作](https://parceljs.org/recipes.html#react)
+    - [x] [**Razzle**](https://github.com/jaredpalmer/razzle) 是一个无需配置的服务端渲染框架，但它提供了比 Next.js 更多的灵活性
+
+
+
++ 使用create react-aspp 初始化单页应用
+
+```shell
+npx create-react-app my-app
+npx 是5.2的东西，npm不需要安装脚手架，可以直接用。create-react-app是脚手架的名称 
+
+然后就使用yarn 纪念性yarn start  / yarn build就好了，就能生成应用
+```
+
++ 高级话题，从零实现creact-react-app,打造属于自己的工具链
+
+一个 **package 管理器**，比如 [Yarn](https://yarnpkg.com/) 或 [npm](https://www.npmjs.com/)。它能让你充分利用庞大的第三方 package 的生态系统，并且轻松地安装或更新它们。
+
+一个**打包器**，比如 [webpack](https://webpack.js.org/) 或 [Parcel](https://parceljs.org/)。它能让你编写模块化代码，并将它们组合在一起成为小的 package，以优化加载时间。
+
+一个**编译器**，例如 [Babel](https://babeljs.io/)。它能让你编写的新版本 JavaScript 代码，在旧版浏览器中依然能够工作。
+
+如果你倾向于从头开始打造你自己的 JavaScript 工具链，可以[查看这个指南](https://blog.usejournal.com/creating-a-react-app-from-scratch-f3c693b84658)，它重新创建了一些 Create React App 的功能。
+
+
+
+## 核心概念
+### 
+### jsx的小细节
+主要是一些小细节，jsx 是一个松散的耦合单元
+
++ JSX是一个存放在称之为“组件”的松散耦合单元之中，来实现[_关注点分离_](https://en.wikipedia.org/wiki/Separation_of_concerns)。
++ 对于XSS注入工具，
+
+ReactDOM 在渲染时候会解析，转义，以避免遭到XSS攻击
+
++ Jsx到底是什么？
+
+```jsx
+// 实际上这两个是等价的
+const element = (
+  <h1 className="greeting">
+    Hello, world!
+  </h1>
+);
+
+const element = React.createElement(
+  'h1',
+  {className: 'greeting'},
+  'Hello, world!'
+);
+
+// jsx是一个对象，在bable转义之后就变成了下面的东西
+React.createElement() 会预先执行一些检查，以帮助你编写无错代码，但实际上它创建了一个这样的对象：
+// 注意：这是简化过的结构
+const element = {
+  type: 'h1',
+  props: {
+    className: 'greeting',
+    children: 'Hello, world!'
+  }
+  ...
+}
+```
+
+### 
+### 元素渲染的逻辑
+ 在react中元素是唯一的最小砖块，在html中有一个唯一的“根节点” ，该节点在内的所有内容都挂载在其下，由 React DOM 管理。
+
+使用 React 构建的应用通常只有单一的根 DOM 节点。如果你在将 React 集成进一个已有应用，那么你可以在应用中包含任意多的独立根 DOM 节点。
+
+```jsx
+const element = <h1>Hello, world</h1>;
+ReactDOM.render(element, document.getElementById('root'));
+```
+
+React元素，是不可变对象，一旦创建无法更改除非重新render，一个UI 元素**<font style="color:#F5222D;">，就像电影的单帧：它代表了某个特定时刻的 UI，</font>**
+
+**<font style="color:#F5222D;">重要的思想：UI不会随时间的变化而变化，UI是某一个时刻的状态</font>**
+
+React DOM 会将元素和它的子元素与它们之前的状态进行比较，并只会进行必要的更新来使 DOM 达到预期的状态。
+
+### 
+### 组件的一些小细节
++ 我们讨论一下一个详细的render流程
+
+我们看下面的一段代码
+
+```jsx
+function Welcome(props) {
+  return <h1>Hello, {props.name},{props.children}</h1>;
+}
+
+const element = <Welcome name="Sara" > 666 </Welcome>;
+
+ReactDOM.render(
+  element,
+  document.getElementById('root')
+);
+```
+
+![画板](https://cdn.nlark.com/yuque/0/2021/jpeg/1627571/1611490719119-1cd3be92-9074-496c-986e-90c4465f61df.jpeg)
+
++ 组合组件
+
+其实就是组件套组件，组件封装的组件，就像一些参见的组件库那样
+
++ 重要的原则！
+
+**<font style="color:#F5222D;">所有 React 组件都必须像纯函数一样保护它们的 props 不被更改,也就是不能允许除了自己组件之外的其它东西，更改自己的sate</font>**
+
++ 一个概念纯函数
+
+什么是纯函数，纯函数指的是：该函数不会尝试更改入参，且多次调用下相同的入参始终返回相同的结果。
+
+### 状态state和生命周期
+> 在vue中有生命周期，和data数据存储中心.在react中，对应的就是state状态，和与之对应的生命周期
+>
+
+#### 创建一个十分简单的定时器效果
++ 现在我们需要做一个定时器效果，它看起来就是这样的
+
+![](https://cdn.nlark.com/yuque/0/2021/gif/1627571/1611323878716-b665e320-0dcd-415d-bd06-29a6f0854e85.gif)
+
++ 我们需要，一个html，然后把react搞上去，你也可以选择使用官方脚手架，构建的react项目，这都可以，我在这儿选择直接上html，这样我们能更加清晰的明白react的运行流程
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <div id="app"></div>
+</body>
+
+
+<!-- 为了使用jsx我们需需要用bable进行预编译 -->
+<script src="https://cdn.bootcdn.net/ajax/libs/babel-standalone/7.0.0-beta.3/babel.js"></script>
+
+<script src="https://cdn.bootcdn.net/ajax/libs/react/17.0.1/umd/react.development.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/react-dom/17.0.1/umd/react-dom.development.js"></script>
+
+
+<script type="text/babel">
+  const CommonA = () => {
+    return <a>123</a>
+  }
+
+
+  // 写一个定时器去调就完事
+
+  function Clock(props) {
+    return (
+      <div>      
+        <h1>bmlaoli!</h1>
+        <h2>It is {props.date.toLocaleTimeString()}.</h2>
+      </div>);
+  }
+
+  function tick() {
+    ReactDOM.render(
+      <Clock date={new Date()} />, document.getElementById('app')
+    );
+  }
+
+  setInterval(tick, 1000);
+</script>
+
+</html>
+```
+
++ 注意
+
+可以看到我们的就这样完成了，这没什么的，非常的简单，就是去调render函数去渲染，每一次给一个最新的date就好了，
+
+```javascript
+  function tick() {
+    ReactDOM.render(
+      <Clock date={new Date()} />, document.getElementById('app')
+    );
+  }
+
+  setInterval(tick, 1000);
+```
+
+#### 升级定时效果class组件
++ 玩点新的花样
+
+现在我们需要玩点新的花样，我们把这个东西搞成class类组件，这在大多数项目中都会是一个class组件，或者是hooks组件（hooks我们后面说）
+
++ 代码示意
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <div id="app"></div>
+</body>
+
+
+<!-- 为了使用jsx我们需需要用bable进行预编译 -->
+<script src="https://cdn.bootcdn.net/ajax/libs/babel-standalone/7.0.0-beta.3/babel.min.js"></script>
+
+<script src="https://cdn.bootcdn.net/ajax/libs/react/17.0.1/umd/react.development.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/react-dom/17.0.1/umd/react-dom.development.js"></script>
+
+
+<script type="text/babel">
+  class Clock extends React.Component {
+    constructor(props) {
+      super(props);
+      this.state = { date: new Date() };
+    }
+
+    componentDidMount() {
+      this.timerID = setInterval(
+        () => this.tick(),
+        1000
+      );
+    }
+
+    componentWillUnmount() {
+      clearInterval(this.timerID);
+    }
+
+    tick() { this.setState({ date: new Date() }); }
+    render() {
+      return (
+        <div>
+          <h1>Hello, world!</h1>
+          <h2>It is {this.state.date.toLocaleTimeString()}.</h2>
+        </div>
+      );
+    }
+  }
+
+  ReactDOM.render(
+    <Clock />,
+    document.getElementById('app')
+  );
+</script>
+
+</html>
+```
+
+#### 生命周期和运行流程详解
+你可以看到，我们改造完成了，接下里我们聊聊，这玩意儿的运行流程
+
++ 我们先来讲一下生命周期
+
+vue 中也有生命周期，react中也是有的，于是就有了这样的图片
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1611324554500-4c2ff10f-c319-429e-a775-74a3dc2c0756.png)
+
++ 了解了生命周期，我们来看看react的运行
+1. 当 `<Clock />` 被传给 `ReactDOM.render()`的时候，React 会调用 `Clock` 组件的构造函数。因为 `Clock` 需要显示当前的时间，所以它会用一个包含当前时间的对象来初始化 `this.state`。我们会在之后更新 state。
+2. 之后 React 会调用组件的 `render()` 方法。这就是 React 确定该在页面上展示什么的方式。然后 React 更新 DOM 来匹配 `Clock` 渲染的输出。
+3. 当 `Clock` 的输出被插入到 DOM 中后，React 就会调用 `ComponentDidMount()` 生命周期方法。在这个方法中，`Clock` 组件向浏览器请求设置一个计时器来每秒调用一次组件的 `tick()` 方法。
+4. 浏览器每秒都会调用一次 `tick()` 方法。 在这方法之中，`Clock` 组件会通过调用 `setState()` 来计划进行一次 UI 更新。得益于 `setState()` 的调用，React 能够知道 state 已经改变了，然后会重新调用 `render()` 方法来确定页面上该显示什么。这一次，`render()` 方法中的 `this.state.date` 就不一样了，如此以来就会渲染输出更新过的时间。React 也会相应的更新 DOM。
+5. 一旦 `Clock` 组件从 DOM 中被移除，React 就会调用 `componentWillUnmount()` 生命周期方法，这样计时器就停止了。
+
+
+
+#### state的注意事项
+我们主要是注意如下的三件事就够了，
+
+- [x] 不要直接修改state
+
+```javascript
+// 如果你直接对state修改，那么 响应式 就不会发生！,react不会监听到你这个值的变化，就不会从新渲染页面
+
+this.state.comment = 'Hello';
+
+// 你应该只有一种改变state的方式，那就是调用setState或者hooks的方式
+this.setState({comment: 'Hello'});
+
+// hooks的方式
+const [value,setValue] = useState('0')
+setValue('2')  
+```
+
+- [x] 注意state的更新可能是异步的
+
+由于我们的state可能是异步的，所以你可能没办法拿到“最新的值”，那么有什么解决方案吗？主要是有如下的两个
+
+
+
++ 在set的时候传递函数，弊端就是会增加复杂度
++ 设置全局变量，弊端是如果组件被缓存了，那么你就要手动清除数据，麻烦，适当的结合二者使用最简单方便
+
+
+
+- [x] state的更新可以被合并
+
+
+
+#### 有关于数据流的问题！
+一定要注意了，在vue中数据流是双向的看下面的一幅图
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1611325262715-f7bda7ae-17b9-489c-bf2a-5834a1455163.png)
+
+在react中是单向的！
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1611325199163-68a60ec8-6243-4ae0-973d-9bf9e4c2bb65.png)
+
+#### hooks版本的定时器效果
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <div id="app"></div>
+</body>
+
+
+<!-- 为了使用jsx我们需需要用bable进行预编译 -->
+<script src="https://cdn.bootcdn.net/ajax/libs/babel-standalone/7.0.0-beta.3/babel.min.js"></script>
+
+<script src="https://cdn.bootcdn.net/ajax/libs/react/17.0.1/umd/react.development.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/react-dom/17.0.1/umd/react-dom.development.js"></script>
+
+
+<script type="text/babel">
+  const { useState, useEffect } = React
+
+  const Clock = () => {
+    const [dateValue, setDateValue] = useState(new Date())
+
+    useEffect(() => {
+      setDateValue(new Date())
+
+    }, [dateValue])
+
+
+    return (
+      <div>
+        <h1>Hello, world!</h1>
+        <h2>It is {dateValue.toLocaleTimeString()}.</h2>
+      </div>
+    )
+  }
+
+
+  ReactDOM.render(
+    <Clock />,
+    document.getElementById('app')
+  );
+</script>
+
+</html>
+```
+
+### 事件处理
+接下来我们看看事件处理，事件处理没啥好说的。主要就是这样的哈
+
++ 回顾一下html中的事件写法
+
+```html
+// 直接上代码好吧
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+function displayDate() {
+  document.getElementById("demo").innerHTML = Date();
+}
+</script>
+</head>
+<body>
+
+<h1>我的第一段 JavaScript</h1>
+
+<p id="demo">这是一段文字。</p>
+
+<button type="button" onclick="displayDate()">显示日期</button>
+
+</body>
+</html>
+
+```
+
++ 回顾一下js中class中的对象绑定this的问题
+
+```javascript
+// 这几个问题主要就是：“在js中，calss不会默认绑定this”，也就是说这样的代码 最后你拿到的this是一个undifind
+
+const module = {
+  x: 42,
+  getX: function() {
+    return this.x;
+  }
+};
+
+const unboundGetX = module.getX;
+console.log(unboundGetX()); // The function gets invoked at the global scope
+// expected output: undefined
+
+// 所以你需要进行绑定，它就是想这样
+const boundGetX = unboundGetX.bind(module);
+console.log(boundGetX());
+// expected output: 42
+
+```
+
++ react中的事件
+
+react中的事件，实际上是合成事件 ，不是对原生的事件做了一点点的封装，这里我们先了解了解，后续有章节深入讲解，下面的例子就是一个使用指南
+
+```jsx
+
+// 处理this绑定问题的方案1
+class Toggle extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {isToggleOn: true};
+    // 为了在回调中使用 `this`，这个绑定是必不可少的    
+	this.handleClick = this.handleClick.bind(this);  }
+
+  handleClick() { 
+    this.setState(state => ({      isToggleOn: !state.isToggleOn    }));
+  }
+  
+  render() {
+    return (
+      <button onClick={this.handleClick}>        
+        {this.state.isToggleOn ? 'ON' : 'OFF'}
+      </button>
+    );
+  }
+}
+
+ReactDOM.render(
+  <Toggle />,
+  document.getElementById('root')
+);
+
+// 处理this绑定问题的方案2  推荐使用（如果你不要hooks使用的class）
+class LoggingButton extends React.Component {
+  // 此语法确保 `handleClick` 内的 `this` 已被绑定。  // 注意: 这是 *实验性* 语法。  handleClick = () => {    console.log('this is:', this);  }
+  render() {
+    return (
+      <button onClick={this.handleClick}>
+        Click me
+      </button>
+    );
+  }
+}
+
+// 处理this绑定问题的方案3
+class LoggingButton extends React.Component {
+  handleClick() {
+    console.log('this is:', this);
+  }
+
+  render() {
+    // 此语法确保 `handleClick` 内的 `this` 已被绑定。    return (      <button onClick={() => this.handleClick()}>        Click me
+      </button>
+    );
+  }
+}
+
+//hooks随便整
+
+
+// 组织默认事件
+function ActionLink() {
+  
+  function handleClick(e) { 
+    e.preventDefault();    
+    console.log('The link was clicked.');
+  }
+  
+  return (
+    <a href="#" onClick={handleClick}>
+      Click me
+    </a>
+  );
+}
+```
+
+
+
+### 表单
+这里需要说明的是。react是没有默认的双向数据绑定的，如果要实现这样的效果，需要自己的手写 双向数据绑定,一个简单的例子，
+
++ 受控和非受控组件
+
+这里需要补充一下，在react中组件分为两种（重状态来看），一个是受控，一个是非受控的。非受控组件就是一个纯的展示组件展示UI。不包含复杂的逻辑操作，与之相对的就是受控组件
+
+```javascript
+
+// 一般的我们倾向于使用受控组件来干这件事
+import React from 'react'
+
+
+class Hello extends React.Component {
+
+  // constructor(){
+
+  //   super()
+
+
+  //   this.state = {
+
+  //     count  = 0
+
+  //   }
+
+  // }
+
+  state = {
+
+    text :'',
+
+    content:'',
+
+    city:'bj',
+
+    checked:false
+
+  }
+
+
+  // 事件
+
+  handerFrom = (e) => {  // 注意这里的this问题
+
+    let target =  e.target
+
+     let value =  target.type === "checkbox"
+
+     ? target.checked 
+
+     : target.value
+
+
+     let name = target.name
+
+    this.setState({
+
+      [name] : value
+
+
+    })
+
+  }
+
+  render() {
+
+      return ( 
+
+      <div>
+
+        {/* input简单的受控组件 */}
+
+        <div>
+
+          <h1>{this.state.text}</h1>
+
+          <input name="text" value={this.state.text} onChange={this.handerFrom}></input>
+
+        </div>
+
+        {/* 富文本受控组件 */}
+
+        <div>
+
+          <textarea name="content" value={this.state.content} onChange={this.handerFrom}></textarea>
+
+        </div>
+
+        {/* 下拉选择受控组件 */}
+
+        <div>
+
+          <select name="select" value={this.state.city} onChange={this.handerFrom}>
+
+            <option value="sh">上海</option>
+
+            <option value="gz">官洲</option>
+
+            <option value="bj">北京</option>
+
+          </select>
+
+        </div>
+
+      </div> )
+
+    }
+
+}
+
+
+export default Hello
+```
+
++ 老子就不喜欢使用受组件可以吗？当然可以
+
+那就使用react的ref控制dom获取dom信息从而获取表单数据
+
+```jsx
+class NameForm extends React.Component {
+  constructor(props) {
+    super(props);
+    this.handleSubmit = this.handleSubmit.bind(this);
+    this.input = React.createRef();  }
+
+  handleSubmit(event) {
+    alert('A name was submitted: ' + this.input.current.value);    event.preventDefault();
+  }
+
+  render() {
+    return (
+      <form onSubmit={this.handleSubmit}>
+        <label>
+          Name:
+          <input type="text" ref={this.input} />        </label>
+        <input type="submit" value="Submit" />
+      </form>
+    );
+  }
+}
+```
+
+### 状态提升
+状态提升，实际上是一种思想：“把一些共用的或者组件之间可以通信的一些东西写在父组件，把子组件的状态提升上去，便于统一管理”，多个组件需要反映相同的变化数据，这时我们建议将共享状态提升到最近的共同父组件中去，这就是核心.
+
+在react中任何可变数据应当只有一个相对应的唯一“数据源”。通常，state 都是首先添加到需要渲染数据的组件中去。然后，如果其他组件也需要这个 state，那么你可以将它提升至这些组件的最近共同父组件中。你应当依靠[自上而下的数据流](https://react.docschina.org/docs/state-and-lifecycle.html#the-data-flows-down)，而不是尝试在不同组件间同步 state。
+
+虽然提升 state 方式比双向绑定方式需要编写更多的“样板”代码，但带来的好处是，排查和隔离 bug  所需的工作量将会变少。由于“存在”于组件中的任何 state，仅有组件自己能够修改它，因此 bug  的排查范围被大大缩减了。此外，你也可以使用自定义逻辑来拒绝或转换用户的输入。
+
+如果某些数据可以由 props 或 state 推导得出，那么它就不应该存在于 state 中，减少数据量有利于后续的维护，而不是这一个哪儿一个的状态导出抛
+
+合理的使用浏览器工具devTools调试也很重要！
+
+
+
+### 组合和继承  
+所谓的的组合是我在写React时使用频率最高的组件的在组合方式，它主要是下面这样子
+
++ 包含 children就是内容    ，（这个东西就类似于vue中的 插槽）
+
+```jsx
+function FancyBorder(props) {
+  return (
+    <div className={'FancyBorder FancyBorder-' + props.color}>
+      {props.children}    </div>
+  );
+}
+
+function WelcomeDialog() {
+  return (
+    <FancyBorder color="blue">
+      <h1 className="Dialog-title">        Welcome      </h1>      <p className="Dialog-message">        Thank you for visiting our spacecraft!      </p>    </FancyBorder>
+  );
+}
+```
+
++ 特殊
+
+特殊就更好理解，最白话的解释就是有名字的特定的“children” （类似于vue中具名插槽）
+
+```jsx
+function Dialog(props) {
+  return (
+    <FancyBorder color="blue">
+      <h1 className="Dialog-title">
+        {props.title}      </h1>
+      <p className="Dialog-message">
+        {props.message}      </p>
+    </FancyBorder>
+  );
+}
+
+function WelcomeDialog() {
+  return (
+    <Dialog      title="Welcome"      message="Thank you for visiting our spacecraft!" />  );
+}
+```
+
+### react哲学
+在react中，哲学可以说就是react的核心概念了！，如果理解它，那么你就理解了react,接下来就是不断的进行最佳实践了，让我们开始吧
+
++ UI应该是根据数据来的，所以第一步就是要确定好数据的结构这样就能得心应手
++ 拆分UI划分组件，这里的一个重要的原则就是：‘单一功能’，一个组件应该只负责一个功能
++ 确保你的数据流的origin在那个父组件，处理好你的props 和sate 存放的位置具体的原则可以参考如下
+    - 找到根据这个 state 进行渲染的所有组件。
+    - 找到他们的共同所有者（common owner）组件（在组件层级上高于所有需要该 state 的组件）。
+    - 该共同所有者组件或者比它层级更高的组件应该拥有该 state。
+    - 如果你找不到一个合适的位置来存放该 state，就可以直接创建一个新的组件来存放该 state，并将这一新组件置于高于共同所有者组件层级的位置。
++ 添加方向数据流控制，我们从需要在子组件处理父组件的数据这个时候，我们就需要这样来做了
+
+
+
+
+

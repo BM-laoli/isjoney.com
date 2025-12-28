@@ -740,26 +740,47 @@ export const DATA = {
         }
       },
       {
-      slug: "App", // 按照要求固定为 Nodejs
-      metadata: {
-        title: "React Native 跨平台与原生客户端实战",
-        summary: "全方位解析移动端开发技术，涵盖 React Native 环境搭建、原生模块封装、自研热更新框架 HouYi 及 ToDoMax 实战。深入 iOS (OC/Swift) 与 Android 原生开发核心，从入门到大型应用架构设计。",
-        tags: ["React Native", "iOS", "Android", "Mobile"],
-        // 暖色调背景 (fff7ed - 浅橙色)，文字颜色 (ea580c - 深橙色)
-        image: "https://placehold.co/322x172/fff7ed/ea580c.png?text=App",
-        status: "Mar. 2024 - Mar. 2025",
-        href: "/books/App/环境配置",
-        authors: "Joney",
-        video: "",
-        links: [
-          {
-            type: "Github",
-            href: "https://github.com/BM-laoli",
-            icon: <Icons.github className="size-3" />,
-          },
-        ],
+        slug: "App", // 按照要求固定为 Nodejs
+        metadata: {
+          title: "React Native 跨平台与原生客户端实战",
+          summary: "全方位解析移动端开发技术，涵盖 React Native 环境搭建、原生模块封装、自研热更新框架 HouYi 及 ToDoMax 实战。深入 iOS (OC/Swift) 与 Android 原生开发核心，从入门到大型应用架构设计。",
+          tags: ["React Native", "iOS", "Android", "Mobile"],
+          // 暖色调背景 (fff7ed - 浅橙色)，文字颜色 (ea580c - 深橙色)
+          image: "https://placehold.co/322x172/fff7ed/ea580c.png?text=App",
+          status: "Mar. 2024 - Mar. 2025",
+          href: "/books/App/环境配置",
+          authors: "Joney",
+          video: "",
+          links: [
+            {
+              type: "Github",
+              href: "https://github.com/BM-laoli",
+              icon: <Icons.github className="size-3" />,
+            },
+          ],
+        }
+      },
+      {
+        slug: "React", // 固定为 React
+        metadata: {
+          title: "React 生态与源码实战指南",
+          summary: "从 React 基础语法、Hooks 深度解析、Router 与 Redux 状态管理，到 Ant Design Pro 中台实战、微前端 Qiankun 落地，以及源码级性能优化与面试技巧的全方位教程。",
+          tags: ["React", "Frontend", "Source Code", "Architecture"],
+          // 暖色调 (淡淡的橙红色背景 ffe4e6，深红文字 9f1239)
+          image: "https://placehold.co/322x172/ffe4e6/9f1239.png?text=React",
+          status: "Mar. 2024 - Mar. 2025",
+          href: "/books/React/阅读指南",
+          authors: "Joney",
+          video: "",
+          links: [
+            {
+              type: "Github",
+              href: "https://github.com/BM-laoli",
+              icon: <Icons.github className="size-3" />,
+            },
+          ],
+        }
       }
-    }
     ],
     // 配置项 Books 目录
     booksContent: {
@@ -1041,6 +1062,120 @@ export const DATA = {
               slug: "App/阶段五、滴滴团队在IOS开发领域的骚操作"
             }
           ]
+        }
+      ],
+      React: [
+        {
+          title: "阅读指南",
+          slug: "React/阅读指南"
+        },
+        {
+          title: "常用辅助工具",
+          slug: "React/常用辅助工具"
+        },
+        {
+          title: "基础第一部分-基础Code",
+          slug: "React/基础第一部分-基础Code"
+        },
+        {
+          title: "基础第二部分-组件封装骚操作",
+          slug: "React/基础第二部分-组件封装骚操作"
+        },
+        {
+          title: "基础第三部分-优化Diff算法",
+          slug: "React/基础第三部分-优化Diff算法"
+        },
+        {
+          title: "基础第四部分-router",
+          slug: "React/基础第四部分-router"
+        },
+        {
+          title: "基础第五部分-redux",
+          slug: "React/基础第五部分-redux"
+        },
+        {
+          title: "基础第六部分-Hooks",
+          slug: "React/基础第六部分-Hooks"
+        },
+        {
+          title: "官方骨灰教程（一）",
+          slug: "React/官方骨灰教程（一）"
+        },
+        {
+          title: "官方骨灰教程（二）",
+          slug: "React/官方骨灰教程（二）"
+        },
+        {
+          title: "官方骨灰教程（三）",
+          slug: "React/官方骨灰教程（三）"
+        },
+        {
+          title: "官方骨灰教程（四）",
+          slug: "React/官方骨灰教程（四）"
+        },
+        {
+          title: "官方骨灰教程（五）",
+          slug: "React/官方骨灰教程（五）"
+        },
+        {
+          title: "核心思想-1《React组件设计模式》",
+          slug: "React/核心思想-1《React组件设计模式》"
+        },
+        {
+          title: "核心思想-2《Ts下的组件设计终极奥义》",
+          slug: "React/核心思想-2《Ts下的组件设计终极奥义》"
+        },
+        {
+          title: "核心思想-3《Antd部分源码解读》",
+          slug: "React/核心思想-3《Antd部分源码解读》"
+        },
+        {
+          title: "hooks下的React设计指南",
+          slug: "React/hooks下的React设计指南"
+        },
+        {
+          title: "实战2：antPro深入（中台解决方案）",
+          slug: "React/实战2：antPro深入（中台解决方案）"
+        },
+        {
+          title: "实战1：TodoList - 仿一下微软的Todo",
+          slug: "React/实战1：TodoList - 仿一下微软的Todo"
+        },
+        {
+          title: "qiankun在umijs & Antd-Pro中的结合（小demo技术落地实践）",
+          slug: "React/qiankun在umijs & Antd-Pro中的结合（小demo技术落地实践）"
+        },
+        {
+          title: "qiankun在umijs & Antd-Pro中的结合( 公司内部系统实战 )",
+          slug: "React/qiankun在umijs & Antd-Pro中的结合( 公司内部系统实战 )"
+        },
+        {
+          title: "动效设计",
+          slug: "React/动效设计"
+        },
+        {
+          title: "Docusaurus文档设计工具react 类属于vuepross",
+          slug: "React/Docusaurus文档设计工具react 类属于vuepross"
+        },
+        {
+          title: "React深入&面试",
+          slug: "React/React深入&面试"
+        },
+        {
+          title: "阿里家的react生态的坑位",
+          slug: "React/阿里家的react生态的坑位"
+        },
+        {
+          title: "代码的构建方式",
+          slug: "React/代码的构建方式"
+        },
+        {
+          title: "React_PC编码风格指南",
+          slug: "React/React_PC编码风格指南"
+        },
+        {
+          title: "React源代码解析",
+          slug: "React/React源代码解析"
         }
       ]
       //更多

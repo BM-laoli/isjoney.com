@@ -1,0 +1,344 @@
+---
+title: "React 网络域规划组件开发"
+date: "2024-12-19"
+summary: "基于 React 和 Ant Design Pro 开发的网络域规划管理页面，包含数据表格展示、新增编辑弹窗、删除确认等功能模块。"
+status: "completed"
+tech: ["React", "Ant Design Pro", "TypeScript"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "React"
+---
+
+```jsx
+// NetworkDomain 网络规划
+import React, { useState, useRef } from 'react'
+import { useRequest } from 'ahooks';
+import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table';
+import { PageHeaderWrapper } from '@ant-design/pro-layout';
+import config from '@/utils/config';
+import { Button, Space, message, Popconfirm, Card, } from 'antd';
+import { page, networkSave, networkDel } from './service';
+import AddModal from './AddModal';
+import { SizeType } from 'antd/lib/config-provider/SizeContext';
+import { Link } from 'umi';
+
+/** 
+ * Preset 
+ */
+
+
+const NetworkDomain: React.FC<any> = () => {
+  /** 
+   * state 
+   */
+  const actionRef = useRef<ActionType>();
+
+  const [size, setSize] = useState<SizeType>('middle');
+  const [sorter, setSorter] = useState<any>('');
+  const [sortOrder, setSortOrder] = useState<any>('');
+  const [visible, setVisible] = useState<boolean>(false);
+  const [obj, setObj] = useState<boolean>(false);
+
+  /** 
+   * method
+   */
+  const onTableChange = (p: any, f: any, s: any) => {
+    setSorter(s.field || '');
+    setSortOrder(s.order || '');
+  };
+
+
+  const { run: delData } = useRequest(networkDel, {
+    manual: true,
+    onSuccess: (result) => {
+      if (result.success) {
+        actionRef.current?.reset()
+        actionRef.current?.reload()
+      }
+    },
+  });
+
+  const { run: saveData, loading } = useRequest(networkSave, {
+    manual: true,
+    onSuccess: (result, params) => {
+      actionRef?.current?.reload();
+      if (result.success) {
+        result.data && message.success(result.codeMessage);
+        setVisible(false);
+        setObj(false);
+      }
+    },
+  });
+
+  const loadData = async (params: any) => {
+    const response = await page(params);
+    return {
+      success: response.success,
+      ...response.data,
+    };
+  };
+
+  const handleEdit = (obj: any) => {
+    setObj(obj);
+    setVisible(true);
+  };
+  const handleDel = (id: any) => {
+    delData(id);
+  };
+  const props = {
+    visible,
+    loading,
+    obj,
+    onCancel: () => {
+      setVisible(false);
+      setObj(false);
+    },
+    onSubmit: (values: any) => {
+      saveData(values);
+    },
+  };
+
+  /** 
+   * effct 
+   */
+
+
+  /** 
+   * componentsConfig 
+   */
+  const header = (
+    <Space>
+      <Button
+        size={size}
+        type="primary"
+        onClick={() => {
+          setVisible(true);
+        }}
+      >
+        新增
+      </Button>
+    </Space>
+  );
+
+  const columns: ProColumns<any>[] = [
+    {
+      title: '名称',
+      key: 'name',
+      dataIndex: 'name',
+      render: (_, dom) => {
+        return <Link
+          to={{
+            pathname: '/networkDomain/networkShort',
+            state: {
+              areaId: dom.id,
+              name: dom.name,
+              description: dom.description
+            },
+          }}
+        >{_}</Link>
+      }
+    },
+    {
+      title: '描述',
+      dataIndex: 'description',
+      ellipsis: true,
+    },
+    {
+      title: '操作',
+      valueType: 'option',
+      dataIndex: 'id',
+      width: 200,
+      fixed: 'right',
+      render: (text: any, record: any) => (
+        <>
+          <Space>
+            {/* <Tag color={config.editColor}> */}
+            <a onClick={() => handleEdit(record)}>编辑</a>
+            {/* </Tag> */}
+            {/* <Tag color={config.deleteColor}> */}
+            <a>
+              <Popconfirm
+                title="您确认要删除该全局属性么?"
+                onConfirm={() => handleDel(record.id)}
+                okText="是"
+                cancelText="否"
+              >
+                删除
+                </Popconfirm>
+            </a>
+            {/* </Tag> */}
+          </Space>
+        </>
+      ),
+    },
+  ];
+
+
+  /** 
+   * render
+   */
+  return (
+    <PageHeaderWrapper title="网络域规划">
+      <Card >
+        <div style={{ minHeight: 650 }}>
+          <ProTable
+            actionRef={actionRef}
+            columns={columns}
+            request={(params) => loadData(params)}
+            params={{ sorter, sortOrder }}
+            size={size}
+            rowKey="id"
+            headerTitle={header}
+            // rowSelection={{}}
+            search={false}
+            tableAlertRender={() => false}
+            onSizeChange={(size) => setSize(size)}
+            onChange={(p, f, s) => onTableChange(p, f, s)}
+            pagination={config.paginationDisplay}
+            scroll={{ x: 1250, y: 450 }}
+            toolBarRender={(action, { selectedRows }) => []}
+          />
+          <AddModal {...props} />
+        </div>
+      </Card>
+    </PageHeaderWrapper>
+  )
+}
+
+export default NetworkDomain
+
+
+
+
+// AddModal 网络域新增编辑的弹出层
+import React, { useState, useRef, useEffect, useCallback, useContext } from 'react'
+import config from '@/utils/config';
+import { Form, Input, Modal } from 'antd';
+import { validation } from './service'
+
+/** 
+ * Preset 
+ */
+const { TextArea } = Input;
+
+
+const AddModal: React.FC<any> = ({ obj = {}, visible, onCancel, onSubmit, loading }) => {
+  /** 
+   * state 
+   */
+  const [form] = Form.useForm();
+
+
+  /** 
+   * method
+   */
+  const onOk = () => {
+    form
+      .validateFields()
+      .then((values) => {
+        const data = { ...values }
+        if (obj.id) {
+          data.id = obj.id
+        }
+        onSubmit({ ...data });
+      })
+      .catch((info) => {
+        console.log('Validate Failed:', info);
+      });
+  };
+
+  const close = () => {
+    clear();
+    onCancel();
+  };
+
+  const clear = () => {
+    form.resetFields();
+  };
+
+  const validationName = (rule, value, callback) => {
+    try {
+      let data = {}
+      if (obj && obj.id) {
+        data.id = obj.id
+      }
+      data.name = value
+      validation(data).then((res) => {
+        if (res && res.data && res.success) {
+          callback();
+        } else {
+          callback('网络域已存在');
+        }
+      })
+      data = null
+    } catch (err) {
+      callback(err);
+    }
+  }
+
+
+  /** 
+   * effct 
+   */
+  useEffect(() => {
+    if (visible) {
+      form.setFieldsValue({
+        ...obj,
+      });
+    }
+  }, [visible]);
+
+
+  /** 
+   * componentsConfig 
+   */
+
+
+  /** 
+   * render
+   */
+  return (
+    <>
+      <Modal
+        visible={visible}
+        title={`${obj.id ? '编辑网络域' : '新增网络域'}`}
+        onCancel={() => close()}
+        confirmLoading={loading}
+        afterClose={() => clear()}
+        width={700}
+        okText="提交"
+        cancelText="取消"
+        onOk={() => onOk()}
+      >
+        <Form form={form} layout="horizontal" name="networkForm">
+          <Form.Item
+            {...config.modalFormItemLayout}
+            label="网络域"
+            name="name"
+            rules={[
+              {
+                required: true,
+                message: '请输入网络域名称',
+              },
+              { validator: validationName },
+            ]}
+          >
+            <Input placeholder="请输入网络域名称" />
+          </Form.Item>
+
+          <Form.Item
+            label="描述"
+            {...config.modalFormItemLayout}
+            name="description">
+            <TextArea />
+          </Form.Item>
+
+        </Form>
+      </Modal>
+    </>
+  )
+}
+
+export default AddModal
+```
+

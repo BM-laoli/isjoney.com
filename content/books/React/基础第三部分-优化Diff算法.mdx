@@ -1,0 +1,47 @@
+---
+title: "React 核心原理：组件、setState 与 JSX"
+date: "2024-12-19"
+summary: "深入剖析 React 组件原理、setState() 方法机制、JSX 语法转化过程、性能优化策略及虚拟 DOM 算法。"
+status: "completed"
+tech: ["React", "setState", "JSX", "VirtualDOM"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "React"
+---
+
+## 说明：
+> 在这一讲中，我们将会学习到如下的知识点
+>
+> + React的组件原理大揭秘
+> + setState()方法的大揭秘
+> + jsx的语法转化的过程
+> + 组价的性能优化
+> + 虚拟算法
+> + React的原理解密
+>
+
+
+
+
+
+## setState的说明
+setState是异步的！不会立即的更新，setState可以被调用多次，但是只会触发一次redner渲染函数，这个是react内部的性能优化机制  ，一定要注意，后面的state的一定不能依赖前面的state         
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597499187510-d3f25f6a-2119-4049-93eb-91e1f1611885.png)
+
+使用stestate的时候有两个方式 一个是直接改变，一个是会用函数，使用函数的方式更推荐，因为可以通过传
+
+递参数，参数有两个（state是新的state，props是旧的prop），而且这个可以灵活的改变state
+
+
+
+setState有两个参数，后面的一个是cb回调，在这里我们可以实现一定的DOM异步操作，页面渲染之后，获取到最新的DOM
+
+
+
+> 代码的演示
+>
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1597500010435-f8684a8d-3ba8-4082-b623-b97f8c533cf6.png) 
+
+## jsx语法转
