@@ -1,0 +1,120 @@
+---
+title: "Go 入门踩坑记录：构建、MySQL、Swagger、Redis 与 Nginx"
+date: "2024-12-19"
+summary: "记录 Go 入门过程中的常见问题，包括程序构建执行、MySQL 连接失败解决方案、Swagger 配置与使用、Redis 连接问题排查以及 Nginx 与 Docker 的部署方案。"
+status: "completed"
+tech: ["Go", "Docker", "Nginx", "MySQL", "Redis"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Go"
+---
+
+> 这里是记录的是 ，按照煎鱼大神的go入门文档中来的坑
+>
+
+
+
+# build之后的程序如何执行
+```shell
+chmod u+x *.sh
+```
+
+# Mysql死掉了
+如果你遇到mysql连接失败的情况 ，你可以考虑如下的方案
+
+[https://blog.csdn.net/whowhowhoisimportant/article/details/111599804](https://blog.csdn.net/whowhowhoisimportant/article/details/111599804)
+
+```shell
+# 我是直接丢了一个重启命令
+sudo -s
+/etc/init.d/mysql restart
+
+# 再进行连接
+```
+
+# Swagerr的问题
+> 这个问题主要是 ，项目头的启动项的问题配置好就可以了，但是实际上如果 工具用得好，比如apifox 和其他工具编译生成TsInterface什么的话，这个东西也可以是一个可选项，但是我们现在还是老老实实，安装教程中跑它吧。在golang中使用这个swago 没次都需要重新编译一些swage文件，命令如下  
+
+>
+
+```shell
+swag init
+```
+
+```go
+package routers
+
+import (
+	"github.com/BM-laoli/go-gin-example/docs"  //项目的东西要换成你自己的 特别是这个swager的问题
+	"github.com/BM-laoli/go-gin-example/middleware/jwt"
+	"github.com/BM-laoli/go-gin-example/pkg/setting"
+	"github.com/BM-laoli/go-gin-example/routers/api"
+	v1 "github.com/BM-laoli/go-gin-example/routers/api/v1"
+	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"     // swagger embed files
+	ginSwagger "github.com/swaggo/gin-swagger" // gin-swagger middleware
+)
+```
+
+# 关于redis连接的问题  
+
+[https://github.com/eddycjy/go-gin-example/issues/127](https://github.com/eddycjy/go-gin-example/issues/127)
+
+注意⚠️很多同学没有去main中init哈！这是一个致命的问题
+
+```shell
+2022/03/04 22:47:50 [Recovery] 2022/03/04 - 22:47:50 panic recovered:
+GET /api/v1/articles?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3QiLCJwYXNzd29yZCI6InRlc3QxMjM0NTYiLCJleHAiOjE2NDY0MTM0MzEsImlzcyI6Imdpbi1ibG9nIn0.TxR-nZZKrNaCRNbOZnwt3Y4Md8fdxU8fuVR-tKG5tks HTTP/1.1
+Host: 127.0.0.1:8000
+Accept: */*
+Accept-Encoding: gzip, deflate, br
+Cache-Control: no-cache
+Connection: keep-alive
+Postman-Token: 294bfd2e-8b89-4c3c-9bc5-a206fdb224b2
+User-Agent: PostmanRuntime/7.29.0
+
+
+runtime error: invalid memory address or nil pointer dereference
+```
+
+# 关于 煎鱼大神的 图片绘制
+> 个人实际上不是非常的建议由后端处理，这种场景，应该更多的交给客户端处理，当然如果极其特殊的情况可以交给后端处理
+>
+
+# 关于Nginx问题
+关于Nginx我们不用过多的讲很多，现在我们仅仅需要的是把Nginx如何和docker结合搞清楚，
+
+实际上煎鱼大神在文章中，在非docker环境下就已经做的很好了，一张图就能理解清楚所有的
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1646488598464-75eb2812-3ede-4472-bd33-42ed0a2206a2.png)
+
+现在我们来讨论一下docker中如何跑这个nginx ，首先我们需要分两类问题去探讨
+
+1. liunx内run多个 服务，使用一个nginx 代理物理机内的多个服务，对外暴露一个端口服务，
+2. 部署多个dockercontainer，外部使用一个ngxin服务去管理和访问他们
+
+它们的示意图如下
+
+![画板](https://cdn.nlark.com/yuque/0/2022/jpeg/1627571/1646489139308-6bb70565-088c-419e-a50f-89cf5be91887.jpeg)
+
+
+
+
+
+![画板](https://cdn.nlark.com/yuque/0/2022/jpeg/1627571/1646489308738-aa8121e5-a754-4cdf-a748-bfceb0c9458c.jpeg)
+
+但是说一下最终的结论，到底何种模式最佳呢？ 
+
+推荐看看这篇文章 [https://www.jianshu.com/p/2057576bfc5a](https://www.jianshu.com/p/2057576bfc5a)
+
+
+
++ 在这里我们并没有选择使用 某种方式，这一节我们直接跳过，如果后续有需要的话，我更加欣赏 把Nginx 映射到容器内部来进行管理，也就是和docker结合的对二中架构模式，当然如果你的业务足够的简单，使用博客中描述的架构模式也是可以的
+
+
+
+# <font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">请入门 Makefile</font>
+对于这个东西 <font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">Makefile 它实际上是类似于，编排工具</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">🔧</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">，是一个基于Unix操作系统的编排工具，这里我们也不深入的了解了。</font>
+
+<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"></font>
+

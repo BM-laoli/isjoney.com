@@ -1,0 +1,75 @@
+---
+title: "IAM 实战项目：企业级权限管理系统"
+date: "2024-12-19"
+summary: "深入介绍 IAM 企业级权限管理系统的架构设计、核心组件、安全机制及部署方案，涵盖认证授权、服务安全、资源控制等关键技术点。"
+status: "completed"
+tech: ["IAM", "Security", "Architecture"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Go"
+---
+
+> 这个专栏主要介绍的是 ：实战项目 IAM 应用长啥样、它能干什么，以及怎么把它部署到 Linux 服务器上。
+>
+
+## 项目的背景
+    IAM项目主要是一个有关于“安全”的项目，既企业内部的各个资源调度如何保证安全的访问，和权限等级的设置。
+
+   安全主要说的以下的两类
+
++ **服务自身的安全**：<font style="color:rgb(51, 51, 51);">需要禁止非法用户访问服务，服务器层面可以通过物理隔离、网络隔离、防火墙等技术从底层保证服务的安全性，软件层面可以通过 HTTPS、用户认证等手段来加强服务的安全性。</font>
++ **服务资源的安全：**说白了就是一个权限控制系统，什么样的角色什么样的身份能访问什么样的资源
+
+
+
+这个项目中呢，认证比较的简单就是JWT，而服务的资源和资源策略的控制比较的复杂
+
+
+
+## IAM系统是什么
+  IAM能够 <font style="color:rgb(51, 51, 51);">在特定的条件下</font>**<font style="color:rgb(51, 51, 51);">，谁能够 / 不能够对哪些资源做哪些操作（Who is able to do what on something given some context）</font>**<font style="color:rgb(51, 51, 51);">，也即完成资源授权功能。</font>
+
+  ![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1623733229752-618f5c9c-de02-47f9-b243-4e4cd0f74836.png)
+
+上面就是一个过程示意图
+
+ 
+
+![画板](https://cdn.nlark.com/yuque/0/2021/jpeg/1627571/1623733507669-7bdd70f9-6e72-4e09-96ad-f1d9e12561bc.jpeg)
+
+## 
+## IAM系统长啥样
+首先外面来看看系统的架构
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1623733515848-b6e90eca-d6c5-4485-baab-3ca0ae93630c.png)
+
+9大组件3大数据库，5个核心组件 
+
+<font style="color:rgb(51, 51, 51);">iam-apiserver、iam-authz-server、iam-pump、marmotedu-sdk-go 和 iamctl 的功能</font>
+
+<font style="color:rgb(51, 51, 51);">数据库是MySQL，MongoDB，Redis</font>
+
+<font style="color:rgb(51, 51, 51);"></font>
+
+<font style="color:rgb(51, 51, 51);"></font>
+
+然后我们总结了一张张的表格，帮助大家梳理脉络
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1623733588579-593bccc6-8b80-4e28-b78d-c86a03074009.png)
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1623733606492-faa1c6b5-088f-4d5f-abd5-6193697641af.png)
+
+## 通过使用流程来理解架构
+![画板](https://cdn.nlark.com/yuque/0/2021/jpeg/1627571/1623734456583-3cafee14-e663-4d45-b3c7-526e0a1dd1b2.jpeg)
+
+## 软件架构模式
+### MVC
+### 前后端分离
+> 上述内容比较的简单这里就不展开的讲了，有时候大项目前后端比较好，小项目有时候MVC更好
+>
+
+## 总结
+![画板](https://cdn.nlark.com/yuque/0/2021/jpeg/1627571/1623734801737-60bcf565-92be-4c03-ab39-42d60f0d2b7b.jpeg)
+
+
+

@@ -1,0 +1,152 @@
+---
+title: "Go 包管理与 GOPATH 配置详解"
+date: "2024-12-19"
+summary: "深入解析 Go 语言 GOPATH 环境变量配置、包管理机制、go install 与 go get 区别，以及个人开发者和企业开发中的最佳目录配置方案。"
+status: "completed"
+tech: ["Go", "GOPATH", "Package Management"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Go"
+---
+
+> 关于包的使用，这片文章说的非常的详细 [如何控制和管理pkg](https://www.topgoer.com/%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/%E9%85%8D%E7%BD%AEgopath.html)， 这里我们只是作为它的补充和总结，不包括一些详细的细节说明，如果你有需要请自行前往查看
+>
+
+
+
+
+
+go install 和 go get 有何种区别？
+
+
+
+<font style="background-color:rgb(247, 247, 247);">GOPATH</font><font style="color:rgb(51, 51, 51);">是一个环境变量，用来表明你写的</font><font style="background-color:rgb(247, 247, 247);">go</font><font style="color:rgb(51, 51, 51);">项目的存放路径</font>
+
+<font style="background-color:rgb(247, 247, 247);">GOPATH</font><font style="color:rgb(51, 51, 51);">路径最好只设置一个，所有的项目代码都放到</font><font style="background-color:rgb(247, 247, 247);">GOPATH</font><font style="color:rgb(51, 51, 51);">的</font><font style="background-color:rgb(247, 247, 247);">src</font><font style="color:rgb(51, 51, 51);">目录下。</font>
+
+## <font style="color:rgb(51, 51, 51);">GOPATH </font>
+### 是什么？如何运行？
+顾名思义，它是一个路径，<font style="color:rgb(51, 51, 51);">在进行</font><font style="background-color:rgb(247, 247, 247);">Go</font><font style="color:rgb(51, 51, 51);">语言开发的时候，我们的代码总是会保存在</font>**<font style="color:#E8323C;background-color:rgb(247, 247, 247);">$GOPATH/src</font>**<font style="color:rgb(51, 51, 51);">目录下。在工程经过 </font>**<font style="background-color:rgb(247, 247, 247);">go build</font>****<font style="color:rgb(51, 51, 51);">、</font>****<font style="background-color:rgb(247, 247, 247);">go install</font>****<font style="color:rgb(51, 51, 51);">或</font>****<font style="background-color:rgb(247, 247, 247);">go get </font>**<font style="color:rgb(51, 51, 51);">等指令后，会将下载的第三方包源代码文件放在</font>**<font style="color:#E8323C;background-color:rgb(247, 247, 247);">$GOPATH/src</font>**<font style="color:rgb(51, 51, 51);">目录下， 产生的二进制可执行文件放在</font>**<font style="color:#E8323C;"> </font>****<font style="color:#E8323C;background-color:rgb(247, 247, 247);">$GOPATH/bin</font>**<font style="color:rgb(51, 51, 51);">目录下，生成的中间缓存文件会被保存在 </font>**<font style="color:#E8323C;background-color:rgb(247, 247, 247);">$GOPATH/pkg</font>**<font style="color:rgb(51, 51, 51);"> 下。</font>
+
+<font style="color:rgb(51, 51, 51);">如果我们使用版本管理工具（</font><font style="background-color:rgb(247, 247, 247);">Version Control System</font><font style="color:rgb(51, 51, 51);">，</font><font style="background-color:rgb(247, 247, 247);">VCS</font><font style="color:rgb(51, 51, 51);">。常用如</font><font style="background-color:rgb(247, 247, 247);">Git</font><font style="color:rgb(51, 51, 51);">）来管理我们的项目代码时，我们只需要添加</font><font style="background-color:rgb(247, 247, 247);">$GOPATH/src</font><font style="color:rgb(51, 51, 51);">目录的源代码即可。</font><font style="background-color:rgb(247, 247, 247);">bin</font><font style="color:rgb(51, 51, 51);"> 和 </font><font style="background-color:rgb(247, 247, 247);">pkg</font><font style="color:rgb(51, 51, 51);"> 目录的内容无需版本控制。</font>
+
+<font style="color:rgb(51, 51, 51);">关于GOPATH我们应该依据实际的项目啦，但是比较通用的方案就是上述的方案了</font>
+
+
+
+### Mac下的设置
+对于非M1来说，设置非常的简单
+
+```shell
+sudo  vim ~/.bash_profile
+
+# 需改GOPATH 的路径，譬如在这里我把路径修改到了 /Volumes/WD_BLACK/origin/go
+
+# 执行修改 
+source ~/.bash_profile
+```
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1652683310318-29fea844-b620-4d73-a336-6bee653a46e9.png)
+
+	然后我把个人的项目全部划分到了github/BM-laoli/下，这样我的所有的go的项目都能够在get上找到所有的pkg 方便大家使用。
+
+## 什么样的配置才是好的配置？
+> 没有银弹！，只有合适
+>
+
+### 个人开发者建议目录配置：![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1652682458572-b14cae89-8e6a-4158-af27-3fa13066cdd3.png)
+### 企业开发中推荐的配置：
+### ![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1652682459055-c94837c4-befa-4040-8cdb-592f61782e2e.png)
+### <font style="color:#E8323C;">其他流行的方案：</font>
+<font style="color:rgb(51, 51, 51);">Go语言中也是通过包来组织代码文件，我们可以引用别人的包也可以发布自己的包，但是为了防止不同包的项目名冲突，我们通常使用顶级域名来作为包名的前缀，这样就不担心项目名冲突的问题了。</font>
+
+<font style="color:rgb(51, 51, 51);">因为不是每个个人开发者都拥有自己的顶级域名，所以目前流行的方式是使用个人的github用户名来区分不同的包。</font>
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1652682459037-06bf1c77-4536-4732-b4df-7f04b533d4e9.png)
+
+<font style="color:rgb(51, 51, 51);"></font>
+
+```go
+// 举个例子：张三和李四都有一个名叫studygo的项目，那么这两个包的路径就会是：
+import "github.com/zhangsan/studygo" 
+// 和
+import "github.com/lisi/studygo" 
+
+// 以后我们从github上下载别人包的时候，如：
+go get github.com/jmoiron/sqlx 
+// 那么，这个包会下载到我们本地GOPATH目录下的src/github.com/jmoiron/sqlx。
+```
+
+
+
+### 我最终的目录配置：
+> 我使用了github 个人开发者推荐的配置
+>
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1652683631105-51288ec3-44fc-4352-8cbd-69754aa3a9ad.png)
+
+
+
+### 我们拿到一个项目如何run?
+> 如果你从github拿到我的项目，切换到3-go-modules 分支进入c2 你发现这里的代码结构上这样的
+>
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1652683976631-561c32f1-6794-4283-8bc0-7918a532b901.png)
+
+如果你留意我在 第一篇文章基础中有设置的module name 你会发现这里有这样的配置 在go.mod中	
+
+```go
+// main.go
+package main
+
+import (
+	"c2/modl/pkg/model"
+	"c2/modl/pkg/utils"
+	"fmt"
+)
+
+func main() {
+	fmt.Println("222")
+	model.GetModalName()
+	utils.GetUtilsName()
+
+}
+
+//go.mod
+module c2/modl
+
+go 1.17
+
+```
+
+我想通过上述的表达你应该懂我这个东西如何使用，需要注意的是 这里我起的包的名字不好
+
+c2/modl 具体来说我应该这样命名 和path 保持一致, 这件事应该在你的go mod init 的时候就做，当然了现在这样
+
+也是无所谓的
+
+```go
+module github.com/BM-laoli/go-laraen
+```
+
+
+
+
+
+如果你更新了某写pkg 你需要执行 tidy,verify来验证和重新载入依赖关系
+
+```shell
+go mod verify
+go mod tidy
+```
+
+## 版本Version问题
+> go的依赖version 社区提供了很多方案，比较常用的就是
+>
+> glide 具体去看官方说明和文档就行了，我这里只是简单的说说，其实也没必要用，因为go官方目前已经给出了解决方案
+>
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1652685688842-18e440db-7cac-4cab-bf0d-c9c63eae0b77.png)
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1652685705671-2acc3204-cdc3-4dd1-bdf5-f7cd4d5af050.png)
+

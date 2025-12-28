@@ -1,0 +1,924 @@
+---
+title: "Go 核心基础：包管理、数据类型与常用结构"
+date: "2024-12-19"
+summary: "系统学习 Golang 基础知识，包括包管理机制、变量与常量、数组与切片、Map 操作及字符串处理等核心概念。"
+status: "completed"
+tech: ["Golang", "Package", "DataTypes"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Go"
+---
+
+> 本文档主要是回顾和学习 Golang ，课程来自蔡超（注意本讲座内容比较分散，你需要集中的进行归纳和总结额）
+>
+
+
+
+## 简单的介绍
+go只有25个关紧字，go是编译的强类型语言，支持自动GC 和指针访问，生产力很强大，Go只有 复合 FFP，OPP是不纯在的但是我们可以使用FP的模式来模拟它，另外区块链开发语言也是golang
+
+
+
+install go的话非常的简单，我们只需要去  [https://www.runoob.com/go/go-environment.html](https://www.runoob.com/go/go-environment.html)， 对于Mac用户我们只需要brew install go 就好了。
+
+
+
+1.8 版本之火必须设置环境变量 ( 但是谁tm的现在还在使用go 1.8？大多数都是11往上了 )  
+
+
+
+IDE的话，我们使用Vscode 使用的时候需要注意，只能一次打开一个workspce 要不然会有问题
+
+
+
+## 从一个最简单程序来看go
+### pkg是什么鬼
+项目中的包packge是什么的鬼呢？类似前端的module化 ，举例下面的项目，中的pkg文件夹📁。项目中的pkg就是这个程序所需要用到的所有的pkg了，我们拿里面的一个最简单的东西来举个例子🌰 看看pkg到底如何使用,比如 file 这个pkg，它的作用时 处理文件
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1650467463441-b38587ae-2ff9-4a74-b6be-442f2b9b5073.png)
+
+代码我们放一小段出来
+
+```go
+package file
+
+import (
+	"fmt"
+	"io/ioutil"
+	"mime/multipart"
+	"os"
+	"path"
+)
+
+// 在这里我们用到了 mime/multipart 包（先不用管这个包），它主要实现了 MIME 的 multipart 解析
+// 获取文件大小 字节
+func GetSize(f multipart.File) (int, error) {
+	content, err := ioutil.ReadAll(f)
+
+	return len(content), err
+}
+
+// 获取文件后缀
+func GetExt(fileName string) string {
+	return path.Ext(fileName)
+}
+
+// 看看文件是否存在
+func CheckNotExist(src string) bool {
+	_, err := os.Stat(src)
+
+	return os.IsNotExist(err)
+}
+
+// 看看有没有权限
+func CheckPermission(src string) bool {
+	// 具体实现省略
+}
+
+// 如果没有就创建文件夹
+func IsNotExistMkDir(src string) error {
+	// 具体实现省略
+}
+
+// 创建文件夹
+func MkDir(src string) error {
+	// 具体实现省略
+}
+
+// 打开文件
+func Open(name string, flag int, perm os.FileMode) (*os.File, error) {
+// 具体实现省略
+}
+
+// MustOpen maximize trying to open the file
+func MustOpen(fileName, filePath string) (*os.File, error) {
+// 具体实现省略
+}
+
+```
+
+然后我们看看在项目中是如何使用的。我们先看这个packge的名字叫做file 和文件夹保存一致（这是一种规范）
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1650467727647-b81b77ec-1f04-4e0f-aef2-a324c529eba8.png)
+
+在pkg upload 下使用了
+
+```go
+package upload
+
+import (
+	"fmt"
+	"log"
+	"mime/multipart"
+	"os"
+	"path"
+	"strings"
+
+	"github.com/BM-laoli/go-gin-example/pkg/file"  // 重点是这个 
+	"github.com/BM-laoli/go-gin-example/pkg/logging"
+	"github.com/BM-laoli/go-gin-example/pkg/setting"
+	util "github.com/BM-laoli/go-gin-example/utils"
+)
+// 这里面有些 github.com/BM-laoli/go-gin-example/pkg/file 先不用管，这个东西和你项目是相关的，后面会讲，目前你可以理解这个就是你本地的那个pkg file
+```
+
+### go中的node_modules
+我们前面有介绍在go中如何引其他包，但是我们貌似忘记了非常重要的一点，就说go中的包管理到底是如何做的，接下来 引用知乎高赞 [https://zhuanlan.zhihu.com/p/269719543](https://zhuanlan.zhihu.com/p/269719543)，来给大家理清楚go中包管理问题，我个人非常喜欢使用表格来总结知识点，这非常的高效且方便记忆
+
+1. 我们看看如何初始化一个包 （类比于 npm init）
+
+```shell
+mkdir yourfiles
+cd yourfiles
+# 建议name 和你的文件夹保存一致
+go mod init yourname 
+
+
+```
+
+2. 如何在包里互相的引用（就像import xxx前端一样）
+
+有了包之后，我们来组织一下我们的项目结构
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1651224083962-106a25b5-027f-4ecd-812e-373e49fb231e.png)
+
+```go
+# model
+package model
+
+import "fmt"
+
+func GetModalName() {
+	fmt.Println("GetModalName")
+}
+
+# utils
+package utils
+
+import "fmt"
+
+func GetUtilsName() {
+	fmt.Println("GetUtilsName")
+}
+package test_main
+
+import "testing"
+
+func TestXXX(t *testing.T) {
+	t.Log("Testing")
+}
+
+# test
+package test_main
+
+import "testing"
+
+func TestXXX(t *testing.T) {
+	t.Log("Testing")
+}
+
+# main
+package main
+
+import (
+	"c2/modl/pkg/model"
+	"c2/modl/pkg/utils"
+	"fmt"
+)
+
+func main() {
+	fmt.Println("222")
+	model.GetModalName()
+	utils.GetUtilsName()
+
+}
+
+```
+
+
+
+3. 看看如何测试 （go中有自带的单元测试）
+
+如果你 使用vscode 那么很方便，点一就好了，如果没有也不要慌 使用 shell go cli 去执行
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1651224233162-bb2237b1-4aa9-4adf-bedc-722cfe932069.png)
+
+```shell
+# 注意啊 一定要进到文件夹里面去
+cd ./test/
+go test 
+
+```
+
+4. 如何install 互联网上的包 比如rsc.io
+
+rsc.io/sampler 是个什么东西？这里有它的文档 [https://pkg.go.dev/rsc.io/quote#section-readme](https://pkg.go.dev/rsc.io/quote#section-readme)
+
+
+
+```shell
+go get rsc.io/sampler
+```
+
+使用它也是非常的简单
+
+```go
+# main
+import (
+	"c2/modl/pkg/model"
+	"c2/modl/pkg/utils"
+	"fmt"
+    "rsc.io/quote"
+)
+
+func main() {
+	fmt.Println("222")
+	model.GetModalName()
+	utils.GetUtilsName()
+    Hello()
+}
+
+func Hello() string {
+    return quote.Hello()
+}
+
+
+
+```
+
+ 5. 那么我有没有它的npm呢？当然了  [https://pkg.go.dev/](https://pkg.go.dev/) 这个就说go 的npm 哈哈哈
+
+
+
+总结一下最后的流程
+
+![画板](https://cdn.nlark.com/yuque/0/2022/jpeg/1627571/1651224970490-1a6d1994-be45-4480-83b0-2ee70f880567.jpeg)
+
+
+
+### go的运行方式
+go的运行 有两种方式，直接run / 编译生成二进制（go会自动静态连接🔗）一个独立的二进制文件，通过容器部署非常的方便
+
+```shell
+# 直接run 一般本地开发这样用
+go run main.go
+
+# 一般build 部署的时候使用二进制
+go build main.go
+```
+
+<font style="color:#E8323C;"></font>
+
+### <font style="color:#E8323C;">注意事项</font>
+<font style="color:#E8323C;">1.关于入口文件 必须上main包:package main</font>
+
+<font style="color:#E8323C;">2.关于入口文件 必须上main方法:func main()   
+</font><font style="color:#E8323C;">3.关于入口文件 不一定说main.go</font>
+
+这些注意事项，通过上面的例子你应该也了解，这里就不多说了。比如下面结构的代码有main方法，他们都可以独立运行 go run hellw.go / go run main.go
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1650468145412-468c334d-c588-4d94-960d-f34bae1fd056.png)
+
+### 退出返回值和 控制台参数的接受
+Go 中的mian 不支持返回值，如果要返回程序退出时的状态，需要通过下面的语法 os.Exit() / os.Exit(-1)
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	fmt.Println("Hello word")
+	// os.Exit() 两种都可以区别什么的后面在说
+	os.Exit(-1)
+}
+
+```
+
+  
+main函数不支持 参数 ，但是你可以os.Args获取命令行参数,比如下面的代码
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+    if len(os.Args) > 1 {
+        fmt.Println("6666===>", os.Args[1])
+    }
+}
+
+```
+
+运行
+
+```shell
+go run main chanex
+# 上面的chanex 这个参数就会被拿进来了
+```
+
+
+
+## 变量以及数据类型
+此内容的前提条件是：你的go mod 已经初始化完毕，我们先看看 变量， 使用你需要使用var 声明，这是可选的
+
+### 及其简单的变量和常量
+```go
+package test
+
+import (
+	"fmt"
+	"testing"
+)
+
+// 知识点 变量声明
+// 测试一个简单的 斐波那契 数列
+var a = 0 // 全局的
+
+func TestFbi(t *testing.T) {
+	// 声明变量
+	// a := 1 局部的
+	b := 2
+
+	for i := 0; i < 5; i++ {
+		fmt.Println(" ", b)
+		temp := a
+		a = b
+		b = temp + a
+	}
+}
+
+func TestExchange(t *testing.T) {
+	x := 1
+	xx := 2
+
+	x, xx = xx, x
+
+	fmt.Println("---> 交换了")
+	t.Log(x)
+	t.Log(xx)
+
+}
+
+```
+
+### 关于常量和Iota
+看看常量使用，你需要使用const 声明就好了
+
+```go
+
+package test
+
+import "testing"
+
+func TestXXX(t *testing.T) {
+	t.Log("Testing")
+}
+
+//iota 是一个变量，它会在const 声明的地方 +1 操作 注意⚠️ _ 符号是省略
+
+//下面的是一个面试题 问d是什么值 d是3
+const (
+    a = 1 + iota
+    b
+    _
+    d
+) 
+
+// 依次使用 累加 +1
+const (
+	Monday = 1 + iota
+	Tuesday
+	Wednesday
+)
+
+// 我们使用位运算 来做判断
+const (
+	Readbale = 1 << iota
+	Weitable
+	Executable
+)
+
+func TestConstAdd(t *testing.T) {
+	t.Log("Testing", Monday)
+	t.Log("Tuesday", Tuesday)
+}
+
+// 使用与运算 它可以 非常建议的表示四种类型
+func TestConstAdd2(t *testing.T) {
+	testValue := 7 // 0011
+	t.Log("Testing", testValue&Readbale)
+	t.Log("Testing", testValue&Weitable)
+	t.Log("Testing", testValue&Executable)
+}
+
+
+```
+
+
+
+关于类型约束
+
+go的基础数据类型如下图所示,go中是分32/64的
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1651753688485-dab09460-b282-47b9-932a-36e5ede590b7.png)
+
+**<font style="color:#E8323C;">不允许出现 隐式类型转化</font>**
+
+**<font style="color:#E8323C;"></font>**
+
+### 预定义值
+```go
+math.MaxInt64
+math.MaxFloat64
+math.MaxUint32
+```
+
+
+
+### 定义自己的类型和取址
+```go
+package test
+
+import "testing"
+
+type MyInt int64
+
+func TestImplicit(t *testing.T) {
+	var a int32 = 1
+	var b int64
+	b = int64(a)
+
+	var c MyInt
+	c = MyInt(b)
+	t.Log(a, b, c)
+}
+
+func TestPoint(t *testing.T) {
+	a := 1
+	aPter := &a // 取地址符号  获取a的地址 引用（一般来说地址是16进制的）
+	t.Log(a, aPter) 
+	t.Logf("%T %T", a, aPter)
+}
+
+func TestString(t *testing.T) {
+	var s string
+	t.Log("*" + s + "*")
+
+	//	判断空srtring 就是获取它的lengyh
+	t.Log(len(s))
+}
+
+```
+
+
+
+## 运算符和以及条件和循环
+
+
+算数运算符 （注意哈 我们没有前置的++和--，只有后置++和--）
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1651755145157-1caf0af5-1f74-4006-b466-a928b5014137.png)
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1651755164025-8da204f5-146d-4954-bb50-3ff95dab23f3.png)
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1651755391210-d6857595-c52a-4d84-85d8-bf3bfa526a2b.png)
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1651755394620-20bf6c52-491b-4ece-a932-e213ebec6343.png)
+
+
+
+### 比较Array
+比较Array如何比较？默认的情况下go是可以进行比较的，但是其他的语言是没法比较的他们比较的是地址引用
+
+（先比较长度和维度 再比较值内容）
+
+```go
+package test
+
+import "testing"
+
+func TestOperatorArray(t *testing.T) {
+	a := [...]int64{1, 2, 3, 4}
+	b := [...]int64{1, 2, 3, 3}
+	c := [...]int64{1, 2, 3, 2}
+	d := [...]int64{1, 2, 3, 4}
+
+	t.Log(a == b, c == d, a == d)
+}
+```
+
+
+
+### 按位清零运算符是啥？
+按位清零运算符是啥？右边为1 的话 左边无论是啥都是0 ，否则保留左边的数 &^
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1651755363840-3e825970-8be1-4a36-90a5-8d092234f4a8.png)
+
+```go
+package test
+
+import "testing"
+
+// 这个代码主要测试 点就 是 更改 程序的“可读 可写 可执行”的便捷更改
+
+func TestConstAdd3(t *testing.T) {
+	const (
+		Readbale = 1 << iota
+		Weitable
+		Executable
+	)
+	testValue := 7 // 0111
+	// 让它变成 不可写
+	testValue = testValue &^ Readbale
+	// 让它变成 不可读
+	// testValue = testValue &^ Weitable
+	// 让它变成 不可执行
+	testValue = testValue &^ Executable
+	t.Log("Testing", testValue&Readbale == Readbale)
+	t.Log("Testing", testValue&Weitable == Weitable)
+	t.Log("Testing", testValue&Executable == Executable)
+}
+```
+
+
+
+### 基础循环结构
+```go
+package test
+
+import (
+	"fmt"
+	"testing"
+)
+
+func TestBaseFor(t *testing.T) {
+	// 简单的for
+	for i := 0; i < 5; i++ {
+		t.Log(i)
+	}
+
+	// while循环
+	a := 5
+	for a < 5 {
+		t.Log(a)
+		a--
+	}
+
+}
+
+```
+
+### 基础条件语句
+```go
+
+func TestIf(t *testing.T) {
+	if v, err := someFunctiono(); err == nil {
+		t.Log("没有出错", v)
+	} else {
+		t.Log("有出错", err)
+	}
+}
+
+func someFunctiono() (sum int, err error) {
+	a := 10
+	fmt.Println(a)
+	return a, nil
+}
+
+```
+
+### 关于switch的骚操作
+在if的语句中可以 写两端 第一端是赋值，第二段是判断 （出现这个的原因主要是go的function可以有多个返回值）
+
+switch条件 可以不限制常量和整数以及数量，默认不需要break ，go是自动给你带的，case可以放具体的条件表达式
+
+```go
+
+func TestSwitchMultiCase(t *testing.T) {
+	for i := 0; i < 5; i++ {
+		switch i {
+		case 0, 2:
+			t.Log("Even")
+		case 1, 3:
+			t.Log("Odd")
+		default:
+			t.Log("it is not 0-3")
+		}
+	}
+}
+
+func TestSwitchConditionCase(t *testing.T) {
+	for i := 0; i < 5; i++ {
+		switch {
+		case i%2 == 0:
+			t.Log("Even")
+		case i%2 == 1:
+			t.Log("Odd")
+		default:
+			t.Log("unknown")
+		}
+	}
+}
+
+```
+
+## 数组和切片
+
+
+### 数组
+1.声明的几种方式，多维也是一样的
+
+```go
+
+func TestNeweggArray(t *testing.T) {
+	// 我们具备如下的声明方式
+	arr1 := [4]int{1, 2, 3, 4}
+	arr2 := [...]int{1, 2, 3, 4, 5}
+	arr1[1] = 0
+
+	t.Log(arr1[1], arr1[2])
+	t.Log(arr2)
+
+}
+```
+
+2.如何去便 利Array _是 省略的意思
+
+```go
+
+
+func TestNeweggArrayOp(t *testing.T) {
+	// 我们具备如下的 截取和便利取值 赋值 操作
+	arr := [...]int{1, 3, 4, 5}
+
+	// 类似js的 forEach 遍历 ，如果你希望省略 某值 ，只需要把它变成 _ 就可以了
+	// for idx, e := range arr {
+	for _, e := range arr {
+		t.Log(e)
+	}
+}
+
+```
+
+3.Array的快速截取 “前包 后不包”
+
+```go
+
+
+func TestNeweggArrayOp(t *testing.T) {
+	// 快速 的截取
+	// a[开始的索引（包含）, 结束索引（不包含）]
+	a := [...]int{1, 2, 3, 4, 5}
+
+	t.Log(a[1:2]) // 2
+	t.Log(a[1:3]) // 2,3
+	t.Log(a[1:])  // 2,3,4,5
+	t.Log(a[1:])  // 2,3,4,5
+	t.Log(a[:3])  // 1,2,3
+}
+
+```
+
+
+
+### 切片Slice 是什么
+**<font style="color:#E8323C;">一句话：可变长的array，它具的结构如下图所示</font>**
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1651937782093-eaad7d9c-352f-4d1a-9c2f-7e9a7e6a90aa.png)
+
+**<font style="color:#E8323C;">指针指向内存中一片连续的存储空间</font>**
+
+
+
+1.声明
+
+```go
+// 实际上 slice 是一种结构 包含了 三个重要的 属性 1，地址，2. len  3, cap 容量
+func TestSliceNew(t *testing.T) {
+	t.Logf("TestSliceNewegg")
+	// 我们看看如何 new 一个简单的 slice , 记住它是一个 可变长的 array
+	var s0 []int
+	t.Log(len(s0), cap(s0))
+
+	// 追加一个如何追加，为什么需要重新 对s0 复制一遍？
+	s0 = append(s0, 1)
+	t.Log(len(s0), cap(s0))
+
+	s1 := []int{1, 2, 3, 4}
+	t.Log(len(s1), cap(s1))
+
+	s2 := make([]int, 3, 5) // 使用 make 方法创建slice参数 1 是类型 ，参数2是len  ，参数3是容量
+	t.Log(len(s2), cap(s2))
+	t.Log(s2[0], s2[1], s2[2]) // 注意⚠️  不能访问 len  ，外的 值 会报错！，例如==> s2[4]
+
+}
+
+
+```
+
+2.观察一下其cap容量的增长规律
+
+
+
+```go
+// 我们看看 slice 的 容量的cap 的增长规律
+func TestSliceNewLeng(t *testing.T) {
+	s := []int{}
+
+	for i := 0; i < 10; i++ {
+		s = append(s, i)
+		t.Log("--->", len(s), cap(s))
+		// 通过 图 我们可以看到 cap 的可变范围 都是 * 2 的增长的
+	}
+}
+```
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1651939070224-52d2b76f-74d0-4f3c-9a61-4cd17bff2208.png)
+
+3.用切片 共享的存储结构
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1651938481578-067bdfa1-cb8a-4f02-b48e-6d2d66b55ec5.png)
+
+这里需要说明的months 这个 array 再内存中是存在的 sliceQ2 和 sumer 如果指向 了这个Array 那么他们的修改 会直接彼此互相影响，因为 指针指向的引用没变
+
+```go
+
+func TestSlicShaerMemory(t *testing.T) {
+	year := []string{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
+	Q2 := year[3:6]
+	t.Log(Q2, len(Q2), cap(Q2))
+
+	sumer := year[5:8]
+	t.Log(sumer, len(sumer), cap(sumer))
+
+	// 用于 是引用 将会导致 值的同步变更
+	sumer[0] = "unknown"
+	t.Log(Q2, year)
+
+}
+
+```
+
+
+
+**<font style="color:#E8323C;">总结Arry 和 slie 对比二者的区别</font>**
+
+- [x] array 容量不可变 slice 可以
+- [x] array 可直接比较 slice 不可以
+
+
+
+## Map
+### 基础的使用
+```go
+package test
+
+import (
+	"testing"
+)
+
+// 如何进行声明（cap不能用len可以使用）
+func TestIniitMap(t *testing.T) {
+	m1 := map[int]int{1: 1, 2: 4, 3: 9}
+	t.Log(m1[2])
+	t.Logf("len m1=%d", len(m1)) // f 可以组合模板字符串
+
+	m2 := map[int]int{}
+	m2[4] = 16
+	t.Logf("len m2=%d", len(m2))
+
+	m3 := make(map[int]int, 10)
+	t.Logf("len m3=%d", len(m3))
+}
+
+// 访问有一个不存在的值 0 和 值0，我们如访问0 值 和不存在呢？
+func TestAceessNotEXistingKey(t *testing.T) {
+	m1 := map[int]int{}
+	t.Log(m1[1])
+	m1[2] = 0
+
+	// 注意值不存在的时候是一个 0 ，key存在value = 0 的时候也是o 这个时候我们需要这样判断
+	if _, ok := m1[3]; ok {
+		t.Logf("key 3's value is %d", m1[3])
+	} else {
+		t.Log("key 3 is not existing")
+	}
+}
+
+// 如何去遍历一个Map
+func TestFoEatch(t *testing.T) {
+	m1 := map[int]int{1: 1, 2: 4, 3: 9}
+	for key, value := range m1 {
+		t.Log(key, value)
+	}
+}
+
+```
+
+
+
+### 进阶操作
+```go
+// 存储function
+
+
+func TestMapFunC(t *testing.T) {
+	m := map[int]func(op int) int{}
+	m[1] = func(op int) int { return op }
+	m[2] = func(op int) int { return op * op }
+	m[3] = func(op int) int { return op * op * op }
+
+	t.Log(m[1](2), m[2](2), m[3](2))
+}
+
+//我们可以使用map来实现set
+func TestMapForSet(t *testing.T) {
+	set := map[int]bool{}
+	set[1] = true
+
+	// hash 可以这样实现
+	n := 1
+	if set[n] {
+		t.Log("存在")
+	} else {
+		t.Log("不存在")
+	}
+
+    
+	// delete可以这样实现
+	delete(set, n)
+	if set[n] {
+		t.Log("存在")
+	} else {
+		t.Log("不存在")
+	}
+}
+
+```
+
+
+
+## 字符串
+
+
+### 关于字符串的重要概念
+第一点我们先来聊聊Unicode 和byte 的问题
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1652273013400-04003d01-c2dc-44fe-820b-78c6559ce356.png)
+
+注意：string 零值是一个 0 哈，因为它是一种数据类型，go中的数据类型基本上都是默认值就是0
+
+string 的byte的 存任何二进制的数据
+
+string是 一个不可变的byte slice
+
+Unicode UTF8的区别，Unicode是编码规则，UTF8是这种编码规则的具体实现，rune取Uncode编码
+
+```go
+func TestStringS(t *testing.T) {
+	var s string
+
+	t.Log(s) // 初始化默认值 = 0
+	s = "hello"
+	t.Log(len(s)) // 对于英语来说 一个字母算一个
+	// s[1] = "3" 不能这样写string的本质是一个不可变的 byte slice
+	s = "\xE4\xB8\xA5" // 存任何 二进制的数据 这个二进制编码代表 严
+	// s = "\xE4\xB8\xA5\xFF" // 存任何 二进制的数据 这个是一个乱码
+	t.Log(s)
+	t.Log(len((s)))
+
+	s = "中"
+	t.Log(len((s))) // 获取的是byte数
+
+	c := []rune(s)               // rune slice 表示的是unicode slice
+	t.Logf("中 unicode %x", c[0]) // 使用16 进位制 去获取 0位置上的 unicode编码
+	t.Logf("中 UTF %x", s)        // 使用16 进位制 去获取 s
+}
+
+```
+
+### 关于字符串的常用方法和一些库
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1652281689524-34a3d81d-e944-4110-9bcb-33dc3cc2fe09.png)
+
+```go
+
+func TestStringFN(t *testing.T) {
+	s := "A,B,C"
+	parts := strings.Split(s, ",")
+	t.Log(parts)
+
+	for _, part := range parts {
+		t.Log(part) // 遍历 string
+	}
+	t.Log(strings.Join(parts, "-")) // 组合
+}
+```
+

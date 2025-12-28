@@ -1,0 +1,170 @@
+---
+title: "Go 切片详解：基础概念、操作与共享存储"
+date: "2024-12-19"
+summary: "深入讲解 Go 语言切片的核心概念，包括基础使用、空切片、切片操作以及共享存储结构等重要特性。"
+status: "completed"
+tech: ["Go", "Slice", "DataStructure"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Go"
+---
+
+# 章节概述如下
+
+
+> 这一讲主要讲解的是：什么是切片
+>
+
+
+
+1. 基础概念和使用
+2. 空的切片
+3. 对切片进行操作
+4. 重要概念：切片是一个共享的存储结构
+
+
+
+## 基础概念和使用
+
+
+```go
+// 简单的介绍什么是切片，所谓的切片实际上指的是 动态的数组，和array最大的区别旧是【】init []不需要放长度，因为他是可变长的
+func inivalue()  {
+	// Go 数组的长度不可改变，在特定场景中这样的集合就不太适用 而引入了切片就解决了这个问题
+	/*
+	定义的方式有如下的几种
+	var identifier []type
+	var slice1 []type = make([]type, len)与slice1 := make([]type, len)等价
+	make([]T, length, capacity)
+	*/
+	
+	/*
+	如何初始化
+	arr := [3] int{1,2,3}
+	s := arr[:]  // 这几个是arr的引用
+	s := arr[startIndex:endIndex]  把arr中从startIndex 到endindex-1的元素创建一个新的切片
+	默认 endIndex 时将表示一直到arr的最后一个元素,默认 startIndex 时将表示从arr的第一个元素开始
+	s := arr[startIndex:] 
+	s := arr[:endIndex]
+
+	 //  类似于复制的操作 
+	s1 := s[startIndex:endIndex]   s :=make([]int,len,cap) len是获取长度的函数 cap是计算容量
+	*/
+	var numbers =make([]int, 3,5)
+	fmt.Printf("len=%d cap=%d slice=%v\n",len(numbers),cap(numbers),numbers)
+}
+```
+
+
+
+## 空的切片
+
+
+```go
+
+// 空的切片nil
+func nillSlice()  {
+	var numbers [] int
+	fmt.Printf("len=%d cap=%d slice=%v\n",len(numbers),cap(numbers),numbers)
+	if(numbers == nil){
+		fmt.Printf("切片是空的")
+ }
+}
+```
+
+
+
+## 对切片进行操作
+
+
+```go
+
+//  切片的截取操作
+func Jiequ(){
+	// 首先是创建切片
+	number1 := []int{1,2,3,4,5,6,7,8}
+	// 打印原始切片
+	fmt.Println("numbers ==", number1)
+	// 开始做各种截取 	小诀窍  
+	fmt.Println("numbers[1:4] ==", number1[1:4])  // 去头不去尾
+  fmt.Println("numbers[:3] ==", number1[:3])  
+  fmt.Println("numbers[4:] ==", number1[4:])
+	fmt.Println("numbers[4:1] ==", number1[4:5])
+
+	number2 := number1[:2]  // 复制
+	fmt.Println("numbers CV1", number2)
+	
+	number3 := number1[2:5]  // 复制
+	fmt.Println("numbers CV2", number3)
+}
+
+// 有没有push方法？ 有没有直接copy的方法？
+func testMethod(){
+	var numbers []int  // 定义类型
+	printSlice(numbers)
+
+	/* 允许追加空切片 */
+	//  会开辟了一个新的存储空间，如果之前的容量放不下的时候切片的cap就会*2增长，在性能上不好
+	numbers = append(numbers, 0)
+	printSlice(numbers)
+
+	/* 向切片添加一个元素 */
+	numbers = append(numbers, 1)
+	printSlice(numbers)
+
+	/* 同时添加多个元素 */
+	numbers = append(numbers, 2,3,4)
+	printSlice(numbers)
+
+	/* 创建切片 numbers1 是之前切片的两倍容量*/
+	numbers1 := make([]int, len(numbers), (cap(numbers))*2)
+
+	/* 拷贝 numbers 的内容到 numbers1 */
+	copy(numbers1,numbers)
+	printSlice(numbers1) 
+} 
+
+func printSlice(x []int){
+	fmt.Printf("len=%d cap=%d slice=%v\n",len(x),cap(x),x)
+}
+```
+
+
+
+## 重要概念：切片是一个共享的存储结构
+
+
+```go
+
+// 切片是一个共享的存储结构
+// 接片如何实现可变长的呢?他的cap会*2增长
+func TestSliceGrowing()  {
+	s := []int{}
+	for i := 0; i < 10; i++ {
+		s = append(s,i)
+		fmt.Println(len(s),cap(s))
+	}
+}
+
+
+// 体会一些 如果操作同一个 存储空间会slice 和js数组中的对象引用地址有点像
+func TestSliceShareMemory()  { 
+	// slice 不能和slice 比较
+	s := []string
+	for i := 0; i < 12; i++ {
+		s = append(s,i+1)
+	}
+	// 得到一个 ["1","2","3"...."12"]
+	
+	// 如果是这样的写法
+	Q2 := s[3:6]
+	fmt.Println(Q2, len(Q2), cap(Q2))
+	
+	summer := year[5:8]
+	fmt.println(summer,len(summer), cap(summer))
+
+	summer[0] = "Unkonw" // 如果这个时候你把值该了，那么非常的遗憾，你改的是一个共享存储的上的东西 ，会同时改变 s上的值得  
+
+}
+```
+

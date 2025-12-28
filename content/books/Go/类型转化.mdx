@@ -1,0 +1,35 @@
+---
+title: "Go 类型转换：显式转换与精度处理"
+date: "2024-12-19"
+summary: "介绍 Go 语言中的显式类型转换语法，通过 int 转 float32 的示例展示基本用法及精度处理注意事项。"
+status: "completed"
+tech: ["Go", "TypeConversion"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Go"
+---
+
+# 章节概述如下
+
+
+> 本章节 涉及的语法 不多，golang中不支持 隐式类型的转化 只能手动
+>
+
+
+
+```go
+package main
+import "fmt"
+
+// 所谓的类型转化非常的容易理解type_name(expression)就完了，
+func main()  {
+	// 接下来的测试是使 int ===> float 类型.如果有精度丢失的问题，可以另外考虑
+	var sum int =17
+	var count int = 6
+	var mean float32
+	
+	mean = float32(sum) / float32(count)
+	fmt.Printf("mean 的值为: %f\n",mean)
+}
+```
+

@@ -1,0 +1,71 @@
+---
+title: "Go 语言 Map 数据结构详解"
+date: "2024-12-19"
+summary: "深入讲解 Go 语言中 map 的使用方法、底层实现原理以及常见操作，包括声明、赋值、遍历和空值判断等。"
+status: "completed"
+tech: ["Go", "Map", "HashTable"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Go"
+---
+
+# 章节概述如下
+
+
+> 本章节 主要讲的是 go语言中的map数据结构,
+>
+
+
+
+```go
+package main
+
+import "fmt"
+
+func main(){
+	simpleUse()
+}
+
+// 集合存的无序的key-valued对，底层的实现是hash表，js的话来说就是一个对象哈
+// 最常见的声明
+/*
+m := map[string]init{"none"：1} 
+m1 := map[string]{}
+// 最常见的是上面三种哈 
+m2 := mark(map[string]int, 10)
+
+// 说明:这个地方 你不能通过cap去获取map的长度 只能通过len
+*/
+func simpleUse(){
+	/* 声明变量，默认 map 是 nil */
+	// var map_variable map[key_data_type]value_data_type
+	/* 使用 make 函数 */
+	// map_variable := make(map[key_data_type]value_data_type)
+
+	// 定义和赋值
+	var countryCapitalMap map[string]string /*创建集合 */
+	countryCapitalMap = make(map[string]string)
+
+	countryCapitalMap [ "France" ] = "巴黎"
+	countryCapitalMap [ "Italy" ] = "罗马"
+	countryCapitalMap [ "Japan" ] = "东京"
+	countryCapitalMap [ "India " ] = "新德里"
+	// 输出
+	for country := range countryCapitalMap {
+		fmt.Println(country, "首都是", countryCapitalMap[country])
+	}
+	// 空值判断
+	/*查看元素在集合中是否存在 */
+	capital, ok := countryCapitalMap[ "American" ] /*如果确定是真实的,则存在,否则不存在 */
+
+	/*fmt.Println(capital) */
+	/*fmt.Println(ok) */
+	//  go语言中 如果一个key不存在会返回一个0 ，其他语言会空指针异常 控制判断旧很好解决了这个问题 到底是0 还是不存在这个值   
+	if (ok) {
+			fmt.Println("American 的首都是", capital)
+	} else {
+			fmt.Println("American 的首都不存在")
+	}
+}
+```
+

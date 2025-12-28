@@ -1,0 +1,337 @@
+---
+title: "Go 数据类型详解：基础类型、常量与字符串"
+date: "2024-01-15"
+summary: "深入讲解 Go 语言的数据类型系统，包括基础类型、常量定义、iota 特性以及字符串的内部实现和操作方法。"
+status: "completed"
+tech: ["Go", "DataTypes", "String"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Go"
+---
+
+# 数据类型的详解
+
+
+> go语言中的数据类型有点多，有点杂，需要掌握清晰 需要一点一点的在学习过程中 植入概念和实战，这里只是讲一些基础的知识点
+>
+
+
+
+## 课题之外的话题 golang 1.9新特性
+
+
+> go 1.9版本对于数字类型，无需定义int及float32、float64，系统会自动识别。
+>
+
+
+
+```go
+package main
+import "fmt"
+
+func main() {
+   var a = 1.5
+   var b =2
+   fmt.Println(a,b)
+}
+```
+
+
+
+## 面试题 字符串去空格和换行符
+
+
+```go
+package main
+  
+import (  
+    "fmt"  
+    "strings"  
+)  
+  
+func main() {  
+    str := "这里是 www\n.runoob\n.com"  
+    fmt.Println("-------- 原字符串 ----------")  
+    fmt.Println(str)  
+    // 去除空格   替换 Replace,
+    str = strings.Replace(str, " ", "", -1)  
+    // 去除换行符  
+    str = strings.Replace(str, "\n", "", -1)  
+    fmt.Println("-------- 去除空格与换行后 ----------")  
+    fmt.Println(str)  
+}
+```
+
+
+
+## 课题之外的话题：空白标识符返回值使用
+
+
+```go
+func main(){
+  _,numb,strs := numbers() // 只获取返回值的前两个
+  fmt.Printl(numb,strs)
+}
+
+// 可以返回多个函数
+func numbers()(int,int,string) {
+  a,b,c := 1,2,"string"
+  return a,b,c
+}
+```
+
+
+
+# 正式进入类型学习
+
+
+## golang类型系统概述
+
+
+1. golang的数据数据类型基础使用  [ boolean,string, struct ] ，
+
+
+
+```go
+// golang类型 概述
+func typesName() {
+	// 说明,配置了变量必须要使用，省钱,golang中适配了很多种场景下的类型，
+	// web端的 服务端的 底层的
+
+	// golang的数据数据类型分3种，
+	var available bool  // 一般声明
+	available = true    // 赋值操作
+	valid := false
+
+	// var num1 int   // 数字 
+	// var num2 float32  
+	// var num3 float64
+	
+	// 字符串 存的是uni编码
+	// var a string 
+
+	// var a = "asdasd"
+	// 派生类型 （复杂对象）  
+  // type okObjecy struct = {}
+  fmt.Println(available)
+	fmt.Println(valid)
+}
+```
+
+
+
+2. 为nil的几种情况
+
+
+
+```go
+func T1 () {
+// 变量申明 指定变量类型，如果没有初始化，则变量默认为零值 
+/*
+	布尔就是false
+	string就是 ""
+
+	nulll的
+	var a *int
+	var a []int
+	var a map[string] int
+	var a chan int
+	var a func(string) int
+	var a error // error 是接口
+*/  
+  a := *int
+  if(a == nil) {
+    fmt.Println("nil !!!!")
+  }
+}
+```
+
+
+
+3. 补充：变量如何声明和初始化各种类型的值
+
+
+
+```go
+func T2 () {
+var i int  // 
+var f float32 //
+var b bool //
+var s string // 
+fmt.Println(i,f,b,s)
+
+
+
+// 变量申明 根据值自行判定变量类型。
+var d = true
+fmt.Println(d)
+
+// 变量申明 var f string = "Runoob" 简写为 f := "Runoob"：
+
+// 多变量声明
+// var (  // 这种因式分解关键字的写法一般用于声明全局变量
+// 	a int
+// 	b bool
+// )
+
+// 总结，我们更加喜欢这样的玩 a := 50 或 b := false。  而不是var a int ;a = 50
+// 注意 ，多值赋值的时候 a, b, c := 5, 7, "abc" 就可以了 abc就依次被赋值过去了
+}
+```
+
+
+
+4. 定义常量 并且实现一个 计算圆面积的函数
+
+
+
+```go
+// 常量中的数据类型 只可以是 [ 布尔型、数字型（整数型、浮点型和复数）和字符串型 ]
+func constData() {
+	// 单个和多个 的类型这样的就好了，const identifier [type] = value  ，const c_name1, c_name2 = value1, value2
+
+	// 几乎和所有的语言一样的道理，分为显式 和隐式的
+	const LENGTH int = 10
+  const WIDTH int = 5  
+  var area int
+  const a, b, c = 1, false, "str" //多重赋值
+
+   area = LENGTH * WIDTH
+   fmt.Printf("面积为 : %d", area)
+   println()
+   println(a, b, c)   
+
+	//  这样的常量也是可以的
+	 const (
+    aa = "abc"
+    bb = len(aa)
+    cc = unsafe.Sizeof(aa)
+	)
+	
+	fmt.Println(aa,bb,cc)
+}
+```
+
+
+
+5. 一个好玩的东西 iota 它在 const关键字出现时将被重置为 0(const 内部的第一行之前)
+
+
+
+```go
+func testIata() {
+		const (
+			a = iota   //0
+			b          //1
+			c          //2
+			d = "ha"   //独立值，iota += 1
+			e          //"ha"   iota += 1  注意这里 d ="ha",e 时那么e后面都变成了 ha 
+			f = 100    //iota +=1
+			g          //100  iota +=1
+			h = iota   //7,恢复计数
+			i          //8
+	)
+	
+  fmt.Println(a,b,c,d,e,f,g,h,i)
+}
+```
+
+
+
+6. go中科院隐式类型装换吗？答案是不行的哈
+
+
+
+```go
+// 1.go 不可以隐式转化
+// 2. 指针不能运算 
+// 3. string 是值类型，默认值是一个“” ，空字符串 而不是一个空
+type MyInit init32
+func TestImplicit()  {
+	var a init32 = 1
+	var b init64 
+	var c MyInit
+	
+	b = init64(a)
+	c = MyInit(a)
+
+	fmt.Println(a,b,c)
+}
+
+
+func zhizeng()  {
+	a :=1
+	aPtr : = &a // 这个符号用来获取 指针
+	fmt.Println("%T %T",a,aPtr)
+
+	// 初始化判断字符串是一个“”字符串
+}
+```
+
+
+
+## 深入string类型
+
+
+> 本章内容可以概括为：
+>
+
+
+
++ string实际上是一个不可变的 byte切片
++ 字符和字符集 解析
++ 常见的处理string的包 字符串的文档可以去查包文档哈
+
+
+
+```go
+package main
+import "fmt"
+
+// 这一讲的主要内容是看string的特性
+
+func main()  {
+	T1()
+}
+
+// 1. string实际上是一个不可变的 byte切片
+func T1()  {
+	s := ""
+    s =" 123"
+	// s[1] = 3 // 会报错哈 
+
+	s = "\xE4\xB8\xA5" // 这个旧是报错了一个 任何二进制的 数据
+
+	fmt.Println(s)
+
+	// 格式化输出
+	c := []rune("中")
+	fmt.Printf("中 unicode %x" ,c )
+	fmt.Printf("中 UT8 %x" ,  "中")
+}
+
+// 2. 字符和字符集
+// Unicode 是一种字符集
+// UTF 是Unicode的物理编码实现规则
+
+// 3. 区别
+/*
+字符             中
+Unicode         0x4E2D
+UTF8            0xE4B8AD
+string/[]byte   [0xE4 ,0xB8, 0xAD]  // 存储形式
+*/
+
+// 4. 常见的处理string的包 字符串的文档可以去查包文档哈
+// strings
+// strconv 
+
+// 字符串如何去遍历？
+func T2()  {
+  s := "中国"
+   for _,c = range s {
+	   fmt.Printf("%[1]c %[1]x",c) // "%[1]c 就是拿出来哈"
+   } 
+}
+```
+

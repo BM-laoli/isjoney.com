@@ -1,0 +1,213 @@
+---
+title: "Go 面向对象编程：封装、方法、继承与多态"
+date: "2024-12-19"
+summary: "深入学习 Go 语言面向对象特性，包括结构体封装、方法定义、匿名嵌套继承、接口多态实现及空接口断言等核心概念。"
+status: "completed"
+tech: ["Go", "OOP", "Interface"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Go"
+---
+
+# 章节概述如下
+
+
+> 本章节是面向对象的 深入学习，你在本章节你将要学习到如下的知识点
+>
+
+
+
+1. 对数据的封装
+2. 对方法 (行为)的定义
+3. 拓展和服用
+4. 多态？
+5. 空接口和断言
+6. 接口最佳实践 总结和心得
+
+
+
+## 对数据的封装
+
+
+```go
+// 1.对于面向对象，go原生是不支持的哈 官方给的回答是“是 也不是” go不支持集成  重点代码快1
+
+// 2.对于数据的封装？ 构造体 定义实例
+// 定义结构体
+type Emptyee struct {
+	Id string
+	Name string
+	Age int
+}
+
+// 3.初始化 实例 的方式 %T代表类型
+// 初始化实例
+func T1()  {
+	e := Emptyee{"0","bole",20}
+	// e1:= Emptyee{Name:"Mike",Age:30}
+	e2:= new(Emptyee) // 注意这里返回的一个指针类型 ，相当于 e:= &Emptyee{} 我们一般都使用这个方式来实现
+	e2.Id = "22"
+	e2.Age = 22
+	e2.Name = "rows"
+	fmt.Println("e %T",&e)
+	fmt.Println("e2 %T",e2)
+	fmt.Println("===>",e2.String())
+}
+```
+
+
+
+## 对方法 (行为)的定义
+
+
+```go
+
+// 4.行为定义 两种凡是 一个是值传递,一个是引用传递 重点代码快2  你可以理解：对象上的方法
+// 方式一 定义在实例 对应方法调用的时候，实例的成员会进行值得复制
+// func (e Emptyee) String() string {
+// 	return fmt.Sprintf("ID: %s-Nmae:%s-Age:%d",e.Id,e.Name,e.Age)
+// }
+
+// 方式二 避免复制 浪费性能，我们使用指针
+func (e *Emptyee) String() string  {
+	return fmt.Sprintf("ID: %s-Nmae:%s-Age:%d",e.Id,e.Name,e.Age)
+}
+```
+
+
+
+## 拓展和服用
+
+
+```go
+
+// 5. 扩展和复用 
+type Pet struct {}
+
+func (p *Pet) Speak()  {
+	fmt.Println("...")
+}
+
+func (p *Pet) SpeakTo( host string )  {
+ p.Speak()
+ fmt.Println("",host)
+}
+
+
+type Dog struct {
+	// p *Pet // 直接拿过来 完成类似继承的操作  另一种写法  Pet 匿名嵌套
+	Pet
+}
+
+func (d *Dog)Speak()  {
+	// d.p.Speak()
+	// 如果需要重载 只能重写 不能重载父类方法
+	// fmt.Println("wang!")
+}
+
+// // 匿名嵌套的时候，就可以去掉 这些方法了
+// func (d *Dog) SpeakTo( host string )  {
+//  d.p.Speak()
+//  fmt.Println("",host)
+// }
+
+func T3()  {
+	dog := new(Dog)  // 注意 虽然看起来 这个是继承 了父类，但是它的类型和父类型是不兼容的
+	dog.Speak()
+}
+```
+
+
+
+## 多态？
+
+
+```go
+// 6. 多态 go是也能实现多态
+type Coder string
+type Programer interface {
+	Write() Coder
+}
+type GoProgram struct {}
+
+func (p *GoProgram) Write() Coder {
+	return "GoProgram==GoProgram"
+}
+
+
+type JavaProgram struct {}
+func (j *JavaProgram) Write() Coder   {
+	return "JavaProgram==JavaProgram"
+}
+
+func WritePrint(p Programer) {
+	fmt.Printf("===>p %T %v\n",p,p.Write() )
+}
+
+func T4() {
+	goProg := new(GoProgram)
+	javaProg := new(JavaProgram)  // 等价于 &JavaProgram{} 
+	WritePrint(goProg)  // goProg的指针类型   这个参数 只能是一个指针类型的interface 
+	WritePrint(javaProg) // javaProg的指针类型
+}
+```
+
+
+
+## 空接口和断言
+
+
+```go
+
+// 7.空接口和断言
+// 空接口 可以表示任意类型
+// 通过断言来讲 空接口 转换为指定的类型
+// v,ok := p.(int) // ok = true的时候 就转换成功了
+
+
+func DoSmone( p interface{} )  {
+	
+	switch v := p.(type) {
+	case int:
+		fmt.Println("Interge",v)
+	case string:
+		fmt.Println("String",v)
+	default:
+		fmt.Println("Unkon Type")
+	}
+
+}
+func T5(){
+	DoSmone(10)
+	DoSmone("10")
+}
+```
+
+
+
+## 接口最佳实践 总结和心得
+
+
+```go
+
+// 8 接口最佳实践 
+// 倾向于 最小接口原则
+type Reader interface {
+	Read(p []byte) (n int, err error)
+} 
+
+type Write interface {
+	Write(p []byte) (n int, err error)
+}
+
+// 较大的接口 由多个小接口复合成
+type RW interface {
+	Reader
+	Write
+}
+// 只依赖必须要功能的最小接口
+// func onlyRead( redaer Reader) error {
+// 	// ,,,,,
+// }
+```
+

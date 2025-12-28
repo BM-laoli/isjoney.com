@@ -1,0 +1,556 @@
+---
+title: "Go 核心特性：函数式编程与面向对象实现"
+date: "2024-12-19"
+summary: "深入解析 Go 语言的函数式编程特性、面向对象实现机制、接口设计原则及错误处理最佳实践，包含多态、组合、空接口等核心概念。"
+status: "completed"
+tech: ["Go", "OOP", "Interface", "ErrorHandling"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Go"
+---
+
+## 一些基础概念
+### 和js一样函数是一等公民
+所有的参数都是传 值 不会传引用 slice 实际上结构是复制的 ，传递的是 结构 里 指针 的复制 
+
+多返回值
+
+### 传递函数FP
+（和JS一样有必包这种概念，go中的也讲究FP的概念 而不是OOP）
+
+```go
+package test
+
+import (
+	"fmt"
+	"math/rand"
+	"testing"
+	"time"
+)
+
+// 测试多返回值
+func returnMuintValue() (int, int) {
+	return rand.Intn(10), rand.Intn(20)
+}
+func TestFn(t *testing.T) {
+	a, b := returnMuintValue()
+
+	t.Log(a, b)
+}
+
+// wrap函数 FP模式
+func timeSpent(inner func(op int) int) func(op int) int {
+	return func(n int) int {
+		startTme := time.Now()
+		ret := inner(n)
+		fmt.Println("time span ===>", time.Since(startTme).Seconds())
+		return ret
+	}
+}
+
+func showFN(value int) int {
+	time.Sleep(time.Second * 1)
+	return value
+}
+
+func TestWrapFP(t *testing.T) {
+	tsSFFP := timeSpent(showFN)
+	t.Log(tsSFFP(10))
+}
+
+```
+
+### 剩余参数
+注意我的 这个词是从 js拿过来来的，在你Go的 他叫做 可变长参数是一个array / slice
+
+```go
+package test
+
+import (
+	"fmt"
+	"testing"
+)
+
+func Sumx(arg ...int) int {
+	res := 0
+	for _, i := range arg {
+		res = i + res
+	}
+	return res
+}
+func TestMorArg(t *testing.T) {
+	t.Log("===>", Sumx(1, 1, 1))
+	t.Log("===>", Sumx(1, 2, 3))
+}
+
+```
+
+### 延时执行
+panic是 一个抛出error和中断程序的操作
+
+```go
+
+func print666() {
+	fmt.Printf("我是print666")
+}
+func TestDefer(t *testing.T) {
+	defer print666()
+	t.Log("我是1 -1 ")
+	panic("err")
+	t.Log("我是1 -2")
+
+}
+```
+
+## Go中的OOP是如何实现的
+GO 是OOP嘛？官方也的回答是：是也不是，但是实际上go是不支持继承的，go中的interfae 和ts很像他说一宗dack type 🦆 鸭子类型
+
+### 结构体（对数据的封装）构造函数
+```go
+
+
+type Employee struct {
+	Name string
+	Id   string
+	Age  int
+}
+
+```
+
+### 实例化 （初始化结构体实力）
+new的创建 返回的是指针类型 ，直接实例化返回的是 实例
+
+```go
+package test
+
+import (
+	"fmt"
+	"testing"
+	"unsafe"
+)
+
+type Employee struct {
+	Name string
+	Id   string
+	Age  int
+}
+
+func TestFuncOOP(t *testing.T) {
+	e := Employee{"0", "Bod", 20}
+	e1 := Employee{Name: "Aoda", Id: "1", Age: 30}
+
+	e2 := new(Employee) // 实际上new 返回的是一个 实例的指针 既 e := &Employee （&取指针操作符在go中） 在c语言中如果你获取到死指针变量 如果你需要获取值 需要 -> 符号但是go中不需要
+	e2.Id = "2"
+	e2.Name = "Joney"
+
+	t.Log(e)
+	t.Log(e1)
+	t.Log(e2)
+
+	t.Logf("e is %T", e)   // %T 取类型 test.Employee
+	t.Logf("e2 is %T", e2) // *test.Employee
+
+}
+
+```
+
+### 方法定义（值还是内存复制？）
+**<font style="color:#E8323C;">行为方法定义定义 两种方式的区别是：“*是没有cv参数，所有的数据都是放在同一个内存位置上的，但是不用*就会产生复制是两个完全不同的地址 性能不好” （unsafe是一个工具盘pkg 可以取到内存地址）</font>**
+
+**<font style="color:#E8323C;">方法要绑定sturt上</font>**
+
+```go
+
+// 添加 行为 ，这个方式的话，由于我们前面说了 go 的function  参数都是值拷贝的，你这么写 它会直接在内存中给你搞一份空间 初始化 Employee，如何验证请看下面的代码 x处
+// func (e Employee) String() string {
+// 	fmt.Printf("Address is %x", unsafe.Pointer(&e.Name))                // 这个 unsafa包自己下去 %x是去16进制的数据，一般来说内存地址都是16 进制的
+// 	return fmt.Sprintf("ID: %s-Name: %s-Age : %d", e.Id, e.Name, e.Age) // %s 取string 占位。%d 取int
+// }
+
+// 这个和上门比较的好处就是 你获取的是 同一块内存地址 因为你是指针 ，指针实际上是指向同一片内存地址的 ,所以没有复制多余的存储空间 建议使用 
+func (e *Employee) String() string {
+	// 代码 x处 下面我们来取它的内存地址
+	fmt.Printf("Address is %x", unsafe.Pointer(&e.Name)) // 这个 unsafa包自己下去 %x是去16进制的数据，一般来说内存地址都是16 进制的
+
+	return fmt.Sprintf("ID: %s-Name: %s-Age : %d", e.Id, e.Name, e.Age) // %s 取string 占位。%d 取int
+}
+
+func TestFuncMethod(t *testing.T) {
+	e := Employee{"0", "Employ", 20}
+	fmt.Printf("Address is %x", unsafe.Pointer(&e.Name)) // 这个 unsafa包自己下去 %x是去16进制的数据，一般来说内存地址都是16 进制的
+
+	t.Log(e.String())
+}
+
+```
+
+
+
+### 定义接口
+Interface 是 定义 对象之间交互的协议用的，说白了就是规则
+
+下面的代码展示了java中的循环依赖 ，java中会单独把interface 放在一个独立的pkg中就解决了这个问题
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1652364076014-3df70ce6-677f-4866-a9c1-0f4ca7be8348.png)
+
+go中如何定义interface，我们不想要implmenet 去实现，这种就是dockType ，它的意思是看起来一样 （方法名完全一致） 它的借口的实现不需要依赖它的定义
+
+```go
+package test
+
+import (
+	"fmt"
+	"testing"
+	"time"
+)
+
+type Programer interface {
+	SayHello() string
+}
+
+type GoProgramer struct{}
+
+// 这里要求 darkTyp 签名完全一致  （  	SayHello() string  ）
+func (g *GoProgramer) SayHello() string {
+	return "fmt.Println(\"Hello!!!!\")"
+}
+
+func TestCLinet(t *testing.T) {
+	p := new(GoProgramer)
+
+	t.Log(p.SayHello())
+}
+
+
+```
+
+### 关于打包📦
+由于go的interface 实现不依赖 它的定义，所以不会存在interface上出现循环依赖的问题，同一个pkg下的Interface都是共享的
+
+### 接口变量	
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1652364029041-0a229ca4-b3df-4ab0-8cbd-b0d7fc15c14e.png)
+
+### 自定义类型
+我们就以前面Wrap的例子，来优化一下它的写法
+
+```go
+
+// 自定义类型
+type MyFunction func(op int) int
+
+func timeSpentX(inner MyFunction) MyFunction {
+	return func(n int) int {
+		startTme := time.Now()
+		ret := inner(n)
+		fmt.Println("time span ===>", time.Since(startTme).Seconds())
+		return ret
+	}
+}
+```
+
+
+
+### 扩展和复用（类似继承）
+ go实际上不支持继承 ，支持组合，实际上 组合优于继承，
+
+LSP => 所以父类使用的地方 子类都可以放进去，咋js中是可以实现OOP的所有特性的
+
+[https://blog.fundebug.com/2020/01/02/javascript-classes-complete-guide/](https://blog.fundebug.com/2020/01/02/javascript-classes-complete-guide/)
+
+```javascript
+class User {
+    name;
+
+    constructor(name) {
+        this.name = name;
+    }
+
+    getName() {
+        return this.name;
+    }
+}
+
+class ContentWriter extends User {
+    posts = [];
+}
+
+const writer = new ContentWriter("John Smith");
+
+writer.name; // => 'John Smith'
+writer.getName(); // => 'John Smith'
+writer.posts; // => []
+
+```
+
+
+
+在go中如何实现类似的东西呢？
+
+```go
+package test
+
+import (
+	"fmt"
+	"testing"
+)
+// 定义父
+type Pet struct {
+}
+
+func (p *Pet) Space() {
+	fmt.Println("-----")
+}
+
+func (p *Pet) SpaceTO(host string) {
+	p.Space()
+	fmt.Println("hello哇", host)
+}
+
+// 定义子
+type Dog struct {
+	p *Pet
+}
+
+func (d *Dog) Space() {
+	d.p.Space()
+}
+
+func (d *Dog) SpaceTO(host string) {
+	d.Space()
+	fmt.Println("-----子", host)
+}
+
+func TestWrapDog(t *testing.T) {
+	dog := new(Dog)
+	dog.SpaceTO("Chan")
+}
+
+```
+
+
+
+匿名嵌套类型 - 更加方便的类继承方式
+
+```go
+
+// 我们有更加简单的方式实现 组合
+type Dog struct {
+	Pet // 匿名嵌套类型 类似js中的原型
+}
+
+
+func TestWrapDog(t *testing.T) {
+	dog := new(Dog)
+	dog.SpaceTO("Chan")
+}
+
+```
+
+
+
+可以重栽嘛？不可以哈，但是可以覆写
+
+```go
+
+// 我们有更加简单的方式实现 组合
+type Dog struct {
+	Pet // 匿名嵌套类型 类似js中的原型
+}
+
+// 如果需要覆 写 就需要自己重新定义
+func (d *Dog) Space() {
+	fmt.Println("子复写-----")
+}
+
+func (d *Dog) SpaceTO(host string) {
+	d.Space()
+	fmt.Println("-----子", host)
+}
+
+func TestWrapDog(t *testing.T) {
+	dog := new(Dog)
+	dog.SpaceTO("Chan")
+}
+
+```
+
+### 多态
+实例代码
+
+注意 new 和 {} 的区别
+
+```go
+package test
+
+import (
+	"fmt"
+	"testing"
+)
+
+type Code string
+
+type ProgramerX interface {
+	writeCode() Code
+}
+
+// 我们有一个程序要复合的参数p 得复合这个接口
+// 不同的人实现它，就有不同的表现出来，这就是多态
+func someCode(p ProgramerX) {
+	fmt.Printf("%T %v\n", p, p.writeCode())
+}
+
+type GoProgramerX struct{}
+type JavaProgramerX struct{}
+
+func (goP *GoProgramerX) writeCode() Code {
+	return "fmt.Print()"
+}
+
+func (javaP *JavaProgramerX) writeCode() Code {
+	return "System.out.Print()"
+}
+
+// 进入测试程序
+func TestPos(t *testing.T) {
+	goProg := new(GoProgramerX)
+	// 注意啊⚠️ 前面我们 说过 new( struct ) 和 struct{} 区别
+	// 前置返回的是指针，后者返回的是 实例
+
+	// 如果你  struct{  } ,那么就得这样写
+	// goProg := &GoProgramerX{}
+
+	javaProg := new(JavaProgramerX)
+	someCode(goProg)
+	someCode(javaProg)
+}
+
+//空接口？空接口的作用一般都是 为了断言 和转 any 
+
+
+```
+
+### 空接口 和断言
+```go
+
+//空接口？空接口的作用一般都是 为了断言 和转 any
+func doSomething(p interface{}) {
+	// if i, ok := p.(int); ok {   // p .(type) 是断言 你可以用swtich 也可以使用 if
+	// 	fmt.Println("integer",i)
+	// }
+	switch v := p.(type) {
+	case int:
+		fmt.Println("Interger", v)
+	case string:
+		fmt.Println("String", v)
+	default:
+		fmt.Println("unkouwn")
+	}
+}
+
+func TestEmptyInterface(t *testing.T) {
+	doSomething(10)
+	doSomething("10")
+}
+
+```
+
+### go中的OOP经验
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1652452483456-81a50392-fc35-4e90-b551-e06ee2133efb.png)
+
+
+
+## 关于错误处理
+我们推荐 在团队中 统一使用 简单的写法;
+
+在go中的错误，一般都是 值为先，erro为后，但是在node中 是错误优先的；
+
+最佳实践：及早失败，避免嵌套；
+
+```go
+package test
+
+import (
+	"errors"
+	"testing"
+)
+
+//我们通常 这样来处理错误
+var Err1 = errors.New("我要大于2")
+var Err2 = errors.New("我要小于100")
+
+func getFib(n int) ([]int, error) {
+	if n < 2 {
+		return nil, Err1
+	}
+	if n > 100 {
+		return nil, Err2
+	}
+	// 错误优先处理
+
+	fibLit := []int{1, 1}
+	for i := 2; i < n; i++ {
+		fibLit = append(fibLit, fibLit[i-2]+fibLit[i-1])
+	}
+	return fibLit, nil
+}
+
+func TestErorr(t *testing.T) {
+	v, err := getFib(5)
+	if err == Err1 {
+		t.Log(Err1)
+		return
+	}
+
+	if err == Err2 {
+		t.Log(Err2)
+		return
+	}
+
+	t.Log(v)
+
+}
+
+```
+
+### panic  和 
+ painc 和os exit 区别（注意defer是被执行的）
+
+recover （go中的try catch ）下面的例子中它会把 functin中的错误都抓起来，且不会抛出 但是这样一般是不好的
+
+注意revocer 不要滥用 ，会导致僵尸进程（你的程序是错的了，但是它依然在运行）更加合理的做法是让程序重启来解决一些未知的错误。
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1652591500352-21b10dda-4412-4ca9-abcc-2fc939068c8e.png)
+
+```go
+func TestErrorCahth(t *testing.T) {
+	// fmt.Printf("xxxx")
+	// os.Exit(-1)  // 退出不会有任何信息
+	// fmt.Printf("1111") // 不会执行
+
+	// defer func() { // defer 不会被error 影响
+	// 	fmt.Printf("deferdeferdeferdefer")
+	// }()
+	// panic(errors.New("error")) // 会有错误信息
+	// // 这个函数接受一个 空 interface  你应该理解这是为什么 类似any
+
+	// 下面就是 recover 的用法，但是我们一般不会这样写，因为log 并没有任何意义还会有问题
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println("这就是recover的用法", err) 
+		}
+	}()
+	panic("我错了")
+}
+
+```
+
+
+
+
+
+
+
+
+
+
+

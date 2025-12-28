@@ -1,0 +1,171 @@
+---
+title: "Go 语言基础：条件判断与循环控制"
+date: "2024-12-19"
+summary: "学习 Go 语言中的命令行输入处理、if 条件语句、switch-case 分支结构以及循环控制，包含变量作用域和质数求解等实例。"
+status: "completed"
+tech: ["Go", "ControlFlow", "Conditional"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Go"
+---
+
+# 本章概述
+
+
+> 本章节内容，我们将会学习到如下的知识点：
+>
+
+
+
+1. 接受命令行的输入
+2. if条件
+3. switch-case条件
+
+
+
+## 判断奇偶数
+
+
+```go
+// 计算奇偶数
+func jo(){
+// 定义变量
+var s int 
+fmt.Println("请输入一个数：")
+// 存储输入的数
+fmt.Scan(&s)
+
+// 进行胖墩
+if (s % 2 == 0){
+	fmt.Println("偶数")
+	} else {
+		fmt.Println("奇数")
+	}
+	
+	fmt.Println("你您输入的数是：",s)
+}
+```
+
+
+
+## 局部作用域
+
+
+```go
+// go语言的变量还可以定义个变量和js类型 ,该变量只在这个判断范围内有效
+func panduadn(){
+	if num := 9; num < 0 {
+	// if （num := 9; num < 0） {  // 注意这里 加不加括号是有区别的！
+		fmt.Println(num, "is negative")
+} else if num < 10 {
+		fmt.Println(num, "has 1 digit")
+} else {
+		fmt.Println(num, "has multiple digits")
+}
+}
+```
+
+
+
+### 小提示：一定要注意
+
+
++ （1） 不需使用括号将条件包含起来
++ （2） 大括号{}必须存在，即使只有一行语句
++ （3） 左括号必须在if或else的同一行
++ （4） 在if之后，条件语句之前，可以添加变量初始化语句，使用；进行分隔
++ （5） 在有返回值的函数中，最终的return不能在条件语句中
+
+
+
+## 求解100 以内的质数
+
+
+```go
+// 求解100以内的所有的素质
+func zhishu(){
+	var count int
+	var flag bool
+	count =1 
+	// 注意go语言没有 while
+
+	for count < 100 {
+		count++
+		flag = true
+
+		for tmp:=2;tmp<count;tmp++ {
+			if count%tmp==0{
+					flag = false
+			}
+	}
+
+		if  flag == true {
+			fmt.Println(count,"素数")
+		} else {
+			// 中断 for循环
+			continue  
+		}
+
+	}
+}
+```
+
+
+
+## 判断用户输入
+
+
+```go
+
+// 判断用户输入
+func qietao() {
+	var a int 
+	var b int
+	
+	fmt.Printf("请输入密码：   \n")
+	fmt.Scan(&a)
+
+	if a == 123456 {
+	fmt.Printf("请再次输入密码：")
+	fmt.Scan(&b)
+			if b == 123456 {
+					fmt.Printf("密码正确，门锁已打开")
+			}else{
+					fmt.Printf("非法入侵，已自动报警")
+			}
+	}else{
+			fmt.Printf("非法入侵，已自动报警")
+	}
+}
+```
+
+
+
+## 简化你的if判断 switch语句
+
+
+```go
+
+// switch 可以多条件匹配,而且不限制类型 go语言默认就是有 beak。case 可以写多个 只要命中一个就能够进去
+func swithchah() {
+// 1. 支持多条件匹配
+ /* 定义局部变量 */
+ var grade string = "B"
+ var  marks int = 90
+
+ switch marks {
+		case 90 ，100，99, 98, 97, 96, 95, 94, 92, 93, 91:
+			 grade = "A"
+		case 80 % 80: // 这个case还可以写表达式！ 非常的灵活 
+			 grade = "B"
+		case 50,60,70 :
+			 grade = "C"
+		default:
+			 grade = "D"  
+ }
+
+// 2. 不同的 case 之间不使用 break 分隔，默认只会执行一个 case。
+// 3. 如果想要执行多个 case，需要使用 fallthrough 关键字，也可用 break 终止
+}
+```
+

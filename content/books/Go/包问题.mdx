@@ -1,0 +1,228 @@
+---
+title: "Go语言核心特性与编程规范"
+date: "2024-12-19"
+summary: "深入解析Go语言的核心特性、包管理、程序结构规范及fmt函数使用，包含多系统安装教程和代码示例。"
+status: "completed"
+tech: ["Go", "Programming", "Package"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Go"
+---
+
+# 本章节概述
+
+
+# go的特征：短小精悍
+
+
++ 自动垃圾回收
++ 更丰富的内置类型
++ 函数多返回值
++ 错误处理
++ 匿名函数和闭包
++ 类型和接口
++ 并发编程
++ 反射
++ 语言交互性
+
+
+
+# 多系统的安装教程
+
+
+> 多系统的安装教程见这里的教程，[https://www.runoob.com/go/go-environment.html](https://www.runoob.com/go/go-environment.html)
+>
+
+
+
+# go语言的结构
+
+
+> 熟悉go语言的结构，有利于我理解go语言
+>
+
+
+
+## 调用go run xxx.go 到底发生了什么？
+
+
+> 可以生成一个 build.sh 脚本，用于在指定位置产生已编译好的 可执文件:
+>
+
+
+
+```shell
+#!/usr/bin/env bash
+
+CURRENT_DIR=`pwd`
+OLD_GO_PATH="$GOPATH"  #例如: /usr/local/go
+OLD_GO_BIN="$GOBIN"    #例如: /usr/local/go/bin
+
+export GOPATH="$CURRENT_DIR" 
+export GOBIN="$CURRENT_DIR/bin"
+
+#指定并整理当前的源码路径
+gofmt -w src
+
+go install test_hello
+
+export GOPATH="$OLD_GO_PATH"
+export GOBIN="$OLD_GO_BIN"
+```
+
+
+
+## 关于包问题和自定义包使用自定义包
+
+
++ 包与文件名没关系
++ 文件夹名与包名 没关系
++ 同一个文件夹下只能有一个包名，要不然编译报错！
+
+
+
+> 以下就是一个简单的文件结构进行的测试
+>
+
+
+
+```shell
+Test
+--helloworld.go
+
+myMath
+--myMath1.go
+--myMath2.go
+```
+
+
+
+> 以下的代码
+>
+
+
+
+```go
+// helloworld.go
+package main
+
+import (
+"fmt"
+"./myMath"
+)
+
+func main(){
+    fmt.Println("Hello World!")
+    fmt.Println(mathClass.Add(1,1))
+    fmt.Println(mathClass.Sub(1,1))
+}
+
+// myMath1.go
+package mathClass
+func Add(x,y int) int {
+    return x + y
+}
+
+// myMath2.go
+package mathClass
+func Sub(x,y int) int {
+    return x - y
+}
+```
+
+
+
+## 规范的书写
+
+
+### 一个相对比较规范的程序结构
+
+
+> 下面是一个比较规范的书写范式
+>
+
+
+
+```go
+// 当前程序的包名
+package main
+
+// 导入其他包
+import  "fmt"
+
+// 常量定义
+const PI = 3.14
+
+// 全局变量的声明和赋值
+var name = "gopher"
+
+// 一般类型声明 newType 实际上就是int 类型的别名而已
+type newType int
+
+// 结构的声明 你可以理解为js中的对象 {}
+type gopher struct{}
+
+// 接口的声明
+type golang interface{}
+
+// 由main函数作为程序入口点启动bootStart
+func main() {
+    Println("Hello World!")
+}
+```
+
+
+
+> 如何重命名和调用
+>
+
+
+
+```go
+// 格式  <PackageName>.<FunctionName> 
+package 别名：
+// 引入自己的包
+import "test/controllers"
+controllers.xxx()  就能调用里面的方法了
+
+// 为fmt起别名为fmt2
+import fmt2 "fmt"
+fmt2.Pintln()
+
+如果使用 . 导入 就可以省略，fmt2.xxx() [不推荐使用]
+import . "fmt"
+func main (){
+    Println("hello,world")
+}
+```
+
+
+
+> private and public
+>
+
+
+
+```go
+// 大写就是共有的，小写就是私有的
+// 使用大小写来决定该常量、变量、类型、接口、结构或函数是否可以被外部包所调用。
+```
+
+
+
+## fmt的函数详解
+
+
+> fmt 函数有很多好玩的地方  
+1.Print() 函数将参数列表 a 中的各个参数转换为字符串并写入到标准输出中。  
+非字符串参数之间会添加空格，返回写入的字节数。
+>
+
+
+
+2.Printf() 函数将参数列表 a 填写到格式字符串 format 的占位符中。
+
+
+
+3.详解 [https://www.runoob.com/go/go-basic-syntax.html](https://www.runoob.com/go/go-basic-syntax.html)
+

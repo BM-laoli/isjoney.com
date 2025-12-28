@@ -1,0 +1,158 @@
+---
+title: "Go 指针详解：基础、空指针与高级应用"
+date: "2024-12-19"
+summary: "深入讲解 Go 语言指针的核心概念，包括基础介绍、空指针处理、数组存储指针、多级指针以及函数传递指针等实用技巧。"
+status: "completed"
+tech: ["Go", "Pointer", "Memory"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Go"
+---
+
+# 章节概述如下
+
+
+> 指针是golang中比较重要的东西,本章 主要讲解的内容如下
+>
+
+
+
+1. 基础介绍
+2. 空指针
+3. toArray 实际上旧把对象的引用（指针）存到数组中去
+
+
+
+## 基础介绍
+
+
+```go
+// go语言中指针的介绍 &在go语言中就是获取某个东西的内存地址值
+func introductionPointer(){
+	var a int = 10
+	var b float32 = 20.00
+	fmt.Printf("变量的地址是：%x\n",&a)
+	
+	// 指针指向值的内存地址，使用指针的时候需要先声明
+	//  1.var var_name * var-type
+	var ip *int /* 指向整数 */
+	var fp *float32 /* 指向浮点型 */
+	
+	//  2.use pointer
+	/*
+	innit pointer 
+	pointer = 1
+	访问指针变量指向地址的值
+	*/
+	ip = &a
+	fp = &b
+	fmt.Printf("变量的地址是：%d \n",ip)
+	fmt.Printf("变量的地址是：%d \n",fp)
+}
+```
+
+
+
+## 空指针
+
+
+```go
+
+// null pointer
+/*
+nil指针就是空指针 概念上都是一样的null none nil nul
+*/
+func nullPorint() {
+	var ptr *int  // 默认的值是 就是 * type这个type的默认值
+	fmt.Printf("ptr 的值是 %x \n",ptr)
+	// 空值的判断
+	// ptr == nill 
+}
+```
+
+
+
+## toArray 实际上旧把对象的引用（指针）存到数组中去
+
+
+```go
+
+// toArray
+func pinterT(){
+	const MAX int = 3
+	var i int
+	// ptr 为整型指针数组。因此每个元素都指向了一个值。以下实例的三个整数将存储在指针数组中：
+	a := []int{0,100,200}
+	var ptr [MAX]*int  // 这个东西就是存入指针
+	for  i = 0; i < MAX; i++ {
+		ptr[i] = &a[i] /* 整数地址赋值给指针数组 */
+ }
+
+ for  i = 0; i < MAX; i++ {
+		fmt.Printf("a[%d] = %d\n", i,*ptr[i] )
+ }
+}
+```
+
+
+
+## 一个指针 指向另一个指针
+
+
+```go
+
+//  指向指针的指针？what is problem  也就是一个指针 变量存的是另一个指针 vat ptr **int
+func prointerTop(){
+	var a int
+	var ptr *int
+	var pptr **int
+	a = 300
+	
+	// 指针ptr 地址
+	ptr = &a
+	// 指针指向 ptr 的hi在
+	pptr = &ptr
+
+	 /* 获取 pptr 的值 */
+   fmt.Printf("变量 a = %d\n", a )
+   fmt.Printf("指针变量 *ptr = %d\n", *ptr )
+   fmt.Printf("指向指针的指针变量 **pptr = %d\n", **pptr)
+}
+```
+
+
+
+## 给函数传递指针
+
+
+```go
+
+// 给函数传递指针
+func  testFuncPointer()  {
+	// 定义全局的变量
+    /* 定义局部变量 */
+    var a int = 100
+    var b int= 200
+
+    fmt.Printf("交换前 a 的值 : %d\n", a )
+    fmt.Printf("交换前 b 的值 : %d\n", b )
+
+    /* 调用函数用于交换值
+    * &a 指向 a 变量的地址
+    * &b 指向 b 变量的地址
+    */
+    swap(&a, &b);
+
+    fmt.Printf("交换后 a 的值 : %d\n", a )
+    fmt.Printf("交换后 b 的值 : %d\n", b )
+}
+
+// 交换两个执政的引用
+func swap(x *int, y *int) {
+	var temp int
+	temp = *x    /* 保存 x 地址的值 */
+	*x = *y      /* 将 y 赋值给 x */
+	*y = temp    /* 将 temp 赋值给 y */
+}
+```
+

@@ -1,0 +1,893 @@
+---
+title: "Go 后端实战：定时任务、文件上传、Redis缓存与部署"
+date: "2025-06-18"
+summary: "深入实践 Go 后端开发，涵盖 Cron 定时任务、图片上传处理、Redis 缓存集成、Nginx 反向代理配置、Docker 容器化部署及 Makefile 自动化构建。"
+status: "completed"
+tech: ["Go", "Gin", "Redis", "Docker"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Go"
+---
+
+> 这个阶段我们将完善我们的这个小型的http应用 ，内容主要如下
+>
+> - [x] Cron定时任务job
+> - [x] 图片上传
+> - [x] redis缓存
+> - [x] Nginx部署
+> - [x] Golang交叉编译
+> - [x] Makefile
+>
+> 我并不会，打算直接cv 煎鱼🐟 大神的原文，这里我省略了一些  ，目前看起来放在  后端实现不怎么合适的功能 比如绘制图片，绘制海报，导入导出Excel 等....，一般这种业务完全可以交给 更加成熟的 Nodejs去做它们的库更强大。
+>
+
+
+
+# Cron定时任务job
+在go中如何做定时任务去刷一些特点的数据，和执行一些特点的脚本呢？这就需要使用到定时任务啦。
+
+## Cron表达式
+这个是一种 “定时器语法” 的一种表达式，它的格式主要如下
+
+| **<font style="color:rgb(59, 62, 72);">字段名</font>** | **<font style="color:rgb(59, 62, 72);">是否必填</font>** | **<font style="color:rgb(59, 62, 72);">允许的值</font>** | **<font style="color:rgb(59, 62, 72);">允许的特殊字符</font>** |
+| --- | --- | --- | --- |
+| <font style="color:rgb(59, 62, 72);">秒（Seconds）</font> | <font style="color:rgb(59, 62, 72);">Yes</font> | <font style="color:rgb(59, 62, 72);">0-59</font> | <font style="color:rgb(59, 62, 72);">* / , -</font> |
+| <font style="color:rgb(59, 62, 72);">分（Minutes）</font> | <font style="color:rgb(59, 62, 72);">Yes</font> | <font style="color:rgb(59, 62, 72);">0-59</font> | <font style="color:rgb(59, 62, 72);">* / , -</font> |
+| <font style="color:rgb(59, 62, 72);">时（Hours）</font> | <font style="color:rgb(59, 62, 72);">Yes</font> | <font style="color:rgb(59, 62, 72);">0-23</font> | <font style="color:rgb(59, 62, 72);">* / , -</font> |
+| <font style="color:rgb(59, 62, 72);">一个月中的某天（Day of month）</font> | <font style="color:rgb(59, 62, 72);">Yes</font> | <font style="color:rgb(59, 62, 72);">1-31</font> | <font style="color:rgb(59, 62, 72);">* / , - ?</font> |
+| <font style="color:rgb(59, 62, 72);">月（Month）</font> | <font style="color:rgb(59, 62, 72);">Yes</font> | <font style="color:rgb(59, 62, 72);">1-12 or JAN-DEC</font> | <font style="color:rgb(59, 62, 72);">* / , -</font> |
+| <font style="color:rgb(59, 62, 72);">星期几（Day of week）</font> | <font style="color:rgb(59, 62, 72);">Yes</font> | <font style="color:rgb(59, 62, 72);">0-6 or SUN-SAT</font> | <font style="color:rgb(59, 62, 72);">* / , - ?</font> |
+
+
+下面是一些简单的语法规则
+
+| 符号 | 含义 |
+| --- | --- |
+| * | <font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">星号表示将匹配字段的所有值</font> |
+| / | <font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">斜线用户 描述范围的增量，表现为 “N-MAX/x”，first-last/x 的形式，例如 3-59/15 表示此时的第三分钟和此后的每 15 分钟，到 59 分钟为止。即从 N 开始，使用增量直到该特定范围结束。它不会重复</font> |
+| ， | <font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">逗号用于分隔列表中的项目。例如，在 Day of week 使用“MON，WED，FRI”将意味着星期一，星期三和星期五</font> |
+| - | <font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">连字符用于定义范围。例如，9 - 17 表示从上午 9 点到下午 5 点的每个小时</font> |
+| ？ | <font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">不指定值，用于代替 “ * ”，类似 “ _ ” 的存在，不难理解</font> |
+
+
+一个简单的表达式，用6个空格分割字段比如  <font style="color:rgb(0, 0, 255);">0/2 * * * * ?</font><font style="color:rgb(51, 51, 51);">  标识每两秒执行一次，为了方便大家的查找测试和学习，这里分享一个站点，可以去快速查阅  </font>[在线Cron表达式生成器](https://cron.qqe2.com/)
+
+在Go中我们使用一个lib ，去完成cron 相关的东西，它有一些预制好的一些值 比如下面的一些
+
+| **<font style="color:rgb(59, 62, 72);">输入</font>** | **<font style="color:rgb(59, 62, 72);">简述</font>** | **<font style="color:rgb(59, 62, 72);">相当于</font>** |
+| --- | --- | --- |
+| <font style="color:rgb(59, 62, 72);">@yearly (or @annually)</font> | <font style="color:rgb(59, 62, 72);">1 月 1 日午夜运行一次</font> | <font style="color:rgb(59, 62, 72);">0 0 0 1 1 *</font> |
+| <font style="color:rgb(59, 62, 72);">@monthly</font> | <font style="color:rgb(59, 62, 72);">每个月的午夜，每个月的第一个月运行一次</font> | <font style="color:rgb(59, 62, 72);">0 0 0 1 * *</font> |
+| <font style="color:rgb(59, 62, 72);">@weekly</font> | <font style="color:rgb(59, 62, 72);">每周一次，周日午夜运行一次</font> | <font style="color:rgb(59, 62, 72);">0 0 0 * * 0</font> |
+| <font style="color:rgb(59, 62, 72);">@daily (or @midnight)</font> | <font style="color:rgb(59, 62, 72);">每天午夜运行一次</font> | <font style="color:rgb(59, 62, 72);">0 0 0 * * *</font> |
+| <font style="color:rgb(59, 62, 72);">@hourly</font> | <font style="color:rgb(59, 62, 72);">每小时运行一次</font> | <font style="color:rgb(59, 62, 72);">0 0 * * * *</font> |
+
+
+## 实践
+```shell
+$ go get -u github.com/robfig/cron
+```
+
+这里我们举个例子，我们的需求是 ：“<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">定时任务清理（或转移、backup）无效数据</font>”
+
+```go
+// 首先我们在 model 上加上 硬删除 接口
+func CleanAllTag() bool {
+	db.Unscoped().Where("deleted_on != ? ", 0).Delete(&Tag{})
+
+	return true
+}
+
+func CleanAllArticle() bool {
+	db.Unscoped().Where("deleted_on != ? ", 0).Delete(&Article{})
+
+	return true
+}
+
+// 然后我们写一个job 
+
+func main() {
+	log.Println("Starting...")
+
+	c := cron.New()
+    // 会根据本地时间创建一个新（空白）的 Cron job runner
+    // 建议使用  c := cron.New(cron.WithSeconds())，它能支持 秒级别 的job
+
+    // 加一个job fn 他会 以按给定的时间表运行，这里我们直接传递匿名的fn
+	c.AddFunc("* * * * * *", func() {
+		log.Println("Run models.CleanAllTag...")
+		models.CleanAllTag()
+	})
+	c.AddFunc("* * * * * *", func() {
+		log.Println("Run models.CleanAllArticle...")
+		models.CleanAllArticle()
+	})
+
+    // 启动
+	c.Start()
+	// 模拟了一个 堵塞的效果
+
+    // 下面的代码 如果有js的来表示就是 setInterval(fn, 1000)
+    // 1.会创建一个新的定时器，持续你设定的时间 d 后发送一个 channel 消息
+	t1 := time.NewTimer(time.Second * 10)
+    // 2. 阻塞 select 等待 channel
+	for {
+		select {
+		case <-t1.C:
+            // 会重置定时器，让它重新开始计时
+            // t1.c 已经取走 ，重新reset
+			t1.Reset(time.Second * 10)
+		}
+	}
+}
+```
+
+
+
+# 图片上传
+图片/文件上传上一个非常常见的业务了，对于gin 来说，它非常的方便的提供了这样的功能，我们举个例子直接看官方的写法。
+
+## Gin官方
+```go
+// 首先我们要获取到文件，我们有两种 一种是 一个http携带来多个文件，一个是http携带一份文件
+// 注意 都要求请求是 form-data 的格式
+
+// 单文件
+// 为 multipart forms 设置较低的内存限制 (默认是 32 MiB)
+func main() {
+	router := gin.Default()
+	
+    // 为 multipart forms 设置较低的内存限制 (默认是 32 MiB)
+	router.MaxMultipartMemory = 8 << 20  // 8 MiB
+	router.POST("/upload", func(c *gin.Context) {
+		// 单文件
+		file, _ := c.FormFile("file") // 直接从formfile 上取
+		log.Println(file.Filename)
+
+		dst := "./" + file.Filename // 上传文件至指定的完整文件路径
+		c.SaveUploadedFile(file, dst) // 保存到某路径下
+
+		c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
+	})
+	router.Run(":8080")
+}
+
+// 多文件
+func main() {
+	router := gin.Default()
+	// 为 multipart forms 设置较低的内存限制 (默认是 32 MiB)
+	router.MaxMultipartMemory = 8 << 20  // 8 MiB
+	router.POST("/upload", func(c *gin.Context) {
+		// Multipart form
+		form, _ := c.MultipartForm()
+		files := form.File["upload[]"]
+
+		for _, file := range files {
+			log.Println(file.Filename)
+
+			// 上传文件至指定目录
+			c.SaveUploadedFile(file, dst)
+		}
+		c.String(http.StatusOK, fmt.Sprintf("%d files uploaded!", len(files)))
+	})
+	router.Run(":8080")
+}
+```
+
+上传文件之后呢？我们如何返回回去展示呢？gin也提供了相关的功能模块 “设置静态资源目录”
+
+```go
+// 在gin中设置这样的东西，非常的简单， 假设我们的文件都上传到了 /assets 下
+
+func main() {
+	router := gin.Default()
+	router.Static("/assets", "./assets")
+	router.StaticFS("/more_static", http.Dir("my_file_system"))
+	router.StaticFile("/favicon.ico", "./resources/favicon.ico")
+	// 如果你感兴趣 可深入看看里面的实现
+    
+    
+	// 监听并在 0.0.0.0:8080 上启动服务
+	router.Run(":8080")
+}
+
+
+
+```
+
+## 我们的项目
+回到我们的项目中来，我们看看自己如何给他集成进来。
+
+首先取值的时候，我们需要有一定的验证。
+
+存储的时候我们 需要获取文件名，文件夹 ，文件全路径，文件是否存在等操作
+
+存储的时候我们还需要 对文件名进行规定 比如用md5 转一下
+
+访问文件的时候 设置静态资源路路径
+
+```go
+// 首先我们取参数的
+
+func UploadImage(c *gin.Context) {
+	code := e.SUCCESS
+	data := make(map[string]string)
+
+	file, image, err := c.Request.FormFile("image") // 读取form-data中的数据
+	
+    if err != nil {
+		logging.Warn(err)
+		code = e.ERROR
+		c.JSON(http.StatusOK, gin.H{
+			"code": code,
+			"msg":  e.GetMsg(code),
+			"data": data,
+		})
+	}
+
+	if image == nil {
+		code = e.INVALID_PARAMS
+	} else {
+		// 合法图片将会进行 下一步的处理
+		imageName := upload.GetImageName(image.Filename)
+		fullPath := upload.GetImageFullPath()
+		savePath := upload.GetImagePath()
+
+		src := fullPath + imageName
+		if !upload.CheckImageExt(imageName) || !upload.CheckImageSize(file) {
+			code = e.ERROR_UPLOAD_CHECK_IMAGE_FORMAT
+		} else {
+			err := upload.CheckImage(fullPath)
+			if err != nil {
+				logging.Warn(err)
+				code = e.ERROR_UPLOAD_CHECK_IMAGE_FAIL
+				// gin能够通过这个方法的调用 进行保存  这几个方法调用成功就存上了
+			} else if err := c.SaveUploadedFile(image, src); err != nil {
+				logging.Warn(err)
+				code = e.ERROR_UPLOAD_SAVE_IMAGE_FAIL
+			} else {
+				data["image_url"] = upload.GetImageFullUrl(imageName)
+				data["image_save_url"] = savePath + imageName
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code": code,
+		"msg":  e.GetMsg(code),
+		"data": data,
+	})
+}
+
+main.go
+++++
+	r.POST("/upload", api.UploadImage) // 上传图片
+
+++++
+
+// 存储的时候 编写一些 对文件操作的pkg 工具包
+// 获取图片完整访问 URL
+func GetImageFullUrl(name string) string {
+    // 注意，我们可以设置一个 上传存储路径也可以不设置，随你好啦
+	return setting.AppSetting.ImagePrefixUrl + "/" + GetImagePath() + name
+}
+
+
+func GetImageName(name string) string {
+	ext := path.Ext(name)
+	fileName := strings.TrimSuffix(name, ext)
+	fileName = util.EncodeMD5(fileName)
+
+	return fileName + ext
+}
+
+func GetImagePath() string {
+	return setting.AppSetting.ImageSavePath
+}
+
+func GetImageFullPath() string {
+	return setting.AppSetting.RuntimeRootPath + GetImagePath()
+}
+
+// 检查图片后缀
+func CheckImageExt(fileName string) bool {
+	ext := file.GetExt(fileName)
+	for _, allowExt := range setting.AppSetting.ImageAllowExts {
+		if strings.ToUpper(allowExt) == strings.ToUpper(ext) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func CheckImageSize(f multipart.File) bool {
+	size, err := file.GetSize(f)
+	if err != nil {
+		log.Println(err)
+		logging.Warn(err)
+		return false
+	}
+
+	return size <= setting.AppSetting.ImageMaxSize
+}
+
+// 检查图片 是否合法
+func CheckImage(src string) error {
+	dir, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("os.Getwd err: %v", err)
+	}
+
+	err = file.IsNotExistMkDir(dir + "/" + src)
+	if err != nil {
+		return fmt.Errorf("file.IsNotExistMkDir err: %v", err)
+	}
+
+	perm := file.CheckPermission(src)
+	if perm == true {
+		return fmt.Errorf("file.CheckPermission Permission denied src: %s", src)
+	}
+
+	return nil
+}
+
+// 需要重命名 用md5 转一下
+package util
+import (
+	"crypto/md5"
+	"encoding/hex"
+)
+func EncodeMD5(value string) string {
+	m := md5.New()
+	m.Write([]byte(value))
+	return hex.EncodeToString(m.Sum(nil))
+}
+
+
+// 访问的时候要路径就好啦
+r.StaticFS("/upload/images", http.Dir(upload.GetImageFullPath())) // 路径静态资源访问支持 ，每个静态资源访问都需要独立去控制
+```
+
+# Redis
+下面的例子，我们将使用 redis 来实现一个 "单点登录" 的功能。 
+
+首先是连接 和一些工具方法🔧 
+
+```go
+你的配置要加上 redis 哈
+[redis]
+Host = 127.0.0.1:6379
+Password =
+MaxIdle = 30
+MaxActive = 30
+IdleTimeout = 200
+```
+
+```shell
+go get github.com/garyburd/redigo/redis
+```
+
+下面的代码 是 对 goRedis 的一些简单的封装📦 
+
+```go
+package gredis
+
+import (
+	"encoding/json"
+	"time"
+
+	"github.com/BM-laoli/go-gin-example/pkg/setting"
+	"github.com/garyburd/redigo/redis"
+)
+
+var RedisConn *redis.Pool
+// 链接池 句柄
+
+func Setup() error {
+    // 开始设置 链接参数 
+	RedisConn = &redis.Pool{
+		MaxIdle:     setting.RedisSetting.MaxIdle, 
+		MaxActive:   setting.RedisSetting.MaxActive,
+		IdleTimeout: setting.RedisSetting.IdleTimeout,
+    	// 最大空闲链接数、在给定时间内允许非配的最大链接数=0 = 无限制
+        // 在给定时间内会保持空链接，如果达到时间就关闭链接
+        
+        Dial: func() (redis.Conn, error) {
+            // 提供创建和配置应用程序连接的一个函数 cb
+			c, err := redis.Dial("tcp", setting.RedisSetting.Host)
+			if err != nil {
+				return nil, err
+			}
+			if setting.RedisSetting.Password != "" {
+				if _, err := c.Do("AUTH", setting.RedisSetting.Password); err != nil {
+					c.Close()
+					return nil, err
+				}
+			}
+			return c, err
+		},
+		TestOnBorrow: func(c redis.Conn, t time.Time) error {
+            // 可选的应用程序检查健康功能 cb
+			_, err := c.Do("PING")
+			return err
+		},
+	}
+
+	return nil
+}
+
+func Set(key string, data interface{}, time int) error {
+	conn := RedisConn.Get() // 在连接池中获取一个活跃连接
+	defer conn.Close()
+
+	value, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+    // 向 Redis 服务器发送命令并返回收到的答复
+	_, err = conn.Do("SET", key, value)
+	if err != nil {
+		return err
+	}
+
+	_, err = conn.Do("EXPIRE", key, time)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func Exists(key string) bool {
+	conn := RedisConn.Get()
+	defer conn.Close()
+
+    // 将命令 返回转 为布尔值
+	exists, err := redis.Bool(conn.Do("EXISTS", key))
+	if err != nil {
+		return false
+	}
+
+	return exists
+}
+
+func Get(key string) ([]byte, error) {
+	conn := RedisConn.Get()
+	defer conn.Close()
+
+    // 将命令 返回 转为Bytes
+	reply, err := redis.Bytes(conn.Do("GET", key))
+	if err != nil {
+		return nil, err
+	}
+
+	return reply, nil
+}
+
+func Delete(key string) (bool, error) {
+	conn := RedisConn.Get()
+	defer conn.Close()
+
+	return redis.Bool(conn.Do("DEL", key))
+}
+
+func LikeDeletes(key string) error {
+	conn := RedisConn.Get()
+	defer conn.Close()
+
+    // 将命令 返回 转为 []string
+	keys, err := redis.Strings(conn.Do("KEYS", "*"+key+"*"))
+	if err != nil {
+		return err
+	}
+
+	for _, key := range keys {
+		_, err = Delete(key)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+// 实际上你可以不用 封装 ，直接用 redigo 中提供的也可以，但是我们初学者还是要深挖一下哈
+
+// 对于你读的时候 最好做容错然后 返回使用 bytes
+
+	key := cache.GetArticleKey()
+	if gredis.Exists(key) {
+		data, err := gredis.Get(key)
+		if err != nil {
+			logging.Info("errerrerrerrerrerr")
+		} else {
+			json.Unmarshal(data, &cacheArticle)
+			return cacheArticle, nil
+		}
+	}
+
+```
+
+有了这些工具，我们再去实现我们想要的业务 -> 单点登陆 ，主要的流程可以看看我之前在掘金上的文章，当时使用Nest 实现的，现在换成Go也是一样的。
+
+[这可能是你看过最全的 「NestJS」 教程了 -文件服务、 单点登录、Job、和部署 - 掘金](https://juejin.cn/post/7080545204687765511)
+
+
+
+![](https://cdn.nlark.com/yuque/0/2023/png/1627571/1672989996564-43f32c4a-c5fa-43fa-a237-237d43754bfb.png)
+
+```go
+// 生成token的地方要存入 key 和token 注意过期时间一定要 > jwt中设置的时间
+var jwtSecret = []byte(configuration.AppSetting.JwtSecret)
+
+type Claims struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Uid      string
+	jwt.StandardClaims
+}
+
+// 生成Token
+func GenerateToken(username, password, uid string) (string, error) {
+	nowTime := time.Now()
+	expireTime := nowTime.Add(3 * time.Hour) // 设置过期时间
+
+	claims := Claims{ // 准备把信息签名 jwt-go 提供
+		username,
+		password,
+		uid,
+		jwt.StandardClaims{
+			ExpiresAt: expireTime.Unix(),
+			Issuer:    "gin-blog",
+		},
+	}
+
+	// SigningMethodHS256  + Secret加密
+	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token, err := tokenClaims.SignedString(jwtSecret)
+
+	return token, err
+}
+
+
+// 生产token并返回 类似于登录
+func GetAuth(c *gin.Context) {
+	var (
+		appG = res.Gin{C: c}
+		user dto.UserDto
+	)
+
+	httpCode, errCode := req.BindAndValidForJSON(c, &user)
+	if errCode != error2.SUCCESS {
+		appG.Response(httpCode, errCode, nil)
+		return
+	}
+
+	authService := UserType{
+		Username: user.Username,
+		Password: user.Password,
+	}
+
+	// 1.把这个用户名的密码给找出来 从数据库
+	// 2. 进行密码核对
+	// 3. 若成功就下发token签名
+
+	isValid, uid, _ := authService.VerifyUser()
+
+	if !isValid {
+		appG.Response(http.StatusInternalServerError, error2.ERROR_ADD_TAG_FAIL, nil)
+		return
+	}
+
+	key := "uid_" + strconv.Itoa(uid)
+
+	// 开始生产token
+	token, err2 := GenerateToken(authService.Username, "", key)
+	if err2 != nil {
+		appG.Response(http.StatusInternalServerError, error2.ERROR_ADD_TAG_FAIL, nil)
+		return
+	}
+
+	// 把user_id 作为key token 做value 存入redis
+	core_redis.Set(key, token, 1800) // 注意这个时间需要 >= jwt_token 过期时间
+
+	appG.Response(http.StatusOK, error2.SUCCESS, map[string]interface{}{
+		"token": token,
+	})
+}
+
+// jwt 中间件
+func GenerateToken(username, password, uid string) (string, error) {
+	nowTime := time.Now()
+	expireTime := nowTime.Add(3 * time.Hour) // 设置过期时间
+
+	claims := Claims{ // 准备把信息签名 jwt-go 提供
+		username,
+		password,
+		uid,
+		jwt.StandardClaims{
+			ExpiresAt: expireTime.Unix(),
+			Issuer:    "gin-blog",
+		},
+	}
+
+	// SigningMethodHS256  + Secret加密
+	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token, err := tokenClaims.SignedString(jwtSecret)
+
+	return token, err
+}
+
+```
+
+# Nginx
+主要是做 负载均衡和反向代理用的，当然它还有更多实用的功能，对这个点，我想做过前端的同学们都清楚哈。这里就不啰嗦了，举个例子，我们的用户数量已经达到了一定的规模，现在我们需要 部署多个application 实例，程序都是一样的程序，数据库都是一样的数据库，这样就能让不同的程序去分一些流量了，属于“人海”战术。
+
+关于安装这里和调试，这里就不说啦哈;   在本小节中我们将会使用 它来做方向代理
+
+![](https://cdn.nlark.com/yuque/0/2023/png/1627571/1673065658580-37e492ad-4ff9-4199-b2ab-bcc5ecec5a6b.png)
+
+
+
+下面是一些简单的参数和常用的命令配置
+
+```nginx
+1、 proxy_pass：配置反向代理的路径。需要注意的是如果 proxy_pass 的 url 最后为 /，则表示绝对路径。否则（不含变量下）表示相对路径，所有的路径都会被代理过去
+
+2、 upstream：配置负载均衡，upstream 默认是以轮询的方式进行负载，另外还支持四种模式，分别是：
+
+（1）weight：权重，指定轮询的概率，weight 与访问概率成正比
+
+（2）ip_hash：按照访问 IP 的 hash 结果值分配
+
+（3）fair：按后端服务器响应时间进行分配，响应时间越短优先级别越高
+
+（4）url_hash：按照访问 URL 的 hash 结果值分配
+
+```
+
+首先我们要启动的是两个 server 我们把这两个 server 配置 成8081 ，8082 ，然后我们希望，能够在本机访问 api.golang.com能够自动打到两个server 上。对于这个需求，我们现在来搞定它。
+
+
+
+我们假设你现在，已经在本机上安装好啦docker 哈（我的机器是mac/和linux）
+
+1. 打开 本机器的配置，把 api.golang-laoli.com 映射 配置上去
+
+```javascript
+127.0.0.1 api.golang-laoli.com
+```
+
+2. 去nginx的配置，比如我这里的 <font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">/usr/local/etc/nginx/nginx.conf</font>
+
+```nginx
+worker_processes  1;
+
+events {
+    worker_connections  1024;
+}
+
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    sendfile        on;
+    keepalive_timeout  65;
+
+    upstream api.blog.com {
+        server 127.0.0.1:8001;
+        server 127.0.0.1:8002;
+    }
+
+    server {
+        listen       8081;
+        server_name  api.blog.com;
+
+        location / {
+            proxy_pass http://api.blog.com/;
+        }
+    }
+}
+```
+
+ 别忘记重启 nginx 当你配置完之后
+
+```shell
+$ nginx -t
+nginx: the configuration file /usr/local/etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /usr/local/etc/nginx/nginx.conf test is successful
+$ nginx -s reload
+```
+
+3. 我们程序也要启动哈，这里就不说啦，你可以debuger 启动，也可以make 编译之后在启动。
+
+
+
+# Docker
+这里我们来唠嗑看看，如何把我们的程序 构建出来，然后丢到docker 中取run；看到这里的朋友完相信你对docker或多或少都有一定的了解。本文默认读者们都了解和 掌握啦docker的一般知识哈。
+
+## 准备
+这里我不得不叨叨一下哈，我现在的环境 mysql 和docker 都上在另一台机器上的。故前面的nginx 要想结合进来一起用，你的构建脚本中 不仅仅要求上下面这样写，你还要去搞nginx的配置，然后再入和设置好那些配置。这里我简单的提一下。
+
+还有一件事，就是你的docker mysql 在run的时候最好指定挂在卷 要不然你每启一个就数据就是从空 开始的
+
+```shell
+ docker run --name mysql -p 3306:3306 -e 
+   MYSQL_ROOT_PASSWORD=rootroot 
+   -v /data/docker-mysql:/var/lib/mysql 
+   -d mysql
+
+```
+
+## 项目
+首先我们要构建image，先让我们写一个dockerfile
+
+```dockerfile
+FROM scratch 
+# 载入一个空的初始化环境
+
+WORKDIR $GOPATH/src/github.com/EDDYCJY/go-gin-example
+# 把工作目录设置到 这个下面
+COPY . $GOPATH/src/github.com/EDDYCJY/go-gin-example
+# 复制源代码过去
+
+
+EXPOSE 8000
+# EXPOSE 指令是声明运行时容器提供服务端口，
+# 这只是一个声明，在运行时并不会因为这个声明应用就会开启这个端口的服务
+ENTRYPOINT ["./go-gin-example"]
+
+```
+
+为保image的体积，你要在现场编译哈，不要到容器里去编译 
+
+```shell
+CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o go-gin-example .
+# 编译所生成的可执行文件会依赖一些库，并且是动态链接。
+# 在这里因为使用的是 scratch 镜像，它是空镜像，
+# 因此我们需要将生成的可执行文件静态链接所依赖的库
+```
+
+
+
+好，完事之后，取执行构建 image
+
+```shell
+docker build -t gin-blog-docker-scratch .
+
+# 注意哈，这个时候先不要着急去run ，你需要把这个容器 启动时候 和 mysql 的容器关联起来
+# 增加命令 --link mysql:mysql 让 Golang 容器与 Mysql 容器互联；
+# 通过 --link，可以在容器内直接使用其关联的容器别名进行访问，
+# 而不通过 IP，但是--link只能解决单机容器间的关联，
+# 在分布式多机的情况下，需要通过别的方式进行连接 比如zk config 上去配置ip等手段
+
+docker run --link mysql:mysql -p 8000:8000 gin-blog-docker
+
+```
+
+
+
+# Golang交叉编译
+说到交叉编译 ，它<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">是 </font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">Golang</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> 令人心动的特性之一</font>**<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">跨平台编译。我们来分析一下前面的一段构建命令</font>**
+
+```shell
+CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o go-gin-example .
+
+```
+
+<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">CGO_ENABLED => 用于标识（声明） </font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">cgo</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> 工具是否可用,</font>
+
+<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">结合案例来说，我们是在宿主机编译的可执行文件，而在</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> </font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">Scratch</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> </font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">镜像运行的可执行文件；显然两者的计算机架构、运行环境标识你无法确定它是否一致（毕竟构建的</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> </font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">docker</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> </font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">镜像还可以给他人使用），那么我们就要进行交叉编译，而交叉编译不支持</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> </font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">cgo</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">，因此这里要禁用掉它</font>
+
+<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">关闭 </font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">cgo</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> 后，在构建过程中会忽略 </font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">cgo</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> 并静态链接所有的依赖库，而开启 </font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">cgo</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> 后，方式将转为动态链接</font>
+
+<font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">golang</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> 是默认开启 </font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">cgo</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> 工具的，可执行 </font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">go env</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> 命令查看</font>
+
+```shell
+$ go env
+GOARCH="amd64"
+GOBIN=""
+GOCACHE="/root/.cache/go-build"
+GOEXE=""
+GOHOSTARCH="amd64"
+GOHOSTOS="linux"
+GOOS="linux"
+...
+GCCGO="gccgo"
+CC="gcc"
+CXX="g++"
+CGO_ENABLED="1"
+...
+```
+
+<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">GOOS => 用于标识（声明）程序构建环境的目标操作系统</font>
+
+<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">GOARCH => 用来标识 程序构建环境 和目标计算机架构</font>
+
+| **<font style="color:rgb(59, 62, 72);">系统</font>** | **<font style="color:rgb(59, 62, 72);">GOOS</font>** | **<font style="color:rgb(59, 62, 72);">GOARCH</font>** |
+| --- | --- | --- |
+| <font style="color:rgb(59, 62, 72);">Windows 32 位</font> | <font style="color:rgb(59, 62, 72);">windows</font> | <font style="color:rgb(59, 62, 72);">386</font> |
+| <font style="color:rgb(59, 62, 72);">Windows 64 位</font> | <font style="color:rgb(59, 62, 72);">windows</font> | <font style="color:rgb(59, 62, 72);">amd64</font> |
+| <font style="color:rgb(59, 62, 72);">OS X 32 位</font> | <font style="color:rgb(59, 62, 72);">darwin</font> | <font style="color:rgb(59, 62, 72);">386</font> |
+| <font style="color:rgb(59, 62, 72);">OS X 64 位</font> | <font style="color:rgb(59, 62, 72);">darwin</font> | <font style="color:rgb(59, 62, 72);">amd64</font> |
+| <font style="color:rgb(59, 62, 72);">Linux 32 位</font> | <font style="color:rgb(59, 62, 72);">linux</font> | <font style="color:rgb(59, 62, 72);">386</font> |
+| <font style="color:rgb(59, 62, 72);">Linux 64 位</font> | <font style="color:rgb(59, 62, 72);">linux</font> | <font style="color:rgb(59, 62, 72);">amd64</font> |
+
+
+<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">GOHOSTOS => 用于标识（声明）程序运行环境的目标操作系统，GOHOSTARCH	 => 用于标识（声明）程序运行环境的目标计算架构</font>
+
+<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> </font>
+
+<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">我们再看一个重要的命令</font>
+
+```shell
+go build .
+
+# -a
+# 强制重新编译，简单来说，就是不利用缓存或已编译好的部分文件，直接所有包都是最新的代码重新编译和关联
+
+
+# -installsuffix
+# 在软件包安装的目录中增加后缀标识，以保持输出与默认版本分开
+
+# -o 指定编译后的可执行文件名称
+
+```
+
+# Makefile
+这个东西（<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">构建自动化工具</font>），可以一定程度的看成是 一种ci 的piple 工具，就同脚本一样，通过它你可以指定先干什么再干什么。
+
+格式和语法大概是这样
+
+```shell
+[target] ... : [prerequisites] ...
+# 目标 ： 前置条件
+<tab>[command]
+# 命令
+    ...
+    ...
+
+```
+
+在这里，我们的工程文件就是
+
+```go
+.PHONY: build clean tool lint help
+// 称为伪目标（phony）
+// 声明为伪目标后：在执行对应的命令时，make 就不会去检查是否存在 
+// build / clean / tool / lint / help 其对应的文件，而是每次都会运行标签对应的命令
+// 若不声明：恰好存在对应的文件，则 make 将会认为 xx 文件已存在，没有重新构建的必要了
+
+all: build
+build:
+	go build -v .
+
+tool:
+	go vet ./...; true
+	gofmt -w .
+
+lint:
+	golint ./...
+
+clean:
+	rm -rf go-gin-example
+	go clean -i .
+
+help:
+	@echo "make: compile packages and dependencies"
+	@echo "make tool: run specified go tool"
+	@echo "make lint: golint ./..."
+	@echo "make clean: remove object files and cached files"
+```
+
+
+
+中后在shell中直接make(对macos 和 linux 都有效) 就好了，他会去自动的找makefile 文件
+
+```shell
+# 确保你在根目录下
+make 
+```
+

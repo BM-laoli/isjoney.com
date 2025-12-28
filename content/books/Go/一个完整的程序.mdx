@@ -1,0 +1,51 @@
+---
+title: "Go 包管理与项目结构"
+date: "2024-12-19"
+summary: "介绍 Go 语言的包概念、项目代码组织结构以及 go mod 的使用方法。"
+status: "completed"
+tech: ["Go", "Package", "Project Structure"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Go"
+---
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1625981147890-971f8f14-b1eb-4686-ae4c-854aade981f0.png)
+
+# 这个 goL是一个完成的go包 这里展示了 一个完整的go程序的代码组织结构
+
+
+> 所谓的包 是指的是，一小段可以复用的 程序，把这些程序 打包放在一个package中，别人使用的时候旧拿来“搭积木”旧好了，
+>
+
+
+
+```shell
+# 是需要写给整个项目的要你的pack编辑器总是会提示报错 goL是你项目的名称
+go mod init goL
+```
+
+
+
+# 目录结构
+
+
+```go
+<proj>
+   |--<src> 源代码
+   |    |--<a>  a模块
+   |    |    |--<a1>
+   |    |    |       |--al.go
+   |    |    |--<a2>
+   |    |    |       |--a2.go
+   |    |    |--<b>
+   |    |    |       |--b1.go
+   |    |    |       |--b2.go
+   |    |    |--<c>
+   |    |    |       |--c.go
+   |--<pkg>  // pkg存放处
+   |--<bin>  // 可执行二进制文件 
+<proj>
+```
+
+
+

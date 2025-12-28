@@ -1,0 +1,345 @@
+---
+title: "Go 函数核心：基础使用、值传递、高阶函数与闭包"
+date: "2025-12-27"
+summary: "深入讲解 Go 语言函数的基础使用、值传递机制、高阶函数、回调函数、闭包概念、方法定义、面向对象思想以及可变长参数的使用，结合实际代码案例进行演示。"
+status: "completed"
+tech: ["Go", "Function", "Closure"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Go"
+---
+
+# 本章概述
+
+
+> 本章我们将要学习的知识点
+>
+
+
+
+1. 函数的基础使用
+2. go语言中只有值传递，所谓的引用，也是传递了一个指针变量进去
+3. 高阶函数
+4. 声明函数的类型 和 回调函数
+5. what？go中也有闭包？
+6. 方法是什么？也是函数吗？
+7. 基础的面向对象
+8. 剩余参数? 在go中叫做 可变长参数 是什么鬼？
+9. 高阶函数于defer使用的案例
+
+
+
+## 函数的基础使用
+
+
+```go
+// 求两个数的最大值
+func baseUseMax(num1,num2 int ) int {
+	/*
+	最基础的语法如下
+	func function_name (parmas list) [ retrun_type ] { body }
+	*/ 
+	// 以下的代码就是来搞比较最大数
+	var res int = 0
+	if(num1 > num2 ){
+		res = num1
+	}else if(num1 < num2){
+		res = num2
+		}else{
+		res = num1
+	}
+	return res
+}
+
+func swap(x, y string) (string, string) {
+	return y, x
+}
+```
+
+
+
+## go语言中只有值传递，所谓的引用，也是传递了一个指针变量进去
+
+
+1. 值传递，不会改变外面的值
+
+
+
+```go
+func  testCompurter()  {
+	/* 定义局部变量 */
+	var a int = 100
+	var b int = 200
+
+	fmt.Printf("交换前 a 的值为 : %d\n", a )
+	fmt.Printf("交换前 b 的值为 : %d\n", b )
+
+	/* 通过调用函数来交换值 */
+	swap2(a, b)
+
+	fmt.Printf("交换后 a 的值 : %d\n", a )
+	fmt.Printf("交换后 b 的值 : %d\n", b )
+}
+
+
+func  swap2(x,y int) int  {
+	var temp int
+	temp = x
+	x =y 
+	y = temp
+	return temp
+}
+
+
+func  testCompurter2()  {
+	/* 定义局部变量 */
+	var a int = 100
+	var b int = 200
+
+	fmt.Printf("交换前 a 的值为 : %d\n", a )
+	fmt.Printf("交换前 b 的值为 : %d\n", b )
+
+
+	/* 调用 swap() 函数
+	* &a 指向 a 指针，a 变量的地址
+	* &b 指向 b 指针，b 变量的地址
+	*/
+	swap3(&a, &b)
+
+	fmt.Printf("交换后 a 的值 : %d\n", a )
+	fmt.Printf("交换后 b 的值 : %d\n", b )
+ }
+```
+
+
+
+2. 传递指针 会改变原来的值，（类似于js中的：引用）
+
+
+
+```go
+func  testCompurter2()  {
+	/* 定义局部变量 */
+	var a int = 100
+	var b int = 200
+
+	fmt.Printf("交换前 a 的值为 : %d\n", a )
+	fmt.Printf("交换前 b 的值为 : %d\n", b )
+
+
+	/* 调用 swap() 函数
+	* &a 指向 a 指针，a 变量的地址
+	* &b 指向 b 指针，b 变量的地址
+	*/
+	swap3(&a, &b)
+
+	fmt.Printf("交换后 a 的值 : %d\n", a )
+	fmt.Printf("交换后 b 的值 : %d\n", b )
+ }
+```
+
+
+
+3. 交换两个变量
+
+
+
+```go
+/* 定义交换值函数*/
+func swap3(x *int, y *int) {
+	var temp int
+	temp = *x    /* *is 保持 x 地址上的值 */
+	*x = *y      /* 将 y 值赋给 x */
+	*y = temp    /* 将 temp 值赋给 y */
+}
+```
+
+
+
+## 高阶函数
+
+
+1. 基础使用
+
+
+
+```go
+
+// 1. 高阶函数 函数的参数是 函数
+func useMath(){
+	/* 声明函数变量 */
+	getSquareRoot := func(x float64) float64 {
+		return math.Sqrt(x)
+	}
+	
+	/* 使用函数 */
+	fmt.Println(getSquareRoot(9))
+}
+```
+
+
+
+## 声明函数的类型 和 回调函数
+
+
+```go
+// 声明一个函数类型
+type cb func(int) int
+func useCb()  {
+	testCallBack(1, callBack)
+	testCallBack(2, func(x int) int {
+			fmt.Printf("我是回调，x：%d\n", x)
+			return x
+	})
+}
+func testCallBack(x int, f cb){
+	f(x)
+}
+
+func callBack(x int) int {
+	fmt.Printf("我是回调，x：%d\n", x)
+	return x
+}
+```
+
+
+
+## what？go中也有闭包？
+
+
+```go
+
+// 2. 闭包 闭包的优越性就是能直接使用函数内部的变量。而不需要声明
+func Closure()  {
+	 /* nextNumber 为一个函数，函数 i 为 0 */
+   nextNumber := getSequence()  
+
+   /* 调用 nextNumber 函数，i 变量自增 1 并返回 */
+   fmt.Println(nextNumber())
+   fmt.Println(nextNumber())
+   fmt.Println(nextNumber())
+   
+   /* 创建新的函数 nextNumber1，并查看结果 */
+   nextNumber1 := getSequence()  
+   fmt.Println(nextNumber1())
+   fmt.Println(nextNumber1())
+}
+func getSequence() func() int {
+	i := 0
+	return func() int  {
+		i +=1
+		return i
+	}
+}
+```
+
+
+
+## 方法是什么？也是函数吗？
+
+
+> 所谓的方法 是值非独立存在的函数，是绑定到某个对象或者某个实例上的函数
+>
+
+
+
+```go
+/* 3. 方法 方法就是一个包含了接受者的函数
+func (variable_name variable_data_type) function_name() [return_type]{
+   /* 函数体	
+*/
+type Circle struct {
+	raidus float64
+}
+
+func mianArea()  {
+	var c1 Circle
+	c1.raidus = 10.00
+	fmt.Println("are is ", c1.getArea() )
+}
+
+func (c *Circle) getArea() float64  {
+	// 计算的方案
+	return 3.14 * c.raidus * c.raidus
+}
+
+// 这种写法，内部的Circle会重新复制这个Cricle实例，造成内纯浪费，我们一般不用这个字写法
+// func (c Circle) getArea() float64  {
+// 	// 计算的方案
+// 	return 3.14 * c.raidus * c.raidus
+// }
+```
+
+
+
+## 基础的面向对象
+
+
+```go
+/*
+Go 是面向对面吗？答案是：是也不是
+C++ 等语言中，实现类的方法做法都是编译器隐式的给函数加一个 this 指针，而在 Go 
+里，这个 this 指针需要明确的申明出来，其实和其它 OO 语言并没有很大的区别。
+*/
+func (c *Circle) getArea() float64 {
+  //c.radius 即为 Circle 类型对象中的属性 Cirecle就是一个对象 radius是属性 getArea是方法
+  return 3.14 * c.radius * c.radius
+}
+
+// 更多的面向对象，我们后续会深入学习
+```
+
+
+
+## 剩余参数? 在go中叫做 可变长参数 是什么鬼？
+
+
+```go
+// 3. 我们来看看一个可变长度参数，就像js中的剩余次数 
+func sum(ops ...int) int {
+	s:= 0
+	for _, op:= range ops {
+		s+= op
+	}
+	return s
+}
+```
+
+
+
+## 高阶函数于defer使用的案例
+
+
+```go
+// 有点promise的东西  用处就是清理资源或者释放锁  defer
+// 直接手动跑错 panic("")  
+func timeSpant( inner func(op int) int )( func(opt int) int ){
+  return func(n int)int {
+	  start:= time.Now()
+	  ret:= inner(n)
+	  fmt.Println("time =====>",time.Since(start).Seconds() )
+	  return ret 
+  }
+}
+
+func slowFn( op int ) int {
+	time.Sleep(time.Second *1) // 进程休眠
+	return op
+}
+
+func T2() {
+	timeSpant(slowFn)(100) // 返回一个加工好的新函数
+}
+
+
+// defer函数
+func defaer()  {
+	defer func() {
+		fmt.Println("lear res")
+	}()
+	fmt.Println("start")
+
+	// panic('error6') // defalut依然 被执行
+}
+```
+

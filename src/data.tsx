@@ -780,7 +780,29 @@ export const DATA = {
             },
           ],
         }
-      }
+      },
+      {
+        slug: "Go", // 固定为 Go
+        metadata: {
+          title: "Go 语言从入门到微服务实战",
+          summary: "全面覆盖 Go 语言核心语法、并发编程、Web 框架开发。深入解析 HTTP/RPC 应用构建、常用中间件原理，以及基于 IAM 系统的企业级项目开发全流程。",
+          tags: ["Go", "Backend", "Microservices", "Project"],
+          // 暖色调 (琥珀色背景 fffbeb，深琥珀色文字 b45309)
+          image: "https://placehold.co/322x172/fffbeb/b45309.png?text=Go",
+          status: "Mar. 2024 - Mar. 2025",
+          href: "/books/Go/一个完整的程序",
+          authors: "Joney",
+          video: "",
+          links: [
+            {
+              type: "Github",
+              href: "https://github.com/BM-laoli",
+              icon: <Icons.github className="size-3" />,
+            },
+          ],
+        }
+      },
+      
     ],
     // 配置项 Books 目录
     booksContent: {
@@ -1176,6 +1198,208 @@ export const DATA = {
         {
           title: "React源代码解析",
           slug: "React/React源代码解析"
+        }
+      ],
+      Go: [
+        {
+          title: "Go语言基础知识教学",
+          slug: "Go/Go语言基础知识教学",
+          children: [
+            {
+              title: "一个完整的程序",
+              slug: "Go/一个完整的程序"
+            },
+            {
+              title: "包问题",
+              slug: "Go/包问题"
+            },
+            {
+              title: "数据类型",
+              slug: "Go/数据类型"
+            },
+            {
+              title: "运算符",
+              slug: "Go/运算符"
+            },
+            {
+              title: "条件运算符",
+              slug: "Go/条件运算符"
+            },
+            {
+              title: "循环运算符",
+              slug: "Go/循环运算符"
+            },
+            {
+              title: "函数",
+              slug: "Go/函数"
+            },
+            {
+              title: "作用域",
+              slug: "Go/作用域"
+            },
+            {
+              title: "Array",
+              slug: "Go/Array"
+            },
+            {
+              title: "Pointer （指针）",
+              slug: "Go/Pointer （指针）"
+            },
+            {
+              title: "struct",
+              slug: "Go/struct"
+            },
+            {
+              title: "string深入",
+              slug: "Go/string深入"
+            },
+            {
+              title: "slice切片",
+              slug: "Go/slice切片"
+            },
+            {
+              title: "面向对象",
+              slug: "Go/面向对象"
+            },
+            {
+              title: "range",
+              slug: "Go/range"
+            },
+            {
+              title: "Map",
+              slug: "Go/Map"
+            },
+            {
+              title: "Go语言中的递归",
+              slug: "Go/Go语言中的递归"
+            },
+            {
+              title: "类型转化",
+              slug: "Go/类型转化"
+            },
+            {
+              title: "接口",
+              slug: "Go/接口"
+            },
+            {
+              title: "异常处理",
+              slug: "Go/异常处理"
+            }
+          ]
+        },
+        {
+          title: "《GO入门系列-煎鱼》",
+          slug: "Go/《GO入门系列-煎鱼》",
+          children: [
+            {
+              title: "阶段一、HTTP应用 骨架构建",
+              slug: "Go/阶段一、HTTP应用 骨架构建"
+            },
+            {
+              title: "阶段二、HTTP应用 - 完善",
+              slug: "Go/阶段二、HTTP应用 - 完善"
+            },
+            {
+              title: "阶段三、PRC应用",
+              slug: "Go/阶段三、PRC应用"
+            },
+            {
+              title: "趟过的坑",
+              slug: "Go/趟过的坑"
+            }
+          ]
+        },
+        {
+          title: "《Go语言从入门到实战 - 蔡超》",
+          slug: "Go/《Go语言从入门到实战 - 蔡超》",
+          children: [
+            {
+              title: "基础内容",
+              slug: "Go/基础内容"
+            },
+            {
+              title: "关于函数Function",
+              slug: "Go/关于函数Function"
+            },
+            {
+              title: "Golang中的包依赖",
+              slug: "Go/Golang中的包依赖"
+            },
+            {
+              title: "关于协程和并发（核心）",
+              slug: "Go/关于协程和并发（核心）"
+            },
+            {
+              title: "单元测试",
+              slug: "Go/单元测试"
+            },
+            {
+              title: "反射和架构",
+              slug: "Go/反射和架构"
+            },
+            {
+              title: "Http服务和性能测试",
+              slug: "Go/Http服务和性能测试"
+            },
+            {
+              title: "面向恢复的设计模式",
+              slug: "Go/面向恢复的设计模式"
+            }
+          ]
+        },
+        {
+          title: "《Go语言核心36讲》",
+          slug: "Go/《Go语言核心36讲》"
+        },
+        {
+          title: "Go语言开发框架-Kotars",
+          slug: "Go/Go语言开发框架-Kotars"
+        },
+        {
+          title: "Go语言项目开发实战 - IAM系统 - （极客时间）",
+          slug: "Go/Go语言项目开发实战 - IAM系统 - （极客时间）",
+          children: [
+            {
+              title: "从0开始构建一个企业级的Go应用",
+              slug: "Go/从0开始构建一个企业级的Go应用"
+            },
+            {
+              title: "IAM系统概述：我们为什么要实现这样的一个Go项目，及其架构",
+              slug: "Go/IAM系统概述：我们为什么要实现这样的一个Go项目，及其架构"
+            },
+            {
+              title: "环境准备：配置和安装基础的Go开发环境",
+              slug: "Go/环境准备：配置和安装基础的Go开发环境"
+            },
+            {
+              title: "快速的部署IAM系统",
+              slug: "Go/快速的部署IAM系统"
+            },
+            {
+              title: "设计规范（上）：项目开发杂论无章，如何规范？",
+              slug: "Go/设计规范（上）：项目开发杂论无章，如何规范？"
+            },
+            {
+              title: "设计规范（下）：commit讯息如何规范？",
+              slug: "Go/设计规范（下）：commit讯息如何规范？"
+            },
+            {
+              title: "目录结构设计：如何组织一个可维护的，可扩展的代码目录",
+              slug: "Go/目录结构设计：如何组织一个可维护的，可扩展的代码目录"
+            },
+            {
+              title: "工作流设计：如何设计合理的多人开发模式",
+              slug: "Go/工作流设计：如何设计合理的多人开发模式"
+            },
+            {
+              title: "研发流程设计（上）：如何设计Go项目的开发流程",
+              slug: "Go/研发流程设计（上）：如何设计Go项目的开发流程"
+            },
+            {
+              title: "研发流程设计（下）：如何管理应用的生命周期？",
+              slug: "Go/研发流程设计（下）：如何管理应用的生命周期？"
+            }
+          ]
         }
       ]
       //更多

@@ -1,0 +1,125 @@
+---
+title: "Go 接口原理与实现详解"
+date: "2024-12-19"
+summary: "深入讲解 Go 语言接口的定义、实现机制、非入侵性特性，以及接口变量的类型与数据结构，结合实际代码示例进行演示。"
+status: "completed"
+tech: ["Go", "Interface", "Protocol"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Go"
+---
+
+# 章节概述如下
+
+
+> 敢于接口，接口是对象 键通讯的协议
+>
+
+
+
+## 基础的使用
+
+
+```go
+// 接口试是类和对象实例之间进行交互的一种协议，我们定义接口就是在定义这些协议 接口依赖
+// 它把所有的具有共性的方法定义在一起，任何其他类型只要实现了这些方法就是实现了这个接口。
+
+/*
+以下 是最简单的语法
+定义接口
+type interface_name interface {
+	method_name1 [return_type]
+	method_name2 [return_type]
+	method_name3 [return_type]
+	...
+	method_namen [return_type]
+}
+
+定义结构体
+type struct_name struct {
+	variables
+}
+
+在构造体 startct_name下 追加一个方法 实现接口
+func (struct_name_variable struct_name) method_name1() [return_type] {
+	方法实现
+}
+...
+func (struct_name_variable struct_name) method_namen() [return_type] {
+	方法实现
+}
+*/
+
+// 我们定义了一个接口Phone，接口里面有一个方法call()。
+// 然后我们在main函数里面定义了一个Phone类型变量，并分别为之赋值为N
+// okiaPhone和IPhone。然后调用call()方法，输出结果如下：
+
+// 接口
+type Phone interface {
+	call()
+}
+// 构造体
+type NokiaPhone struct {
+}
+
+type IPhone struct {
+}
+
+func (nokiaPhone NokiaPhone) call() {
+	fmt.Println("I am Nokia, I can call you!")
+}
+func (iPhone IPhone) call() {   
+	fmt.Println("I am iPhone, I can call you!")
+}
+
+
+func main()  {
+	// 开始使用
+  var phone Phone
+
+    phone = new(NokiaPhone)
+    phone.call()
+
+    phone = new(IPhone)
+    phone.call()
+
+}
+```
+
+
+
+## 蔡超 老师 极客时间
+
+
+```go
+
+// 定义实现和接口方法的东西 蔡老师
+// 1.接口是非入侵性的，实现不依赖于接口定义
+// 定义接口
+type Programer interface {
+	WriteHelloWord() Code
+}
+type GoProgram static {}
+// 2. 所有的接口的定义可以包含在接口使用者包中
+func (p *Programer) WriteHelloWord() Code {
+	return "11111"
+}
+
+func T1(
+ var p Programer
+ p = new(GoProgram)
+ fmt.Println(p.WriteHelloWord() ) // 因为实现了 这个接口所以能调用接口里的方法
+)
+
+// 接口变量 分为数据和类型 Coder是接口 GoProgram是Coder的实现 prog是类型是接口的变量 这个变量分两个部分
+/*
+var prog Coder = &GoProgram{}
+类型：type GoProgrmaer statuct {}
+数据：实现了接口的实例
+*/
+
+
+// 自定义类型LaoliAdd就是一个类型
+type LaoliAdd func(op int) int
+```
+

@@ -1,0 +1,3698 @@
+---
+title: "Go Gin框架实战：从入门到企业级应用"
+date: "2024-06-18"
+summary: "深入讲解Go语言Gin框架的核心用法，包括路由配置、ORM操作、JWT认证、日志记录和优雅重启等企业级开发必备技能。"
+status: "completed"
+tech: ["Go", "Gin", "GORM", "JWT"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Go"
+---
+
+> 如图所示，本阶段  将会着重说明，1 部分的内容，和一些注意事项以及扩展, gin 和 node中的express 框架非常的像！如果你能够使用express的一些知识来理解它，我想这是最快的上手方式
+>
+
+
+
+本项目地址：
+
+[github](https://github.com/BM-laoli/go-gin-example/tree/base)
+
+
+
+这个阶段的内容包含了，煎鱼 大佬的 go 入门系列的 连载1-6，基础 项目 到 日志记录jwt验证
+
+
+
+请牢记 go的pack 站点，他就像 npm站一样重要
+
+[Go Packages](https://pkg.go.dev/)
+
+#  开始
+## 安装的时候需要注意的事情
+> 实际上这里没有什么非常特别的东西需要注意，主要是Path的问题
+>
+
+<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">添加环境变量 GOROOT 和将 GOBIN 添加到 PATH 中. 这点和 nodejs在安装的时候很类似，如果你不指定 ，找到node 这个命令，但是现在最想的版本 已经不需要这样了；与jdk的安装也类似。（上述仅针对linux 系统而言）</font>
+
+```shell
+# /etc/profile
+export GOROOT=/usr/local/go 
+export PATH=$PATH:$GOROOT/bin
+
+```
+
+MacOs 就直接brew 就完了
+
+```shell
+ brew install go
+
+# 升级
+ brew upgrade go
+```
+
+## 源码结构
+> 当你安装完之后，我们去它的安装目录，看看它的源码结构里都有什么东西
+>
+
+```shell
+go
+├── api # 用于存放依照 Go 版本顺序的 API 增量列表文件。这里所说的 API 包含公开的变量、常量、函数等。
+# 这些 API 增量列表文件用于 Go 语言 API 检查
+├── bin # 用于存放主要的标准命令文件（可执行文件），包含go、godoc、gofmt
+├── blog # 用于存放官方博客中的所有文章
+├── doc # 用于存放标准库的 HTML 格式的程序文档。我们可以通过godoc命令启动一个 Web 程序展示这些文档
+├── lib # 用于存放一些特殊的库文件
+├── misc # 用于存放一些辅助类的说明和工具
+├── pkg # 用于存放安装Go标准库后的所有归档文件（以.a结尾的文件）。注意，你会发现其中有名称为linux_amd64
+# 的文件夹，我们称为平台相关目录。这类文件夹的名称由对应的操作系统和计算架构的名称组合而
+# 成。通过go install命令，Go程序会被编译成平台相关的归档文件存放到其中
+├── src # 用于存放 Go自身、Go 标准工具以及标准库的所有源码文件
+├── test
+└── ... # 存放用来测试和验证Go本身的所有相关文件
+
+# 在我们的可执行cli的bin 目录下它的结构有两个文件
+_ go # 二进制可执行文件
+_ gifmt # 格式化工具
+```
+
+## Go  <font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">Modules</font>
+> 在go11+ 开启go Modules 之后，项目可以放在任何文件夹的位置中，这东西就类似我们的npm 
+>
+
+```shell
+# 下面 完整的表述了 了创建一个 工程 的所需要的初始化命令
+$ mkdir go-gin-example && cd go-gin-example
+
+$ go env -w GO111MODULE=on # 打开 Go modules 开关（目前在 Go1.13 中默认值为 auto）。
+
+$ go env -w GOPROXY=https://goproxy.cn,direct 
+# 置 GOPROXY 代理，这里主要涉及到两个值，第一个是 https://goproxy.cn，它是由七牛云背 
+# 书的一个强大稳定的 Go 模块代理，可以有效地解决你的外网问题；第二个是 direct，它是一个特殊
+# 的 fallback 选项，它的作用是用于指示 Go 在拉取模块时遇到错误会回源到模块版本的源地址去抓
+# 取（比如 GitHub 等）。
+
+$ go mod init github.com/EDDYCJY/go-gin-example # 初始化
+# 主要 github.com/EDDYCJY/go-gin-example 填写的是模块引入路径，你可以根据自己的情况修改路径。
+go: creating new go.mod: module github.com/EDDYCJY/go-gin-example
+
+$ ls
+go.mod
+```
+
+生成的 go mod 是什么，go sum 又是什么，对比npm 的包管理，你可以理解 package.json , sum 就是一个yarn,lock 类似的存在, 对于 sum我们不做过多的解读，下面我们来看看 mod中都是什么，需要什么
+
+```shell
+module  语句指定包的名字（路径）
+require 语句指定的依赖项模块
+replace 语句可以替换依赖项模块
+exclude 语句可以忽略依赖项模块
+
+# 一个类似的例子如下 
+module github.com/EDDYCJY/go-gin-example // 当前mod 名字
+
+go 1.12 // 依赖go的版本
+
+// 工程需要指定的依赖
+require (
+	github.com/labstack/echo v3.3.10+incompatible // indirect 这个是不直接引用，而是传递下去
+	github.com/labstack/gommon v0.2.8 // 这个是直接引用
+	github.com/mattn/go-colorable v0.1.1 // indirect
+	github.com/mattn/go-isatty v0.0.7 // indirect
+	github.com/valyala/fasttemplate v1.0.0 // indirect
+	golang.org/x/crypto v0.0.0-20190313024323-a1f597ede03a // indirect
+)
+```
+
+那么 go get 又是什么呢？还是一样可以理解它就是go中的npm/yarn . 常用命令有下面几个
+
+
+
+```shell
+go get [?xxx]
+# 用 go get 拉取新的依赖
+# 拉取最新的版本(优先择取 tag)：go get golang.org/x/text@latest
+# 拉取 master 分支的最新 commit：go get golang.org/x/text@master
+# 拉取 tag 为 v0.3.2 的 commit：go get golang.org/x/text@v0.3.2
+# 拉取 hash 为 342b231 的 commit，最终会被转换为 v0.3.2：go get golang.org/x/text@342b2e
+
+go get -u # 更新现有的依赖
+go mod download # 下载 go.mod 文件中指明的所有依赖
+go mod tidy # 整理现有的依赖 也可以自动的处理 代码中的 indirect/ 非indirect 报错
+go mod graph # 查看现有的依赖结构
+go mod init # 生成 go.mod 文件 (Go 1.13 中唯一一个可以生成 go.mod 文件的子命令)
+go mod edit # 编辑 go.mod 文件
+go mod vendor # 导出现有的所有依赖 (事实上 Go modules 正在淡化 Vendor 的概念)
+go mod verify # 校验一个模块是否被篡改过
+
+# 注意⚠️ 这个有一个issues
+# https://github.com/golang/go/issues/52179  也许你不应该使用go get -u 而是使用
+
+$ go get ./...
+
+```
+
+## 关于Gin
+> 这个是个 开发框架，你可以类比express
+>
+
+```shell
+# 注意哈，我们继续沿用上面的 工程 
+# install
+go get -u github.com/gin-gonic/gin
+
+```
+
+
+
+下面是一个非常简单的使用 
+
+```go
+package main
+
+import "github.com/gin-gonic/gin"
+
+func main() {
+  r := gin.Default()
+  r.GET("/ping", func(c *gin.Context) {
+    c.JSON(200, gin.H{
+      "message": "pong",
+    })
+  })
+  r.Run() // listen and serve on 0.0.0.0:8080
+}
+
+// 返回json格式 {message ：pong }
+```
+
+## 关于测试
+> 测试的话 还是非常的简单和高效的, 我们可以直接用go就提供好的单元测试
+>
+> 一个非常简明的教程 [Go Test 单元测试简明教程 | 快速入门 | 极客兔兔](https://geektutu.com/post/quick-go-test.html#1-%E5%A6%82%E4%BD%95%E5%86%99%E5%A5%BD%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95)
+>
+
+ 
+
+## 准备几张表
+```sql
+-- 你需要用到的
+
+```
+
+# 一个最基础的项目骨架
+本小节内容完成后，你将会得到下面的目录结构
+
+```shell
+go-gin-example/
+├── conf
+│   └── app.ini
+├── main.go
+├── middleware
+├── models
+│   └── models.go
+├── pkg
+│   ├── e
+│   │   ├── code.go
+│   │   └── msg.go
+│   ├── setting
+│   │   └── setting.go
+│   └── util
+│       └── pagination.go
+├── routers
+│   └── router.go
+├── runtime
+```
+
+## go modules replace
+> 由于我们没有推包，上去，东西都是本地的，所以我们需要 repaace 把远程地址替换成本地的地址
+>
+
+```shell
+replace (
+		github.com/EDDYCJY/go-gin-example/pkg/setting => ~/go-application/go-gin-example/pkg/setting
+		github.com/EDDYCJY/go-gin-example/conf    	  => ~/go-application/go-gin-example/pkg/conf
+		github.com/EDDYCJY/go-gin-example/middleware  => ~/go-application/go-gin-example/middleware
+		github.com/EDDYCJY/go-gin-example/models 	  => ~/go-application/go-gin-example/models
+		github.com/EDDYCJY/go-gin-example/routers 	  => ~/go-application/go-gin-example/routers
+)
+
+# 基本上 都是每一个 都需要自己去加一遍 ，截止2022/12/23 日这个不用自己写了 会自动处理
+# 如果有问题请看 go 18 这种写法 replace github.com/golang-queue/queue => ../../
+```
+
+
+
+## 程序内配置（<font style="color:rgb(80, 161, 79);background-color:rgb(250, 250, 250);">gopkg.in</font>）
+> 我们使用一个流行的工具🔧包，来配置程序内的配置config以及管理它 [go-ini/ini: A fantastic package for INI manipulations in Go](https://ini.unknwon.io/)
+>
+
+我们先安装，
+
+```shell
+go get -u github.com/go-ini/ini
+```
+
+然后写个配置.config.ini
+
+```properties
+#debug or release
+RUN_MODE = debug
+
+[app]
+PAGE_SIZE = 10
+JWT_SECRET = 23347$040412
+
+[server]
+HTTP_PORT = 8000
+READ_TIMEOUT = 60
+WRITE_TIMEOUT = 60
+
+[database]
+TYPE = mysql
+USER = 数据库账号
+PASSWORD = 数据库密码
+#127.0.0.1:3306
+HOST = 数据库IP:数据库端口号
+NAME = blog
+TABLE_PREFIX = blog_
+```
+
+然后写个读取的方法 setting.go
+
+```go
+package setting
+
+import (
+	"log"
+	"time"
+
+	"github.com/go-ini/ini"
+)
+
+var (
+	Cfg *ini.File
+
+	RunMode string
+
+	HTTPPort int
+	ReadTimeout time.Duration
+	WriteTimeout time.Duration
+
+	PageSize int
+	JwtSecret string
+)
+
+func init() {
+	var err error
+	Cfg, err = ini.Load("conf/app.ini")
+	if err != nil {
+		log.Fatalf("Fail to parse 'conf/app.ini': %v", err)
+	}
+
+	LoadBase()
+	LoadServer()
+	LoadApp()
+}
+
+func LoadBase() {
+	RunMode = Cfg.Section("").Key("RUN_MODE").MustString("debug")
+}
+
+func LoadServer() {
+	sec, err := Cfg.GetSection("server")
+	if err != nil {
+		log.Fatalf("Fail to get section 'server': %v", err)
+	}
+
+	HTTPPort = sec.Key("HTTP_PORT").MustInt(8000)
+	ReadTimeout = time.Duration(sec.Key("READ_TIMEOUT").MustInt(60)) * time.Second
+	WriteTimeout =  time.Duration(sec.Key("WRITE_TIMEOUT").MustInt(60)) * time.Second
+}
+
+func LoadApp() {
+	sec, err := Cfg.GetSection("app")
+	if err != nil {
+		log.Fatalf("Fail to get section 'app': %v", err)
+	}
+
+	JwtSecret = sec.Key("JWT_SECRET").MustString("!@)*#)!@U#@*!@!)")
+	PageSize = sec.Key("PAGE_SIZE").MustInt(10)
+}
+```
+
+## 一些工具包（pkg）
+> 这里我们主要手动的声明 和书写http返回，和error message 返回格式m, 用全局变量去管理它们，要比自己手写单独的写 好得多得多
+>
+
+1. msg 返回error 统一管理
+
+```go
+// code.go
+package e
+
+const (
+	SUCCESS = 200
+	ERROR = 500
+	INVALID_PARAMS = 400
+
+	ERROR_EXIST_TAG = 10001
+	ERROR_NOT_EXIST_TAG = 10002
+	ERROR_NOT_EXIST_ARTICLE = 10003
+
+	ERROR_AUTH_CHECK_TOKEN_FAIL = 20001
+	ERROR_AUTH_CHECK_TOKEN_TIMEOUT = 20002
+	ERROR_AUTH_TOKEN = 20003
+	ERROR_AUTH = 20004
+)
+
+// msg.go
+package e
+
+var MsgFlags = map[int]string {
+	SUCCESS : "ok",
+	ERROR : "fail",
+	INVALID_PARAMS : "请求参数错误",
+	ERROR_EXIST_TAG : "已存在该标签名称",
+	ERROR_NOT_EXIST_TAG : "该标签不存在",
+	ERROR_NOT_EXIST_ARTICLE : "该文章不存在",
+	ERROR_AUTH_CHECK_TOKEN_FAIL : "Token鉴权失败",
+	ERROR_AUTH_CHECK_TOKEN_TIMEOUT : "Token已超时",
+	ERROR_AUTH_TOKEN : "Token生成失败",
+	ERROR_AUTH : "Token错误",
+}
+
+func GetMsg(code int) string {
+	msg, ok := MsgFlags[code]
+	if ok {
+		return msg
+	}
+
+	return MsgFlags[ERROR]
+}
+```
+
+
+
+2. 写一个分页的通用逻辑（使用到了 ）go get -u github.com/unknwon/com
+
+```go
+package util
+
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/unknwon/com"
+
+	"github.com/EDDYCJY/go-gin-example/pkg/setting"
+)
+
+func GetPage(c *gin.Context) int {
+	result := 0
+	page, _ := com.StrTo(c.Query("page")).Int()
+    if page > 0 {
+        result = (page - 1) * setting.PageSize
+    }
+
+    return result
+}
+```
+
+## models 的编写 
+> 这里主要是介绍了db mysql 的链接
+>
+
+1. 依赖安装
+
+```shell
+go get -u github.com/jinzhu/gorm
+go get -u github.com/go-sql-driver/mysql
+```
+
+2. 代码编写	
+
+```shell
+package models
+
+import (
+	"log"
+	"fmt"
+
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
+
+	"github.com/EDDYCJY/go-gin-example/pkg/setting"
+)
+
+var db *gorm.DB
+
+type Model struct {
+	ID int `gorm:"primary_key" json:"id"`
+	CreatedOn int `json:"created_on"`
+	ModifiedOn int `json:"modified_on"`
+}
+
+func init() {
+	var (
+		err error
+		dbType, dbName, user, password, host, tablePrefix string
+	)
+
+	sec, err := setting.Cfg.GetSection("database")
+	if err != nil {
+		log.Fatal(2, "Fail to get section 'database': %v", err)
+	}
+
+	dbType = sec.Key("TYPE").String()
+	dbName = sec.Key("NAME").String()
+	user = sec.Key("USER").String()
+	password = sec.Key("PASSWORD").String()
+	host = sec.Key("HOST").String()
+	tablePrefix = sec.Key("TABLE_PREFIX").String()
+
+	db, err = gorm.Open(dbType, fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local",
+		user,
+		password,
+		host,
+		dbName))
+
+	if err != nil {
+		log.Println(err)
+	}
+
+	gorm.DefaultTableNameHandler = func (db *gorm.DB, defaultTableName string) string  {
+	    return tablePrefix + defaultTableName;
+	}
+
+	db.SingularTable(true)
+	db.LogMode(true)
+	db.DB().SetMaxIdleConns(10)
+	db.DB().SetMaxOpenConns(100)
+}
+
+func CloseDB() {
+	defer db.Close()
+}
+```
+
+## Gin的路由
+> Gin的路由比较简单 这里，一笔带过
+>
+
+```go
+package routers
+
+import (
+    "github.com/gin-gonic/gin"
+
+    "github.com/EDDYCJY/go-gin-example/pkg/setting"
+)
+
+func InitRouter() *gin.Engine {
+    r := gin.New()
+
+    r.Use(gin.Logger())
+
+    r.Use(gin.Recovery())
+
+    gin.SetMode(setting.RunMode)
+
+    r.GET("/test", func(c *gin.Context) {
+        c.JSON(200, gin.H{
+            "message": "test",
+        })
+    })
+
+    return r
+}
+```
+
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+
+	"github.com/EDDYCJY/go-gin-example/routers"
+	"github.com/EDDYCJY/go-gin-example/pkg/setting"
+)
+
+func main() {
+	router := routers.InitRouter()
+
+	s := &http.Server{
+		Addr:           fmt.Sprintf(":%d", setting.HTTPPort),
+		Handler:        router,
+		ReadTimeout:    setting.ReadTimeout,
+		WriteTimeout:   setting.WriteTimeout,
+		MaxHeaderBytes: 1 << 20,
+	}
+
+	s.ListenAndServe()
+}
+```
+
+# 编写Tag （最简单的CRUD例子）
+> 本小节 主要是 对如何编写Tag API的CRUD 做了详细的说明。对整个过程中使用到的工具包🔧 也做了相关的说明 
+>
+
+## 路由
+> 我们主要来完成一个路由，具体的model （sql）操作逻辑我们先用fnSql 来表示, 我们先关注路由的构建
+>
+
+
+
+首先我们来看整个目录的结构
+
+```markdown
+...
+├── routers
+│   ├── api
+│   │   └── v1
+│   │       └── tag.go
+│   └── router.go
+└── main.go
+...
+```
+
+```go
+//  我们冲从底层开始先上构建，(这种思维方式是一个优秀程序员应该有的)
+
+//tag.go
+package v1
+
+import (
+    "github.com/gin-gonic/gin"
+)
+
+//获取多个文章标签
+func GetTags(c *gin.Context) {
+    
+}
+
+//新增文章标签
+func AddTag(c *gin.Context) {
+    
+}
+
+//修改文章标签
+func EditTag(c *gin.Context) {
+    
+}
+
+//删除文章标签
+func DeleteTag(c *gin.Context) {
+    
+}
+
+// router.go
+package routers
+
+import (
+    "github.com/gin-gonic/gin"
+
+    "gin-blog/routers/api/v1"
+    "gin-blog/pkg/setting"
+)
+
+func InitRouter() *gin.Engine {
+    r := gin.New()
+
+    r.Use(gin.Logger())
+
+    r.Use(gin.Recovery())
+
+    gin.SetMode(setting.RunMode)
+
+    apiv1 := r.Group("/api/v1")
+    {
+        //获取标签列表
+        apiv1.GET("/tags", v1.GetTags)
+        //新建标签
+        apiv1.POST("/tags", v1.AddTag)
+        //更新指定标签
+        apiv1.PUT("/tags/:id", v1.EditTag)
+        //删除指定标签
+        apiv1.DELETE("/tags/:id", v1.DeleteTag)
+    }
+
+    return r
+}
+
+// main.go
+
+
+
+```
+
+## SQL操作model 逻辑
+> 这里是用来做 model的地方，也就是所谓的数据模型 定义了一些sql执行fun
+>
+
+
+
+补充一个知识点，orm上的hooks，它长这样
+
+<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">gorm 中的cb 可以将回调方法定义为模型结构的指针，在创建、更新、查询、删除时将被调用，如果任何回调返回错误，gorm 将停止未来操作并回滚所有更改。</font>
+
+<font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">gorm</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">所支持的cb方法：</font>
+
++ <font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">创建：BeforeSave、BeforeCreate、AfterCreate、AfterSave</font>
++ <font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">更新：BeforeSave、BeforeUpdate、AfterUpdate、AfterSave</font>
++ <font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">删除：BeforeDelete、AfterDelete</font>
++ <font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">查询：AfterFind</font>
+
+
+
+```go
+package models
+
+
+type Tag struct {
+    Model
+
+    Name string `json:"name"`
+    CreatedBy string `json:"created_by"`
+    ModifiedBy string `json:"modified_by"`
+    State int `json:"state"`
+}
+
+// 这个是orm 在直线sql的时候的几个hook
+func (tag *Tag) BeforeCreate(scope *gorm.Scope) error {
+    scope.SetColumn("CreatedOn", time.Now().Unix())
+
+    return nil
+}
+
+func (tag *Tag) BeforeUpdate(scope *gorm.Scope) error {
+    scope.SetColumn("ModifiedOn", time.Now().Unix())
+
+    return nil
+}
+
+
+// 由于我们声明了这个返回的tags，所以你不需要 显示的return
+func GetTags(pageNum int, pageSize int, maps interface {}) (tags []Tag) {
+    db.Where(maps).Offset(pageNum).Limit(pageSize).Find(&tags)
+
+    return
+}
+
+func GetTagTotal(maps interface {}) (count int){
+    db.Model(&Tag{}).Where(maps).Count(&count)
+
+    return
+}
+
+func ExistTagByName(name string) bool {
+    var tag Tag
+    db.Select("id").Where("name = ?", name).First(&tag)
+    if tag.ID > 0 {
+        return true
+    }
+
+    return false
+}
+
+func AddTag(name string, state int, createdBy string) bool{
+    db.Create(&Tag {
+        Name : name,
+        State : state,
+        CreatedBy : createdBy,
+    })
+
+    return true
+}
+
+func ExistTagByID(id int) bool {
+    var tag Tag
+    db.Select("id").Where("id = ?", id).First(&tag)
+    if tag.ID > 0 {
+        return true
+    }
+
+    return false
+}
+
+func DeleteTag(id int) bool {
+    db.Where("id = ?", id).Delete(&Tag{})
+    return true
+}
+
+func EditTag(id int, data interface {}) bool {
+    db.Model(&Tag{}).Where("id = ?", id).Updates(data)
+    return true
+}
+```
+
+1. <font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">我们创建了一个</font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">Tag struct{}</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">，用于</font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">Gorm</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">的使用。并给予了附属属性</font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">json</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">，这样子在</font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">c.JSON</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">的时候就会自动转换格式，非常的便利</font>
+2. <font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">有人会疑惑</font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">db</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">是哪里来的；因为在同个</font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">models</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">包下，因此</font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">db *gorm.DB</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">是可以直接使用的</font>
+
+## validation 验证接口字段（+完成API）
+> 我们这里将会完善原来的router的所有的逻辑
+>
+
+在正式写代码前我们说一下 Gin后去参数和 validata验证器的细节
+
+```go
+// 关于gin如何取 参数我们来看下面的几种情形
+// 1. query 参数 （不管是get/post/put/
+r.POST("/test", func(ctx *gin.Context) {
+
+    id := ctx.Query("id")
+    page := ctx.DefaultQuery("page", "0")
+
+    fmt.Printf("id: %s; page: %s; ", id, page)
+
+    ctx.JSON(http.StatusOK, gin.H{
+        "code": 200,
+        "msg":  "success",
+        "data": make(map[string]string),
+    })
+})
+
+// 2. params 参数
+r.POST("/test/:ids/my/:is", func(ctx *gin.Context) {
+
+    ids := ctx.Param("ids")
+    is := ctx.Param("is")
+    // 通过这个方法可以获取到params的值 ，并且其它值也依然能够获取到
+
+    id := ctx.Query("id")
+    page := ctx.DefaultQuery("page", "0")
+
+    name := ctx.PostForm("name") // xxxx
+    message := ctx.PostForm("message")
+
+    fmt.Printf("id: %s; page: %s; name: %s; message: %s;  ids : %s; is: %s", id, page, name, message, ids, is)
+
+    ctx.JSON(http.StatusOK, gin.H{
+        "code": 200,
+        "msg":  "success",
+        "data": make(map[string]string),
+    })
+})
+
+// 3. header
+	token := ctx.GetHeader("x-token")
+    fmt.Printf("this is header x-token: %s \n", token)
+// 这也就能获取这些数据了
+
+// post put 请求等带在body中的参数类型
+// 4. body- json参数
+r.POST("/test/:ids/my/:is", func(ctx *gin.Context) {
+
+    // 解析json 有多种方式，这里只讲一种 通过bindJson来解析json结构体
+    //定义匿名结构体，字段与json字段对应
+    var body struct {
+        Email string `json:"email"`
+        Name  string `json:"name"`
+    }
+    if err := ctx.BindJSON(&body); err != nil {
+        return
+    }
+
+    fmt.Printf("email -> %s \n name -> %s", body.Email, body.Name)
+
+    ctx.JSON(http.StatusOK, gin.H{
+        "code": 200,
+        "msg":  "success",
+        "data": make(map[string]string),
+    })
+})
+
+// 5. body- from-data (通用用于上传文件) 下面是个例子
+r.POST("uploadFIles", func(c *gin.Context) {
+		// 单文件
+		// file, _ := c.FormFile("file")
+		// log.Println(file.Filename)
+
+		// dst := "./" + file.Filename
+		// // 上传文件至指定的完整文件路径
+		// c.SaveUploadedFile(file, dst)
+
+		// 多文件
+		// Multipart form
+		form, _ := c.MultipartForm()
+		files := form.File["upload[]"]
+
+		for _, file := range files {
+			log.Println(file.Filename)
+
+		}
+		c.String(http.StatusOK, fmt.Sprintf("%d files uploaded!", len(files)))
+
+		// c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
+	})
+
+
+
+// 6. body- xxx-wwww-form-urllencoded
+r.POST("/test", func(ctx *gin.Context) {
+
+    id := ctx.Query("id")
+    page := ctx.DefaultQuery("page", "0")
+
+    fmt.Printf("id: %s; page: %s; name: %s; message: %s", id, page, name, message)
+
+    ctx.JSON(http.StatusOK, gin.H{
+        "code": 200,
+        "msg":  "success",
+        "data": make(map[string]string),
+    })
+})
+
+
+```
+
+
+
+关于validation 也比较简单，官方文档 [https://github.com/astaxie/beego/tree/master/validation](https://github.com/astaxie/beego/tree/master/validation), 实际上我们有两种方式 一个对应简单的 sturct的验证，一个是复杂点的 RegExp 验证
+
+
+
+```go
+type User struct {
+	Name string
+	Age int
+}
+
+// 简单的
+u := User{"man", 40}
+	valid := validation.Validation{}
+	valid.Required(u.Name, "name")
+	valid.MaxSize(u.Name, 15, "nameMax")
+	valid.Range(u.Age, 0, 140, "age")
+	if valid.HasErrors() {
+		// validation does not pass
+		// print invalid message
+		for _, err := range valid.Errors {
+			log.Println(err.Key, err.Message)
+		}
+	}
+	// or use like this
+	if v := valid.Max(u.Age, 140, "ageMax"); !v.Ok {
+		log.Println(v.Error.Key, v.Error.Message)
+	}
+
+// 复杂的 实际上好像我们也不需要用到怎么负责的东西
+type user struct {
+	Id   int
+	Name string `valid:"Required;Match(/^(test)?\\w*@;com$/)"`
+	Age  int    `valid:"Required;Range(1, 140)"`
+}
+
+func main() {
+	valid := validation.Validation{}
+	// ignore empty field valid
+	// see CanSkipFuncs
+	// valid := validation.Validation{RequiredFirst:true}
+	u := user{Name: "test", Age: 40}
+	b, err := valid.Valid(u)
+	if err != nil {
+		// handle error
+	}
+	if !b {
+		// validation does not pass
+		// blabla...
+	}
+}
+
+// 下面也许是一个奇怪的东西，但是你还是有可能会用到它
+type user struct {
+	Id   int
+	Name string `valid:"Required;IsMe"`
+	Age  int    `valid:"Required;Range(1, 140)"`
+}
+
+func IsMe(v *validation.Validation, obj interface{}, key string) {
+	name, ok:= obj.(string)
+	if !ok {
+		// wrong use case?
+		return
+	}
+
+	if name != "me" {
+		// valid false
+		v.SetError("Name", "is not me!")
+	}
+}
+
+func main() {
+	valid := validation.Validation{}
+	if err := validation.AddCustomFunc("IsMe", IsMe); err != nil {
+		// hadle error
+	}
+	u := user{Name: "test", Age: 40}
+	b, err := valid.Valid(u)
+	if err != nil {
+		// handle error
+	}
+	if !b {
+		// validation does not pass
+		// blabla...
+	}
+}
+```
+
+
+
+好，上述就是一个所有的前置铺垫了 
+
+
+
+```go
+func GetTags(c *gin.Context) {
+    name := c.Query("name")
+
+    maps := make(map[string]interface{})
+    data := make(map[string]interface{})
+
+    if name != "" {
+        maps["name"] = name
+    }
+
+    var state int = -1
+    if arg := c.Query("state"); arg != "" {
+        state = com.StrTo(arg).MustInt() // com是一个非常简单高效的工具🔧
+        maps["state"] = state
+    }
+
+    code := e.SUCCESS
+
+    data["lists"] = models.GetTags(util.GetPage(c), setting.PageSize, maps)
+    data["total"] = models.GetTagTotal(maps)
+
+    c.JSON(http.StatusOK, gin.H{
+        "code" : code,
+        "msg" : e.GetMsg(code),
+        "data" : data,
+    })
+}
+
+func AddTag(c *gin.Context) {
+    name := c.Query("name")
+    state := com.StrTo(c.DefaultQuery("state", "0")).MustInt()
+    createdBy := c.Query("created_by")
+
+    valid := validation.Validation{}
+    valid.Required(name, "name").Message("名称不能为空")
+    valid.MaxSize(name, 100, "name").Message("名称最长为100字符")
+    valid.Required(createdBy, "created_by").Message("创建人不能为空")
+    valid.MaxSize(createdBy, 100, "created_by").Message("创建人最长为100字符")
+    valid.Range(state, 0, 1, "state").Message("状态只允许0或1")
+
+    code := e.INVALID_PARAMS
+    if ! valid.HasErrors() {
+        if ! models.ExistTagByName(name) {
+            code = e.SUCCESS
+            models.AddTag(name, state, createdBy)
+        } else {
+            code = e.ERROR_EXIST_TAG
+        }
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "code" : code,
+        "msg" : e.GetMsg(code),
+        "data" : make(map[string]string),
+    })
+}
+
+func EditTag(c *gin.Context) {
+    id := com.StrTo(c.Param("id")).MustInt()
+    name := c.Query("name")
+    modifiedBy := c.Query("modified_by")
+
+    valid := validation.Validation{}
+
+    var state int = -1
+    if arg := c.Query("state"); arg != "" {
+        state = com.StrTo(arg).MustInt()
+        valid.Range(state, 0, 1, "state").Message("状态只允许0或1")
+    }
+
+    valid.Required(id, "id").Message("ID不能为空")
+    valid.Required(modifiedBy, "modified_by").Message("修改人不能为空")
+    valid.MaxSize(modifiedBy, 100, "modified_by").Message("修改人最长为100字符")
+    valid.MaxSize(name, 100, "name").Message("名称最长为100字符")
+
+    code := e.INVALID_PARAMS
+    if ! valid.HasErrors() {
+        code = e.SUCCESS
+        if models.ExistTagByID(id) {
+            data := make(map[string]interface{})
+            data["modified_by"] = modifiedBy
+            if name != "" {
+                data["name"] = name
+            }
+            if state != -1 {
+                data["state"] = state
+            }
+
+            models.EditTag(id, data)
+        } else {
+            code = e.ERROR_NOT_EXIST_TAG
+        }
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "code" : code,
+        "msg" : e.GetMsg(code),
+        "data" : make(map[string]string),
+    })
+}
+
+//删除文章标签
+func DeleteTag(c *gin.Context) {
+    id := com.StrTo(c.Param("id")).MustInt()
+
+    valid := validation.Validation{}
+    valid.Min(id, 1, "id").Message("ID必须大于0")
+
+    code := e.INVALID_PARAMS
+    if ! valid.HasErrors() {
+        code = e.SUCCESS
+        if models.ExistTagByID(id) {
+            models.DeleteTag(id)
+        } else {
+            code = e.ERROR_NOT_EXIST_TAG
+        }
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "code" : code,
+        "msg" : e.GetMsg(code),
+        "data" : make(map[string]string),
+    })
+}
+
+```
+
+ 上述的案例中，我们都是用query 来取值的不管是 何种接口方式，事实上这也不是一个好的主意，我们后续会修改他 
+
+# GORM关联关系
+> 这一小节 主要是 希望大家能对 gorm 有更好的了解；我们以构建一个于tag有**<font style="color:#DF2A3F;">关系</font>**的article 来做我们的实战目标
+>
+
+当你做完之后你的项目结构大概会是这样的
+
+```go
+go-gin-example/
+├── conf
+│   └── app.ini
+├── main.go
+├── middleware
+├── models
+│   ├── article.go
+│   ├── models.go
+│   └── tag.go
+├── pkg
+│   ├── e
+│   │   ├── code.go
+│   │   └── msg.go
+│   ├── setting
+│   │   └── setting.go
+│   └── util
+│       └── pagination.go
+├── routers
+│   ├── api
+│   │   └── v1
+│   │       ├── article.go
+│   │       └── tag.go
+│   └── router.go
+├── runtime
+```
+
+## 路由占位
+```go
+package v1
+
+import (
+    "github.com/gin-gonic/gin"
+)
+
+//获取单个文章
+func GetArticle(c *gin.Context) {
+}
+
+//获取多个文章
+func GetArticles(c *gin.Context) {
+}
+
+//新增文章
+func AddArticle(c *gin.Context) {
+}
+
+//修改文章
+func EditArticle(c *gin.Context) {
+}
+
+//删除文章
+func DeleteArticle(c *gin.Context) {
+}
+```
+
+```go
+func InitRouter() *gin.Engine {
+    ...
+    apiv1 := r.Group("/api/v1")
+    {
+        ...
+        //获取文章列表
+        apiv1.GET("/articles", v1.GetArticles)
+        //获取指定文章
+        apiv1.GET("/articles/:id", v1.GetArticle)
+        //新建文章
+        apiv1.POST("/articles", v1.AddArticle)
+        //更新指定文章
+        apiv1.PUT("/articles/:id", v1.EditArticle)
+        //删除指定文章
+        apiv1.DELETE("/articles/:id", v1.DeleteArticle)
+    }
+
+    return r
+}
+```
+
+## model 逻辑（关联关系Gorm）
+> 有关sql的学习，我只推荐 [MySQL UNIQUE 约束 | 新手教程](https://www.begtut.com/mysql/mysql-unique-constraint.html) 这个站点
+>
+> 首先我们需要了解gorm的文档，这里就不展开详细的说明了；[GORM 指南](https://gorm.io/zh_CN/docs/)
+>
+
+下面我们用一张图来说明 ，多表之间可能存在的关系，这里是有关的 文章   
+[产品经理必须懂的关系模型：一对一，一对多以及多对多关系 | 人人都是产品经理](https://www.woshipm.com/pmd/5176906.html)
+
+[数据库中多表之间的关系_kd凯文的博客-CSDN博客_多表之间的关系](https://blog.csdn.net/duanyaowei/article/details/106180233)
+
+概念有下面：
+
+表表间的关系有三种（一对一 ，一对多/多对一， 多对多），主键 所在的表是主表，主健 建立的在 少的一方，在“多”的一方建立 外健 去链接 “少”的一方的主键
+
+
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1672367651241-4334b8ba-f20f-4f5d-9f2d-9f105d3f035e.png)![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1672367684562-91f509ee-c3b0-4172-926c-66002935cf7d.png)![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1672367755972-c74be166-b497-40f2-83a3-9458a70688c7.png)
+
+对于表的建立 和SQL的查询，有下面的一些例子可供参考（以Mysql为例子）
+
+这里推荐两片文章 ，要知道实际上，我们并没有 什么强硬的规则说多对多一对一，只是看外健的设置规则
+
+[5.MySQL建立表的关系（外键）_放纵fly的博客-CSDN博客_mysql创建表外键](https://blog.csdn.net/m0_52559893/article/details/121187821?spm=1001.2101.3001.6650.2&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-2-121187821-blog-82872984.pc_relevant_landingrelevant&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-2-121187821-blog-82872984.pc_relevant_landingrelevant&utm_relevant_index=3)
+
+[MySQL UNIQUE 约束 | 新手教程](https://www.begtut.com/mysql/mysql-unique-constraint.html)
+
+```sql
+-- 下面👇是一些sql 来构建 和查询多表
+--（我们举个例子来看 User用户表，Order订单表，Orderdetail订单详情，item商品表 ）
+-- 下面的关系如下： 一个用户对应多个订单，一个订单只能对应一个用户；一个订单对应多个订单详情，
+-- 一个订单详情只对应一个订单；一个订单详情只对应一个商品，一个商品可以包括在多个订单详情中；
+-- 所以，用户和商品之间是多对多关系
+
+-- 进入mysql 创建一个库 用来做演示
+CREATE DATABASE GODEMO;
+SHOW DATANASES;
+USE GODEMO;
+
+-- 创建 几张关系表
+-- 注意下面的几个语法说明
+-- KEY `FK_user` (`user_id`) 设置外健名
+
+-- 设置外健约束 
+-- [CONSTRAINT <外键名>] FOREIGN KEY 字段名 [，字段名2，…] REFERENCES [关联到哪里去]
+-- CONSTRAINT `FK_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) 
+
+-- 下面是一些可选项
+-- on update cascade  同步更新
+-- on delete cascade  同步删除
+
+CREATE TABLE `user` (
+  `id` bigint(32) NOT NULL AUTO_INCREMENT COMMENT '客户id(主键)',
+  `username` varchar(32) NOT NULL COMMENT '客户名称',
+  `birthday` date DEFAULT NULL COMMENT '客户生日',
+  `sex` char(1) DEFAULT NULL COMMENT '客户性别',
+  `address` varchar(256) DEFAULT NULL COMMENT '客户地址',
+  PRIMARY KEY (`id`)
+  -- ON UPDATE CASCADE 我这里就不加了
+  -- ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8;
+
+CREATE TABLE `orders` (
+  `id` bigint(32) NOT NULL AUTO_INCREMENT COMMENT '客户id(主键)',
+  `user_id` bigint(32) NOT NULL COMMENT '下单客户id(外键)',
+  `number` varchar(32) NOT NULL COMMENT '订单号',
+  `createtime` datetime NOT NULL COMMENT '创建时间',
+  `note` varchar(32) DEFAULT NULL COMMENT '备注',
+  PRIMARY KEY (`id`),
+    -- 建立索引（优化用）
+  KEY `FK_user` (`user_id`),
+    -- 建立外健约束
+  CONSTRAINT `FK_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8;
+
+CREATE TABLE `orderdetail` (
+  `id` bigint(32) NOT NULL AUTO_INCREMENT COMMENT 'id(主键)',
+  `order_id` bigint(32) NOT NULL COMMENT '订单id',
+  `item_id` bigint(32) NOT NULL COMMENT '商品id',
+  `item_num` bigint(32) DEFAULT NULL COMMENT '商品购买数量',
+  PRIMARY KEY (`id`),
+  KEY `order_id` (`order_id`),
+  KEY `orderdetail_ibfk_2_idx` (`item_id`),
+  CONSTRAINT `orderdetail_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`),
+  CONSTRAINT `orderdetail_ibfk_2` FOREIGN KEY (`item_id`) REFERENCES `item` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8;
+
+CREATE TABLE `item` (
+  `id` bigint(32) NOT NULL AUTO_INCREMENT COMMENT 'id(主键)',
+  `name` varchar(32) NOT NULL COMMENT '商品名称',
+  `price` float(10,1) NOT NULL COMMENT '商品价格',
+  `detail` text COMMENT '商品描述',
+  `pic` varchar(512) DEFAULT NULL COMMENT '商品图片',
+  `createtime` datetime DEFAULT NULL COMMENT '生产日期',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+
+-- 注意这个表实际上没有什么特别大的意义，这里仅仅是演示
+CREATE TABLE `usertoitem` (
+  `id` bigint(32) NOT NULL AUTO_INCREMENT COMMENT 'id(主键)',
+  `item_id` bigint(32) NOT NULL COMMENT '商品id',
+  `user_id` bigint(32) NOT NULL COMMENT '用户id',
+  PRIMARY KEY (`id`),
+  CONSTRAINT `usertoitem_ibfk_1` FOREIGN KEY (`item_id`) REFERENCES `item`(`id`),
+  CONSTRAINT `usertoitem_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `user`(`id`)
+) ENGINE = InnoDB AUTO_INCREMENT = 5 DEFAULT CHARSET = utf8;
+
+-- 简单的看看如何新增 数据 和查询数据 CURD (CR) --> UD 也类似 属于sql知识 这里不详细说明了 
+-- 建立user 
+INSERT INTO user (username, birthday, sex, address)
+VALUES (
+    'AIKEN',
+    NOW(),
+    2,
+    'address:varchar'
+  );
+-- 建立item
+SELECT *
+FROM user
+INSERT INTO item (name, price, detail, pic, createtime)
+VALUES (
+    'P3',
+    111.3,
+    'P3_',
+    'P3_img',
+    NOW()
+  );
+
+-- 创建一个order
+INSERT INTO orders (user_id, number, createtime, note)
+VALUES (
+    8,
+    '8u2uwbUBU',
+    NOW(),
+    'note:varchar'
+  );
+
+-- 给这个订单加三个item
+INSERT INTO orderdetail (order_id, item_id, item_num)
+VALUES (9, 5, 12423);
+INSERT INTO orderdetail (order_id, item_id, item_num)
+VALUES (9, 7, 12423);
+INSERT INTO orderdetail (order_id, item_id, item_num)
+VALUES (9, 7, 12423);
+
+-- 给usertoitem 表添加数据 （下面仅仅是添加一条记录，你可以换item_id添加多条）
+INSERT INTO usertoitem (item_id, user_id)
+VALUES (
+    6,
+    10 
+  );
+
+-- 查询某用户的 orderDetail 
+SELECT *
+FROM orderdetail
+  LEFT JOIN orders ON orderdetail.order_id = orders.id
+  LEFT JOIN user ON orders.user_id = user.id
+WHERE orders.user_id = 8;
+
+-- 查询某用户的 所有item
+SELECT * 
+FROM usertoitem
+  LEFT JOIN user ON user_id = user.id
+  LEFT JOIN item ON usertoitem.item_id = item.id
+WHERE user_id = 8;
+
+```
+
+请记住，任何orm 都是一种工具🔧方便你开发方便和编程语言层面的配合， SQL语法才是通用的根！，所以你可以用orm 但一定不要忘啦sql！
+
+```go
+// 通过前面的学习我们都明白了 gorm的一般操作。现在我们来看看关于gorm的多表操作
+// 由于上面说的SQL 例子 么有办法用尽 gorm中的多表操作关系，所以我们依然以gorm官方为准
+
+// BelongTo 这种模型的每一个实例都“属于”另一个模型的一个实例。
+// `User` 属于 `Company`，`CompanyID` 是外键
+type User struct {
+  gorm.Model
+  Name      string
+  CompanyID int
+  Company   Company
+}
+
+type Company struct {
+  ID   int
+  Name string
+}
+
+
+// has one 与另一个模型建立一对一的关联，但它和一对一关系有些许不同。 
+// 这种关联表明一个模型的每个实例都包含或拥有另一个模型的一个实例。我们用 gorm的例子做说明
+// User 有一张 CreditCard，UserID 是外键 且每个 user 只能有一张 credit card。
+type User struct {
+  gorm.Model
+  CreditCard CreditCard
+}
+
+type CreditCard struct {
+  gorm.Model
+  Number string
+  UserID uint // 这就是一对一 
+}
+
+// has Many 不同于 has one，拥有者可以有零或多个关联模型。 每个 user 可以有多张 credit card。
+// User 有多张 CreditCard，UserID 是外键
+type User struct {
+  gorm.Model
+  CreditCards []CreditCard
+}
+
+type CreditCard struct {
+  gorm.Model
+  Number string
+  UserID uint
+}
+
+// Many to Many 会在两个 model 中添加一张连接表。GORM 会自动创建连接表
+// User 拥有并属于多种 language，`user_languages` 是连接表
+type User struct {
+  gorm.Model
+  Languages []Language `gorm:"many2many:user_languages;"`
+}
+
+type Language struct {
+  gorm.Model
+  Name string
+}
+
+// 自定义的中间表 （实际业务中 这种情况居多）
+type Person struct {
+  ID        int
+  Name      string
+  Addresses []Address `gorm:"many2many:person_addresses;"`
+}
+
+type Address struct {
+  ID   uint
+  Name string
+}
+
+type PersonAddress struct {
+  PersonID  int `gorm:"primaryKey"`
+  AddressID int `gorm:"primaryKey"`
+  CreatedAt time.Time
+  DeletedAt gorm.DeletedAt
+}
+
+func (PersonAddress) BeforeCreate(db *gorm.DB) error {
+  // ...
+}
+
+// 修改 Person 的 Addresses 字段的连接表为 PersonAddress
+// PersonAddress 必须定义好所需的外键，否则会报错
+err := db.SetupJoinTable(&Person{}, "Addresses", &PersonAddress{})
+
+
+// **创建数据和修改数据**
+user := User{
+  Name:            "jinzhu",
+  BillingAddress:  Address{Address1: "Billing Address - Address 1"},
+  ShippingAddress: Address{Address1: "Shipping Address - Address 1"},
+  Emails:          []Email{
+    {Email: "jinzhu@example.com"},
+    {Email: "jinzhu-2@example.com"},
+  },
+  Languages:       []Language{
+    {Name: "ZH"},
+    {Name: "EN"},
+  },
+}
+
+db.Create(&user) // 创建
+db.Save(&user) // 更新
+
+
+// **查询 📖注意 查询有很多方式我们举例几个好吧，剩下的在文档中**
+db.Model(&user).Association("Languages").Find(&languages)
+codes := []string{"zh-CN", "en-US", "ja-JP"}
+db.Model(&user).Where("code IN ?", codes).Association("Languages").Find(&languages)
+db.Model(&user).Where("code IN ?", codes).Order("code desc").Association("Languages").Find(&languages)
+
+// 预加载一些数据
+type User struct {
+  gorm.Model
+  Username string
+  Orders   []Order
+}
+
+type Order struct {
+  gorm.Model
+  UserID uint
+  Price  float64
+}
+
+// 查找 user 时预加载相关 Order
+db.Preload("Orders").Find(&users)
+// SELECT * FROM users;
+// SELECT * FROM orders WHERE user_id IN (1,2,3,4);
+
+db.Preload("Orders").Preload("Profile").Preload("Role").Find(&users)
+// SELECT * FROM users;
+// SELECT * FROM orders WHERE user_id IN (1,2,3,4); // has many
+// SELECT * FROM profiles WHERE user_id IN (1,2,3,4); // has one
+// SELECT * FROM roles WHERE id IN (4,5,6); // belongs to
+
+
+```
+
+```go
+// 这里的例子是 关于tag 和 article 之间的关系，他们属于  belong to 
+package models
+
+import (
+    "time"
+
+    "github.com/jinzhu/gorm"
+)
+
+type Article struct {
+    Model
+
+    TagID int `json:"tag_id" gorm:"index"`//// 直接用它 做为外健 目前tag 和article ，为belong to 关系
+·    Tag   Tag `json:"tag"` 
+
+    Title string `json:"title"`
+    Desc string `json:"desc"`
+    Content string `json:"content"`
+    CreatedBy string `json:"created_by"`
+    ModifiedBy string `json:"modified_by"`
+    State int `json:"state"`
+}
+
+
+// 是否已经存在
+func ExistArticleByID(id int) bool {
+    var article Article
+    db.Select("id").Where("id = ?", id).First(&article)
+
+    if article.ID > 0 {
+        return true
+    }
+
+    return false
+}
+
+// 获取总数据
+func GetArticleTotal(maps interface {}) (count int){
+    db.Model(&Article{}).Where(maps).Count(&count)
+
+    return
+}
+
+// 获取详情，用到了 预加载 和分页
+func GetArticles(pageNum int, pageSize int, maps interface {}) (articles []Article) {
+    db.Preload("Tag").Where(maps).Offset(pageNum).Limit(pageSize).Find(&articles)
+
+    return
+}
+
+// 获取某文章具体详情 Related 查询
+func GetArticle(id int) (article Article) {
+    db.Where("id = ?", id).First(&article)
+    db.Model(&article).Related(&article.Tag)
+    // 补充一个话题 https://segmentfault.com/q/1010000021168438
+/*
+
+    db.Model(&user).Related(&company) user 是源，company 说 关联源中的字段名，这段
+主要是意思是 查user -> company
+
+    db.Model(&user).Association("company").Find(&company)
+这段说的意思是 。company表是要查主表 源，主查company表。user实例只是条件填充对象
+
+*/
+    return
+}
+
+// 编辑
+func EditArticle(id int, data interface {}) bool {
+    db.Model(&Article{}).Where("id = ?", id).Updates(data)
+
+    return true
+}
+
+// 新增
+func AddArticle(data map[string]interface {}) bool {
+    db.Create(&Article {
+        TagID : data["tag_id"].(int),
+        Title : data["title"].(string),
+        Desc : data["desc"].(string),
+        Content : data["content"].(string),
+        CreatedBy : data["created_by"].(string),
+        State : data["state"].(int),
+    })
+
+    return true
+}
+
+// 删除
+func DeleteArticle(id int) bool {
+    db.Where("id = ?", id).Delete(Article{})
+
+    return true
+}
+
+// 两个model hook
+func (article *Article) BeforeCreate(scope *gorm.Scope) error {
+    scope.SetColumn("CreatedOn", time.Now().Unix())
+
+    return nil
+}
+
+func (article *Article) BeforeUpdate(scope *gorm.Scope) error {
+    scope.SetColumn("ModifiedOn", time.Now().Unix())
+
+    return nil
+}
+```
+
+## 路由具体的逻辑
+> 这里的逻辑就比较的简单，我们只需要获取 http的报文 ，然后去解析，去验证，去存入库就好啦
+>
+
+```go
+package v1
+
+import (
+    "net/http"
+    "log"
+
+    "github.com/gin-gonic/gin"
+    "github.com/astaxie/beego/validation"
+    "github.com/unknwon/com"
+
+    "github.com/EDDYCJY/go-gin-example/models"
+    "github.com/EDDYCJY/go-gin-example/pkg/e"
+    "github.com/EDDYCJY/go-gin-example/pkg/setting"
+    "github.com/EDDYCJY/go-gin-example/pkg/util"
+)
+
+//获取单个文章
+func GetArticle(c *gin.Context) {
+    id := com.StrTo(c.Param("id")).MustInt()
+
+    valid := validation.Validation{}
+    valid.Min(id, 1, "id").Message("ID必须大于0")
+
+    code := e.INVALID_PARAMS
+    var data interface {}
+    if ! valid.HasErrors() {
+        if models.ExistArticleByID(id) {
+            data = models.GetArticle(id)
+            code = e.SUCCESS
+        } else {
+            code = e.ERROR_NOT_EXIST_ARTICLE
+        }
+    } else {
+        for _, err := range valid.Errors {
+            log.Printf("err.key: %s, err.message: %s", err.Key, err.Message)
+        }
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "code" : code,
+        "msg" : e.GetMsg(code),
+        "data" : data,
+    })
+}
+
+//获取多个文章
+func GetArticles(c *gin.Context) {
+    data := make(map[string]interface{})
+    maps := make(map[string]interface{})
+    valid := validation.Validation{}
+
+    var state int = -1
+    if arg := c.Query("state"); arg != "" {
+        state = com.StrTo(arg).MustInt()
+        maps["state"] = state
+
+        valid.Range(state, 0, 1, "state").Message("状态只允许0或1")
+    }
+
+    var tagId int = -1
+    if arg := c.Query("tag_id"); arg != "" {
+        tagId = com.StrTo(arg).MustInt()
+        maps["tag_id"] = tagId
+
+        valid.Min(tagId, 1, "tag_id").Message("标签ID必须大于0")
+    }
+
+    code := e.INVALID_PARAMS
+    if ! valid.HasErrors() {
+        code = e.SUCCESS
+
+        data["lists"] = models.GetArticles(util.GetPage(c), setting.PageSize, maps)
+        data["total"] = models.GetArticleTotal(maps)
+
+    } else {
+        for _, err := range valid.Errors {
+            log.Printf("err.key: %s, err.message: %s", err.Key, err.Message)
+        }
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "code" : code,
+        "msg" : e.GetMsg(code),
+        "data" : data,
+    })
+}
+
+//新增文章
+func AddArticle(c *gin.Context) {
+    tagId := com.StrTo(c.Query("tag_id")).MustInt()
+    title := c.Query("title")
+    desc := c.Query("desc")
+    content := c.Query("content")
+    createdBy := c.Query("created_by")
+    state := com.StrTo(c.DefaultQuery("state", "0")).MustInt()
+
+    valid := validation.Validation{}
+    valid.Min(tagId, 1, "tag_id").Message("标签ID必须大于0")
+    valid.Required(title, "title").Message("标题不能为空")
+    valid.Required(desc, "desc").Message("简述不能为空")
+    valid.Required(content, "content").Message("内容不能为空")
+    valid.Required(createdBy, "created_by").Message("创建人不能为空")
+    valid.Range(state, 0, 1, "state").Message("状态只允许0或1")
+
+    code := e.INVALID_PARAMS
+    if ! valid.HasErrors() {
+        if models.ExistTagByID(tagId) {
+            data := make(map[string]interface {})
+            data["tag_id"] = tagId
+            data["title"] = title
+            data["desc"] = desc
+            data["content"] = content
+            data["created_by"] = createdBy
+            data["state"] = state
+
+            models.AddArticle(data)
+            code = e.SUCCESS
+        } else {
+            code = e.ERROR_NOT_EXIST_TAG
+        }
+    } else {
+        for _, err := range valid.Errors {
+            log.Printf("err.key: %s, err.message: %s", err.Key, err.Message)
+        }
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "code" : code,
+        "msg" : e.GetMsg(code),
+        "data" : make(map[string]interface{}),
+    })
+}
+
+//修改文章
+func EditArticle(c *gin.Context) {
+    valid := validation.Validation{}
+
+    id := com.StrTo(c.Param("id")).MustInt()
+    tagId := com.StrTo(c.Query("tag_id")).MustInt()
+    title := c.Query("title")
+    desc := c.Query("desc")
+    content := c.Query("content")
+    modifiedBy := c.Query("modified_by")
+
+    var state int = -1
+    if arg := c.Query("state"); arg != "" {
+        state = com.StrTo(arg).MustInt()
+        valid.Range(state, 0, 1, "state").Message("状态只允许0或1")
+    }
+
+    valid.Min(id, 1, "id").Message("ID必须大于0")
+    valid.MaxSize(title, 100, "title").Message("标题最长为100字符")
+    valid.MaxSize(desc, 255, "desc").Message("简述最长为255字符")
+    valid.MaxSize(content, 65535, "content").Message("内容最长为65535字符")
+    valid.Required(modifiedBy, "modified_by").Message("修改人不能为空")
+    valid.MaxSize(modifiedBy, 100, "modified_by").Message("修改人最长为100字符")
+
+    code := e.INVALID_PARAMS
+    if ! valid.HasErrors() {
+        if models.ExistArticleByID(id) {
+            if models.ExistTagByID(tagId) {
+                data := make(map[string]interface {})
+                if tagId > 0 {
+                    data["tag_id"] = tagId
+                }
+                if title != "" {
+                    data["title"] = title
+                }
+                if desc != "" {
+                    data["desc"] = desc
+                }
+                if content != "" {
+                    data["content"] = content
+                }
+
+                data["modified_by"] = modifiedBy
+
+                models.EditArticle(id, data)
+                code = e.SUCCESS
+            } else {
+                code = e.ERROR_NOT_EXIST_TAG
+            }
+        } else {
+            code = e.ERROR_NOT_EXIST_ARTICLE
+        }
+    } else {
+        for _, err := range valid.Errors {
+            log.Printf("err.key: %s, err.message: %s", err.Key, err.Message)
+        }
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "code" : code,
+        "msg" : e.GetMsg(code),
+        "data" : make(map[string]string),
+    })
+}
+
+//删除文章
+func DeleteArticle(c *gin.Context) {
+    id := com.StrTo(c.Param("id")).MustInt()
+
+    valid := validation.Validation{}
+    valid.Min(id, 1, "id").Message("ID必须大于0")
+
+    code := e.INVALID_PARAMS
+    if ! valid.HasErrors() {
+        if models.ExistArticleByID(id) {
+            models.DeleteArticle(id)
+            code = e.SUCCESS
+        } else {
+            code = e.ERROR_NOT_EXIST_ARTICLE
+        }
+    } else {
+        for _, err := range valid.Errors {
+            log.Printf("err.key: %s, err.message: %s", err.Key, err.Message)
+        }
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "code" : code,
+        "msg" : e.GetMsg(code),
+        "data" : make(map[string]string),
+    })
+}
+```
+
+# 整理一波代码
+> 下面的东西，我讲不会一模一样安装 煎鱼 大神的文章去写，我将以自己的理解为依据，写下面的内容，如有不对的对方，大家多多理解和包涵
+>
+
+## 优化配置结构
+现在为止 ，我们代码中的许多pkg 都上直接 引入的，且都是直接用的ini 配置。
+
+1. 映射结构体，使用MapTo 设置配置参数
+2. 把参数都管理到pkg/setting中去
+
+<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">在 Go 中，当存在多个 init 函数时，执行顺序为：</font>
+
++ <font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">相同包下的 init 函数：按照源文件编译顺序决定执行顺序（默认按文件名排序）</font>
++ <font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">不同包下的 init 函数：按照包导入的依赖关系决定先后顺序</font>
+
+<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">所以要避免多 init 的情况，</font>**<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">尽量由程序把控初始化的先后顺序</font>**
+
+ 	先把配置项搞定，使用 大驼峰
+
+```properties
+
+[app]
+PageSize = 10
+JwtSecret = 23347$040412
+
+RuntimeRootPath = runtime/
+
+PrefixUrl = http://127.0.0.1:8000
+ImageSavePath = upload/images/
+ExportSavePath = export/
+QrCodeSavePath = qrcode/
+LogSavePath = logs/
+FontSavePath = fonts/
+
+# MB
+ImageMaxSize = 5
+ImageAllowExts = .jpg,.jpeg,.png
+
+LogSaveName = log
+LogFileExt = log
+TimeFormat = 20060102
+
+[server]
+#debug or release
+RunMode = debug
+HttpPort = 8000
+ReadTimeout = 60
+WriteTimeout = 60
+
+[database]
+Type = mysql
+User = root
+Password = rootroot
+Host = 192.168.1.5:3306
+Name = go_logs
+TablePrefix = blog_
+
+[redis]
+Host = 192.168.1.5:6379
+Password =
+MaxIdle = 30
+MaxActive = 30
+IdleTimeout = 200
+
+
+```
+
+```go
+package setting
+
+import (
+	"log"
+	"time"
+
+	"github.com/go-ini/ini"
+)
+
+// 1.  编写与配置项保持一致的结构体（App、Server、Database， Redis）
+// 2. 使用 MapTo 将配置项映射到结构体上 具体结构体的类型是怎么样子的需要看你自己的使用场景而定
+// 3. 对一些需特殊设置的配置项进行再赋值
+
+type App struct {
+	JwtSecret       string // 下面的一些字段 你现在可能是不需要的，我们先配置在这里，
+    // 后面你会使用它的
+	PageSize        int
+	RuntimeRootPath string
+
+	PrefixUrl      string
+	ImageSavePath  string
+	ImageMaxSize   int
+	ImageAllowExts []string
+	FontSavePath   string
+
+	ExportSavePath string
+	QrCodeSavePath string
+	LogSavePath    string
+	LogSaveName    string
+	LogFileExt     string
+	TimeFormat     string
+}
+
+//⚠️ 为啥使用指针 
+// 在 MapTo 中 typ.Kind() == reflect.Ptr 约束了必须使用指针，
+// 否则会返回 cannot map to non-pointer struct 的错误。这个是表面原因
+
+// 更往内探究，可以认为是 field.Set 的原因，
+// 当执行 val := reflect.ValueOf(v) ，函数通过传递 v 拷贝创建了 val，go中传递的是值的拷贝
+// 但是 val 的改变并不能更改原始的 v，要想 val 的更改能作用到 v，则必须传递 v 的地址
+
+var AppSetting = &App{}
+
+type Server struct {
+	RunMode      string
+	HttpPort     int
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
+}
+
+var ServerSetting = &Server{}
+
+type Database struct {
+	Type        string
+	User        string
+	Password    string
+	Host        string
+	Name        string
+	TablePrefix string
+}
+
+var DatabaseSetting = &Database{}
+
+type Redis struct {
+	Host        string
+	Password    string
+	MaxIdle     int
+	MaxActive   int
+	IdleTimeout time.Duration
+}
+
+var RedisSetting = &Redis{}
+
+// 开始执行 主要的文档依据就是 go-ini 这个包
+func Setup() {
+	Cfg, err := ini.Load("conf/app.ini")
+	if err != nil {
+		log.Fatalf("Fail to parse 'conf/app.ini': %v", err)
+	}
+
+	err = Cfg.Section("app").MapTo(AppSetting)
+	if err != nil {
+		log.Fatalf("Cfg.MapTo AppSetting err: %v", err)
+	}
+
+	AppSetting.ImageMaxSize = AppSetting.ImageMaxSize * 1024 * 1024
+
+	err = Cfg.Section("server").MapTo(ServerSetting)
+	if err != nil {
+		log.Fatalf("Cfg.MapTo ServerSetting err: %v", err)
+	}
+
+	ServerSetting.ReadTimeout = ServerSetting.ReadTimeout * time.Second // 对于time类型的需要 * 一个量 完成类型转化
+	ServerSetting.WriteTimeout = ServerSetting.WriteTimeout * time.Second
+
+	err = Cfg.Section("database").MapTo(DatabaseSetting)
+	if err != nil {
+		log.Fatalf("Cfg.MapTo DatabaseSetting err: %v", err)
+	}
+
+	err = Cfg.Section("redis").MapTo(RedisSetting)
+	if err != nil {
+		log.Fatalf("Cfg.MapTo RedisSetting err: %v", err)
+	}
+	RedisSetting.IdleTimeout = RedisSetting.IdleTimeout * time.Second
+}
+
+```
+
+下面是这个setting 在mian中引入
+
+```go
+func main() {
+	// 为了控制程序的加载的先后顺序，我们不能使用go中自带的init函数，我们需要认为的获取到控制权
+	// setting\modeels\loggin\greeids模块都初始化执行一遍
+	setting.Setup()
+	models.Setup() // modle 也需要这样做，
+}
+```
+
+## Model优化
+回顾原来的代码，我们不难发现，db 的操作都写在model中。它应该保存更加纯粹，从Model下刀，简化里面的hook，它可以被丢到全局去，并且改造 入口，不需要init 函数，BeforeCreate 和BeforeUpdate也不要放到每个的单独的model中去了，直接在全局model中加一个 自定义的callback 以便于完成更多的工作
+
+```go
+package models
+
+import (
+	"fmt"
+	"log"
+	"time"
+
+	"github.com/BM-laoli/go-gin-example/pkg/setting"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
+)
+
+var db *gorm.DB
+
+type Model struct {
+	ID         int `gorm:"primary_key" json:"id"`
+	CreatedOn  int `json:"created_on"`
+	ModifiedOn int `json:"modified_on"`
+	DeletedOn  int `json:"deleted_on"`
+}
+
+// 初始化 数据库连接
+func Setup() {
+	var (
+		err error
+	)
+
+	// 打开连接
+	db, err = gorm.Open(setting.DatabaseSetting.Type, fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local",
+		setting.DatabaseSetting.User,
+		setting.DatabaseSetting.Password,
+		setting.DatabaseSetting.Host,
+		setting.DatabaseSetting.Name))
+
+	if err != nil {
+        // 做些什么
+	}
+
+	// 获取数据库名连接
+	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
+		return setting.DatabaseSetting.TablePrefix + defaultTableName
+	}
+
+	// 注册回调 创建时 修改时 删除时
+	db.Callback().Create().Replace("gorm:update_time_stamp", updateTimeStampForCreateCallback)
+	db.Callback().Update().Replace("gorm:update_time_stamp", updateTimeStampForUpdateCallback)
+	db.Callback().Delete().Replace("gorm:delete", deleteCallback)
+
+	// 配置是否可以写入提示
+	// 数据库中只有 表，没有db.SingularTable(true)设置，相同的添加数据的操作都会失败，提示users表不存在
+	// LogMode是定义日志记录的可用模式的类型，这些模式会影响日志消息开始堆积时如何处理日志。
+	db.SingularTable(true)
+	db.LogMode(true)
+
+	// 设置连接限制 比如
+	db.DB().SetMaxIdleConns(10)
+	db.DB().SetMaxOpenConns(100)
+}
+
+// 关闭连接
+func CloseDB() {
+	defer db.Close()
+}
+
+// 各种回调
+// updateTimeStampForCreateCallback will set `CreatedOn`, `ModifiedOn` when creating 创建字段的时候附加字段进入db
+func updateTimeStampForCreateCallback(scope *gorm.Scope) {
+	if !scope.HasError() {
+		nowTime := time.Now().Unix()
+		if createTimeField, ok := scope.FieldByName("CreatedOn"); ok {
+			if createTimeField.IsBlank {
+				createTimeField.Set(nowTime)
+			}
+		}
+
+		if modifyTimeField, ok := scope.FieldByName("ModifiedOn"); ok {
+			if modifyTimeField.IsBlank {
+				modifyTimeField.Set(nowTime)
+			}
+		}
+	}
+}
+
+// 这个东西我们暂时先不了解 
+// updateTimeStampForUpdateCallback will set `ModifyTime` when updating // 数据更新的时候添加到数据库中去
+func updateTimeStampForUpdateCallback(scope *gorm.Scope) {
+	if _, ok := scope.Get("gorm:update_column"); !ok {
+		scope.SetColumn("ModifiedOn", time.Now().Unix())
+	}
+}
+
+// deleteCallback will set `DeletedOn` where deleting
+func deleteCallback(scope *gorm.Scope) {
+	if !scope.HasError() {
+		var extraOption string
+		if str, ok := scope.Get("gorm:delete_option"); ok {
+			extraOption = fmt.Sprint(str)
+		}
+
+		deletedOnField, hasDeletedOnField := scope.FieldByName("DeletedOn")
+
+		if !scope.Search.Unscoped && hasDeletedOnField {
+			scope.Raw(fmt.Sprintf(
+				"UPDATE %v SET %v=%v%v%v",
+				scope.QuotedTableName(),
+				scope.Quote(deletedOnField.DBName),
+				scope.AddToVars(time.Now().Unix()),
+				addExtraSpaceIfExist(scope.CombinedConditionSql()),
+				addExtraSpaceIfExist(extraOption),
+			)).Exec()
+		} else {
+			scope.Raw(fmt.Sprintf(
+				"DELETE FROM %v%v%v",
+				scope.QuotedTableName(),
+				addExtraSpaceIfExist(scope.CombinedConditionSql()),
+				addExtraSpaceIfExist(extraOption),
+			)).Exec()
+		}
+	}
+}
+
+// 这个方法有点丢多余 就时看看string 加一个牵制空格 作用是后续 依据文件手动修改库的时候使用的
+// addExtraSpaceIfExist adds a separator
+func addExtraSpaceIfExist(str string) string {
+	if str != "" {
+		return " " + str
+	}
+	return ""
+}
+
+```
+
+## Controller？Service？
+在经典的 JAVA框架Spring 中，经常会出现下面的程序结构（下面是Nest 的一个项目结构）
+
+![](https://cdn.nlark.com/yuque/0/2023/png/1627571/1672741488821-97ad65ec-4b1f-4f4b-8c9f-b1541d6e8c64.png)
+
+实践证明，它确实值得推敲，至少它的分层结构 是合理且可复用，以及便于管理的，我们借鉴一些它的思想吧！
+
+从Service下刀  请忽略里面还没有写好的 auth cache service 我们来关注 tag 和 article ，在写service 之前我们先整理一波 ，每个的modle
+
+```go
+package models
+
+import "github.com/jinzhu/gorm"
+
+type Tag struct {
+	Model
+
+	Name       string `json:"name"`
+	CreatedBy  string `json:"created_by"`
+	ModifiedBy string `json:"modified_by"`
+	State      int    `json:"state"`
+}
+
+// ExistTagByName checks if there is a tag with the same name
+func ExistTagByName(name string) (bool, error) {
+	var tag Tag
+	err := db.Select("id").Where("name = ? AND deleted_on = ? ", name, 0).First(&tag).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return false, err
+	}
+
+	if tag.ID > 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+// AddTag Add a Tag
+func AddTag(name string, state int, createdBy string) error {
+	tag := Tag{
+		Name:      name,
+		State:     state,
+		CreatedBy: createdBy,
+	}
+	if err := db.Create(&tag).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetTags gets a list of tags based on paging and constraints
+func GetTags(pageNum int, pageSize int, maps interface{}) ([]Tag, error) {
+	var (
+		tags []Tag
+		err  error
+	)
+
+	if pageSize > 0 && pageNum > 0 {
+		err = db.Where(maps).Find(&tags).Offset(pageNum).Limit(pageSize).Error
+	} else {
+		err = db.Where(maps).Find(&tags).Error
+	}
+
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+
+	return tags, nil
+}
+
+// GetTagTotal counts the total number of tags based on the constraint
+func GetTagTotal(maps interface{}) (int, error) {
+	var count int
+	if err := db.Model(&Tag{}).Where(maps).Count(&count).Error; err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
+// ExistTagByID determines whether a Tag exists based on the ID
+func ExistTagByID(id int) (bool, error) {
+	var tag Tag
+	err := db.Select("id").Where("id = ? AND deleted_on = ? ", id, 0).First(&tag).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return false, err
+	}
+	if tag.ID > 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+// DeleteTag delete a tag
+func DeleteTag(id int) error {
+	if err := db.Where("id = ?", id).Delete(&Tag{}).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// EditTag modify a single tag
+func EditTag(id int, data interface{}) error {
+	if err := db.Model(&Tag{}).Where("id = ? AND deleted_on = ? ", id, 0).Updates(data).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// CleanAllTag clear all tag
+func CleanAllTag() (bool, error) {
+	if err := db.Unscoped().Where("deleted_on != ? ", 0).Delete(&Tag{}).Error; err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+```
+
+```go
+package models
+
+import "github.com/jinzhu/gorm"
+
+//  ------------------------------------------------准备工作定义模型 和callback
+type Article struct {
+	Model
+
+	TagID int `json:"tag_id" gorm:"index"` //声明 这个字段是 索引 外键  （⚠️：如果你想关联 那么外键 和 struct 都要有）
+	Tag   Tag `json:"tag"`                 //  内嵌的model
+
+	Title         string `json:"title"`
+	Desc          string `json:"desc"`
+	Content       string `json:"content"`
+	CreatedBy     string `json:"created_by"`
+	ModifiedBy    string `json:"modified_by"`
+	State         int    `json:"state"`
+	CoverImageUrl string `json:"cover_image_url"`
+}
+
+//  ------------------------------------------------ 正式开始逻辑
+
+// 判断有没有这个文章
+func ExistArticleByID(id int) bool {
+	var article Article
+	db.Select("id").Where("id = ?", id).First(&article)
+
+	if article.ID > 0 {
+		return true
+	}
+
+	return false
+}
+
+// 获取LIst总数
+func GetArticleTotal(maps interface{}) (count int) {
+	db.Model(&Article{}).Where(maps).Count(&count)
+
+	return
+}
+
+// 获取文章List
+// func GetArticles(pageNum int, pageSize int, maps interface{}) (articles []Article) {
+// 	db.Preload("Tag").Where(maps).Offset(pageNum).Limit(pageSize).Find(&articles)
+// 	// 注意这个 Preload
+// 	// 它 是一个预加载器 就执行两条SQL，上面的👆的orm翻译过来就是
+// 	// SELECT * FROM blog_articles;    SELECT * FROM blog_tag WHERE id IN (1,2,3,4);
+// 	// 在gorm中做关联查询主要是两种方式
+// 	// 1. gorm 的Join 2. 循环的Related
+// 	return
+// }
+// GetArticles gets a list of articles based on paging constraints
+func GetArticles(pageNum int, pageSize int, maps interface{}) ([]*Article, error) {
+	var articles []*Article
+	err := db.Preload("Tag").Where(maps).Offset(pageNum).Limit(pageSize).Find(&articles).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+
+	return articles, nil
+}
+
+func GetArticle(id int) (*Article, error) {
+	var article Article
+	err := db.Where("id = ? AND deleted_on = ? ", id, 0).First(&article).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+
+	err = db.Model(&article).Related(&article.Tag).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+
+	return &article, nil
+}
+
+// 这里有一个空接口 类似于any
+func EditArticle(id int, data interface{}) error {
+	if err := db.Model(&Article{}).Where("id = ? AND deleted_on = ? ", id, 0).Updates(data).Error; err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+func AddArticle(data map[string]interface{}) error {
+	article := &Article{
+		TagID: data["tag_id"].(int),
+		// 我们来看看这个语法 ，实际上它想表达的是：
+		// 1. V.( I ) 断言 ，I 表示接口interface V表示一个借口值， V.( I ) 这句话的意思是 看看 接口的值 是否为某一个类型
+		// 2. 结合上述的理解就是： 看看 类型data中的Tag_id的值 是否是int
+		Title:         data["title"].(string),
+		Desc:          data["desc"].(string),
+		Content:       data["content"].(string),
+		CreatedBy:     data["created_by"].(string),
+		State:         data["state"].(int),
+		CoverImageUrl: data["cover_image_url"].(string),
+	}
+
+	if err := db.Create(&article).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteArticle delete a single article
+func DeleteArticle(id int) error {
+	if err := db.Where("id = ?", id).Delete(Article{}).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// 定时job
+func CleanAllArticle() bool {
+	db.Unscoped().Where("deleted_on != ? ", 0).Delete(&Article{})
+
+	return true
+}
+
+```
+
+![](https://cdn.nlark.com/yuque/0/2023/png/1627571/1672724846880-c38c2e24-d35b-40f8-acdd-eec1e367a963.png)
+
+```go
+// 我们在service ，关注点在业务组合，很多的业务流和一些特殊的逻辑都可以放到这里来做
+
+// 先准备我们的tagService
+package tag_service
+
+import (
+	"encoding/json"
+	"io"
+	"time"
+	"github.com/BM-laoli/go-gin-example/models"
+)
+
+// 这东西和 model中的不一样，model中，更倾向于 数据 entities
+// 这里的 Tag 更倾向于 service 和 controller 之间的协议，也就是dto
+type Tag struct {
+	ID         int
+	Name       string
+	CreatedBy  string
+	ModifiedBy string
+	State      int
+
+	PageNum  int
+	PageSize int
+}
+
+func (t *Tag) ExistByName() (bool, error) {
+	return models.ExistTagByName(t.Name)
+}
+
+func (t *Tag) ExistByID() (bool, error) {
+	return models.ExistTagByID(t.ID)
+}
+
+func (t *Tag) Add() error {
+	return models.AddTag(t.Name, t.State, t.CreatedBy)
+}
+
+//  执行修改
+func (t *Tag) Edit() error {
+	data := make(map[string]interface{})
+	data["modified_by"] = t.ModifiedBy
+	data["name"] = t.Name
+	if t.State >= 0 {
+		data["state"] = t.State
+	}
+
+	return models.EditTag(t.ID, data)
+}
+
+func (t *Tag) Delete() error {
+	return models.DeleteTag(t.ID)
+}
+
+func (t *Tag) Count() (int, error) {
+	return models.GetTagTotal(t.getMaps())
+}
+
+
+func (t *Tag) GetAll() ([]models.Tag, error) {
+	var (
+		tags, cacheTags []models.Tag
+	)
+    
+	tags, err := models.GetTags(t.PageNum, t.PageSize, t.getMaps())
+	if err != nil {
+		return nil, err
+	}
+
+    return tags, nil
+}
+
+// 主要看是否是 属于 “已经软删除”
+func (t *Tag) getMaps() map[string]interface{} {
+	maps := make(map[string]interface{})
+	maps["deleted_on"] = 0
+
+	if t.Name != "" {
+		maps["name"] = t.Name
+	}
+	if t.State >= 0 {
+		maps["state"] = t.State
+	}
+
+	return maps
+}
+
+// 再而可看article service
+package article_service
+
+import (
+	"encoding/json"
+
+	"github.com/BM-laoli/go-gin-example/models"
+	"github.com/BM-laoli/go-gin-example/pkg/gredis"
+	"github.com/BM-laoli/go-gin-example/pkg/logging"
+	"github.com/BM-laoli/go-gin-example/service/cache_service"
+)
+
+// 定义 article 结构用来存query 数据
+type Article struct {
+	ID            int
+	TagID         int
+	Title         string
+	Desc          string
+	Content       string
+	CoverImageUrl string
+	State         int
+	CreatedBy     string
+	ModifiedBy    string
+
+	PageNum  int
+	PageSize int
+}
+
+func (a *Article) Add() error {
+	article := map[string]interface{}{
+		"tag_id":          a.TagID,
+		"title":           a.Title,
+		"desc":            a.Desc,
+		"content":         a.Content,
+		"created_by":      a.CreatedBy,
+		"cover_image_url": a.CoverImageUrl,
+		"state":           a.State,
+	}
+
+    // 定义一个 map （实际上 我个人观点 map 和 strut 类似 js中的object ）
+
+	if err := models.AddArticle(article); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *Article) Edit() error {
+	return models.EditArticle(a.ID, map[string]interface{}{
+		"tag_id":          a.TagID,
+		"title":           a.Title,
+		"desc":            a.Desc,
+		"content":         a.Content,
+		"cover_image_url": a.CoverImageUrl,
+		"state":           a.State,
+		"modified_by":     a.ModifiedBy,
+	})
+}
+
+func (a *Article) Get() (*models.Article, error) {
+	
+	article, err := models.GetArticle(a.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return article, nil
+}
+
+func (a *Article) GetAll() ([]*models.Article, error) {
+	var (
+		articles []*models.Article
+	)
+
+
+	articles, err := models.GetArticles(a.PageNum, a.PageSize, a.getMaps())
+	if err != nil {
+		return nil, err
+	}
+
+	return articles, nil
+}
+
+func (a *Article) Delete() error {
+	return models.DeleteArticle(a.ID)
+}
+
+func (a *Article) ExistByID() (bool, error) {
+	return models.ExistArticleByID(a.ID), nil
+}
+
+func (a *Article) Count() (int, error) {
+	return models.GetArticleTotal(a.getMaps()), nil
+}
+
+func (a *Article) getMaps() map[string]interface{} {
+	maps := make(map[string]interface{})
+	maps["deleted_on"] = 0
+	if a.State != -1 {
+		maps["state"] = a.State
+	}
+	if a.TagID != -1 {
+		maps["tag_id"] = a.TagID
+	}
+
+	return maps
+}
+
+
+
+```
+
+在前面的拆分中，我们多次看到了这样的代码
+
+```go
+type Article struct {
+	ID            int
+	TagID         int
+	Title         string
+	Desc          string
+	Content       string
+	CoverImageUrl string
+	State         int
+	CreatedBy     string
+	ModifiedBy    string
+
+	PageNum  int
+	PageSize int
+}
+
+func (a *Article) getMaps() map[string]interface{} {
+	maps := make(map[string]interface{})
+	maps["deleted_on"] = 0
+	if a.State != -1 {
+		maps["state"] = a.State
+	}
+	if a.TagID != -1 {
+		maps["tag_id"] = a.TagID
+	}
+
+	return maps
+}
+
+// Article struct为我们提供了一个在 service 和在 controller 层通用的 解析结构，
+// getMaps 为model sql的执行，提供了一些前置过滤逻辑
+
+```
+
+下面我们就花点时间看看，； 首先我们需要看看 目前我们的从 http上取参数和解析的以及过滤的过程，
+
+另外我们还没有提到的一点就是 ，统一的返回格式，这个点通过一个公共方法来包装返回
+
+```go
+// Response setting gin.JSON  为gin.json设置返格式 类似于OOP中的对类方法的重写
+func (g *Gin) Response(httpCode, errCode int, data interface{}) {
+	g.C.JSON(httpCode, Response{
+		Code: errCode,
+		Msg:  e.GetMsg(errCode),
+		Data: data,
+	})
+	return
+}
+```
+
+```go
+// http 获取参数
+type AddTagForm struct {
+	Name      string `json:"name" valid:"Required;MaxSize(100)"`
+	CreatedBy string `json:"created_by" valid:"Required;MaxSize(100)"`
+	State     int    `json:"state" valid:"Range(0,1)"`
+}
+// 这东西用来做验证用的，前面我们提到过，下面是就是一个自定义的验证方式
+func BindAndValidForJSON(c *gin.Context, json interface{}) (int, int) {
+	err := c.BindJSON(json)
+	if err != nil {
+		return http.StatusBadRequest, e.INVALID_PARAMS
+	}
+
+	valid := validation.Validation{}
+	check, err := valid.Valid(json)
+	if err != nil {
+		return http.StatusInternalServerError, e.ERROR
+	}
+	if !check {
+		MarkErrors(valid.Errors)
+		return http.StatusBadRequest, e.INVALID_PARAMS
+	}
+
+	return http.StatusOK, e.SUCCESS
+}
+
+// 我们写了一个 通用的 返回值的 格式化方法
+type Gin struct {
+	C *gin.Context
+}
+
+type Response struct {
+	Code int         `json:"code"`
+	Msg  string      `json:"msg"`
+	Data interface{} `json:"data"`
+}
+
+// Response setting gin.JSON  为gin.json设置返格式 类似于OOP中的对类方法的重写
+func (g *Gin) Response(httpCode, errCode int, data interface{}) {
+	g.C.JSON(httpCode, Response{
+		Code: errCode,
+		Msg:  e.GetMsg(errCode),
+		Data: data,
+	})
+	return
+}
+
+// 以上的方法组合，就有了我们的addTag的一个腿的 controller 逻辑 （或者说router具体取值传递
+到service的过程）
+func AddTag(c *gin.Context) {
+	var (
+		appG = app.Gin{C: c}
+		jsonForm AddTagForm
+	)
+
+	// 验证form表单
+	httpCode, errCode := app.BindAndValidForJSON(c, &jsonForm)
+	if errCode != e.SUCCESS {
+		appG.Response(httpCode, errCode, nil)
+		return
+	}
+
+	tagService := tag_service.Tag{
+		Name:      jsonForm.Name,
+		CreatedBy: jsonForm.CreatedBy,
+		State:     jsonForm.State,
+	}
+	exists, err := tagService.ExistByName()
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, e.ERROR_EXIST_TAG_FAIL, nil)
+		return
+	}
+	if exists {
+		appG.Response(http.StatusOK, e.ERROR_EXIST_TAG, nil)
+		return
+	}
+
+	err = tagService.Add()
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, e.ERROR_ADD_TAG_FAIL, nil)
+		return
+	}
+
+	appG.Response(http.StatusOK, e.SUCCESS, nil)
+}
+
+```
+
+## 路由参数？
+我们可以看到目前还是有非常的多 取值（从Http报文来的，都不是一种正规的方式），我们来对他们改造一下，我们这举例子tag 相关的内容，其它的article ，还需要大家自己去改哈。
+
+```go
+// 实际上，我们注意观察，前面我们提到的代码
+func EditTag(c *gin.Context) {
+	var (
+		appG = app.Gin{C: c}
+		form = EditTagForm{ID: com.StrTo(c.Param("id")).MustInt()}
+	)
+
+	httpCode, errCode := app.BindAndValid(c, &form) // 用到了这个方法 这个方法里就
+    // 包含了取值 + 数据验证 逻辑
+    // 注意这里其实是不正确的写法，我们需要从json body中取值，如何从params 中获取 id
+    // .....
+}
+
+func AddTag(c *gin.Context) {
+	var (
+		appG = app.Gin{C: c}
+		jsonForm AddTagForm
+	)
+	
+	httpCode, errCode := app.BindAndValidForJSON(c, &jsonForm)
+    // 这里也是如此，取值 + 验证
+	if errCode != e.SUCCESS {
+		appG.Response(httpCode, errCode, nil)
+		return
+	}
+
+    // ...
+}
+
+// BindAndValid binds and validates data
+func BindAndValid(c *gin.Context, form interface{}) (int, int) {
+	err := c.Bind(form) // 这个是从 ? params 上取值 进行验证
+	if err != nil {
+		return http.StatusBadRequest, e.INVALID_PARAMS
+	}
+
+	valid := validation.Validation{}
+	check, err := valid.Valid(form)
+	if err != nil {
+		return http.StatusInternalServerError, e.ERROR
+	}
+	if !check {
+		MarkErrors(valid.Errors)
+		return http.StatusBadRequest, e.INVALID_PARAMS
+	}
+
+	return http.StatusOK, e.SUCCESS
+}
+
+// BindAndValid binds and validates data
+func BindAndValidForJSON(c *gin.Context, json interface{}) (int, int) {
+	err := c.BindJSON(json) // 这里就从body 中读取 json 数据
+	if err != nil {
+		return http.StatusBadRequest, e.INVALID_PARAMS
+	}
+
+	valid := validation.Validation{}
+	check, err := valid.Valid(json)
+	if err != nil {
+		return http.StatusInternalServerError, e.ERROR
+	}
+	if !check {
+		MarkErrors(valid.Errors)
+		return http.StatusBadRequest, e.INVALID_PARAMS
+	}
+
+	return http.StatusOK, e.SUCCESS
+}
+// 取之就是如此的简单，更多的取值方法在前面已经详细的说明过了
+```
+
+# 自定义<font style="color:rgb(51, 51, 51);">GORM Callbacks & 软删除</font>
+细心的朋友们也许发现了，我们前面没有使用 BeforeCreate ，这种callback了，因为它看起来是绑定到了特定的model上，如果有100+的model 我们并不可能每一个都加 一个BeforeCreate类似的hook。在gorm中，我们可以实现自定义的 全局hook。
+
+故我们需要修改它，前文虽然已经写好啦，但是我们本小节来描述一下为什么这么做，原理是什么.
+
+在做下面的操作之前，我们需要给 整体的model 通用结构 上加一些通用的字段 DeletedOn 这种，这样你自己的model 就不需要多次定义啦，如果有 需要直接 引入就可以共享里面的字段啦
+
+```go
+type Model struct {
+    ID int `gorm:"primary_key" json:"id"`
+    CreatedOn int `json:"created_on"`
+    ModifiedOn int `json:"modified_on"`
+    DeletedOn int `json:"deleted_on"`
+}
+
+type Tag struct {
+	Model
+
+	Name       string `json:"name"`
+	CreatedBy  string `json:"created_by"`
+	ModifiedBy string `json:"modified_by"`
+	State      int    `json:"state"`
+}
+// 等价
+type Tag struct {
+    ID int `gorm:"primary_key" json:"id"`
+    CreatedOn int `json:"created_on"`
+    ModifiedOn int `json:"modified_on"`
+    DeletedOn int `json:"deleted_on"`
+    
+	Name       string `json:"name"`
+	CreatedBy  string `json:"created_by"`
+	ModifiedBy string `json:"modified_by"`
+	State      int    `json:"state"`
+}
+```
+
+1. 我们需要注册我们自定义的cb
+
+```go
+// updateTimeStampForCreateCallback will set `CreatedOn`, `ModifiedOn` when creating 创建字段的时候附加字段进入db
+func updateTimeStampForCreateCallback(scope *gorm.Scope) {
+	if !scope.HasError() {
+		nowTime := time.Now().Unix()
+		if createTimeField, ok := scope.FieldByName("CreatedOn"); ok {
+			if createTimeField.IsBlank {
+				createTimeField.Set(nowTime)
+			}
+		}
+
+		if modifyTimeField, ok := scope.FieldByName("ModifiedOn"); ok {
+			if modifyTimeField.IsBlank {
+				modifyTimeField.Set(nowTime)
+			}
+		}
+	}
+}
+
+// updateTimeStampForUpdateCallback will set `ModifyTime` when updating // 数据更新的时候添加到数据库中去
+func updateTimeStampForUpdateCallback(scope *gorm.Scope) {
+	if _, ok := scope.Get("gorm:update_column"); !ok {
+		scope.SetColumn("ModifiedOn", time.Now().Unix())
+	}
+}
+
+// 用到的源码 和简单解析
+
+func (scope *Scope) FieldByName(name string) (field *Field, ok bool) {
+	// +++++
+	for _, field := range scope.Fields() {
+		if field.Name == name || field.DBName == name {
+			return field, true
+		}
+		if field.DBName == dbName {
+			mostMatchedField = field
+		}
+	}
+    // +++++
+}
+// 通过 Fields 获取所有字段，然后判断是否具备当前字段
+// Set 用来给 字段设置值 ，参数为 interface{}
+// scope.Get(...) 根据入参获取设置了字面值的参数，例如本文中是 gorm:update_column ，它会去查找含这个字面值的字段属性
+// scope.SetColumn(...) 假设没有指定 update_column 的字段，我们默认在更新回调设置 ModifiedOn 的值
+
+
+```
+
+2. 然后挂回去
+
+```go
+//++++
+// 注册回调 创建时 修改时 删除时
+db.Callback().Create().Replace("gorm:update_time_stamp", updateTimeStampForCreateCallback)
+db.Callback().Update().Replace("gorm:update_time_stamp", updateTimeStampForUpdateCallback)
+```
+
+处理完 这个毁掉之后，我们再来看看，做一个软删除逻辑，实际的业务中，通常都会区分软删除和硬删除两种.
+
+```go
+
+// deleteCallback will set `DeletedOn` where deleting
+func deleteCallback(scope *gorm.Scope) {
+	if !scope.HasError() {
+		var extraOption string
+        // 先检查是否手动设置啦 delete_option
+		if str, ok := scope.Get("gorm:delete_option"); ok {
+			extraOption = fmt.Sprint(str)
+		}
+        // 获取这个字段，如果存在 这个字段 那么 在update 软删除，否则硬删除
+        // 意思就是：只有你的model，tab 中存在这个字段 才会去软删除，要不然会直接干掉！
+		deletedOnField, hasDeletedOnField := scope.FieldByName("DeletedOn")
+
+        // 下面的内容是对 Unscoped 的检查
+        // gorm的Unscoped方法设置tx.Statement.Unscoped为true；
+        // 针对软删除会追加SoftDeleteDeleteClause，即设置deleted_at为指定的时间戳；
+        // 而callbacks的Delete方法在db.Statement.Unscoped为false的时候才追加
+        // db.Statement.Schema.DeleteClauses，而Unscoped则执行的是物理删除。
+
+        // 逻辑如下，如果存在 就软删除，如果已经被软删除啦 那就硬删除！
+		if !scope.Search.Unscoped && hasDeletedOnField {
+
+            // 下面的东西 前面的 SQL中需要后面的指定的参数 来进行填充，最后去 exec 执行
+            scope.Raw(fmt.Sprintf(
+				"UPDATE %v SET %v=%v%v%v",
+				scope.QuotedTableName(),
+                // QuotedTableName 返回 引用的表名
+				scope.Quote(deletedOnField.DBName),
+				scope.AddToVars(time.Now().Unix()),
+                // CombinedConditionSql 返回组合好的sql
+				addExtraSpaceIfExist(scope.CombinedConditionSql()),
+				addExtraSpaceIfExist(extraOption),
+			)).Exec()
+		} else {
+			scope.Raw(fmt.Sprintf(
+				"DELETE FROM %v%v%v",
+				scope.QuotedTableName(),
+				addExtraSpaceIfExist(scope.CombinedConditionSql()),
+				addExtraSpaceIfExist(extraOption),
+			)).Exec()
+		}
+	}
+}
+
+// 这个方法有点丢多余 就看看string 加一个牵制空格 作用是后续 依据文件手动修改库的时候使用的
+// addExtraSpaceIfExist adds a separator
+func addExtraSpaceIfExist(str string) string {
+	if str != "" {
+		return " " + str
+	}
+	return ""
+}
+
+// 最后依然给它，挂回去就好啦
+func Setup() {
+// ++++
+db.Callback().Delete().Replace("gorm:delete", deleteCallback)
+// ++++
+}
+
+```
+
+# JWT
+> 这个小节，你将学会如何在gin中使用中间件 middwaare，和从http header中获取数据，以及jwt 验证实现
+>
+
+需要基础的Http web service 都需要做 jwt 验证，看看是否是系统允许的用户，保护系统。也就是我们常说的，xxx必须要登录才能使用，目前许多产品都是 以用户账号 为核心，然后扩展开的一些列的业务。
+
+对于go，go-gin 而言，要想做一个jwt 还是非常的简单和简洁的，请看下面的逻辑和实现过程。
+
+## Token的解析器和生成器
+我们首先来定义 生成器和解析器，我们使用来一个库 go get -u github.com/dgrijalva/jwt-go
+
+```shell
+go get -u github.com/dgrijalva/jwt-go
+```
+
+```go
+package util
+
+import (
+	"time"
+
+	"github.com/BM-laoli/go-gin-example/pkg/setting"
+	jwt "github.com/dgrijalva/jwt-go"
+)
+
+var jwtSecret = []byte(setting.AppSetting.JwtSecret)
+// 这个要使用 byte
+
+
+// 定义token解析出来的格式和签入token中的数据
+type Claims struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	jwt.StandardClaims
+}
+
+// 生成Token
+func GenerateToken(username, password string) (string, error) {
+	nowTime := time.Now()
+	expireTime := nowTime.Add(3 * time.Hour) // 设置过期时间
+
+	claims := Claims{ // 准备把信息签名 jwt-go 提供
+		username,
+		password,
+		jwt.StandardClaims{
+			ExpiresAt: expireTime.Unix(),
+			Issuer:    "gin-blog",
+		},
+	}
+
+	// SigningMethodHS256  + Secret加密
+    // 目前一共有三种 crypto.Hash 方案 SigningMethodHS256、SigningMethodHS384、SigningMethodHS512
+	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token, err := tokenClaims.SignedString(jwtSecret)
+    // SignedString 生产内部签名 获取完整token
+
+	return token, err
+}
+
+// 解析token
+func ParseToken(token string) (*Claims, error) {
+	tokenClaims, err := jwt.ParseWithClaims(token, &Claims{}, // 用于解析鉴权的声明，方法内部主要是具体的解码和校验的过程，最终返回*Token
+		// 这个是回调 可以多更多的操作
+		func(token *jwt.Token) (interface{}, error) {
+			return jwtSecret, nil
+		})
+
+	if tokenClaims != nil {
+		// tokenClaims.Valid 验证是否过期 基于时间的声明exp, iat, nbf
+		if claims, ok := tokenClaims.Claims.(*Claims); ok && tokenClaims.Valid {
+			return claims, nil
+		}
+	}
+
+	return nil, err
+}
+
+```
+
+## 中间件
+我们给gin加一个中间件，它的作用是在 router 进入到 正式业务（需要签名）的api之前，做一次验证
+
+```go
+
+// 中间件 用于处理和检测token 是否正确
+func JWT() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var code int
+		var data interface{}
+		var token string
+
+		code = e.SUCCESS
+
+		var orgToken = c.Request.Header.Get("Authorization")
+		if orgToken == "" {
+			code = e.INVALID_PARAMS
+		} else {
+			token = strings.Fields(orgToken)[1]
+		}
+
+		if token == "" {
+			code = e.INVALID_PARAMS
+		} else {
+			claims, err := util.ParseToken(token)
+			logging.Error(err)
+			if err != nil {
+				code = e.ERROR_AUTH_CHECK_TOKEN_FAIL
+			} else if time.Now().Unix() > claims.ExpiresAt {
+				code = e.ERROR_AUTH_CHECK_TOKEN_TIMEOUT
+			}
+		}
+
+		if code != e.SUCCESS {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"code": code,
+				"msg":  e.GetMsg(code),
+				"data": data,
+			})
+
+			c.Abort()
+			return
+		}
+
+		// 成功之后 调用next 说明通过了这个中间件 和node 比较类似
+		c.Next()
+	}
+}
+
+
+// 使用起来非常的简单 use 就好啦
+r.POST("/auth", api.GetAuth)
+r.POST("/authRegister", api.Register)
+apiv1 := r.Group("/api/v1")
+apiv1.Use(jwt.JWT()) // 某些api之后的都会经过验证，之前的是不回验证的 /auth /authRegister都不会
+{
+    // ++++
+    apiv1.GET("/tags", v1.GetTags)
+}
+
+```
+
+## 其他部分
+主要是指 service 和 model 以及 controller
+
+```go
+// 编写具体的 router 和 service 以及model(主要是auth)
+// **auth.modle.go**
+type Auth struct {
+	ID       int    `gorm:"primary_key" json:"id"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+func CheckAuth(username, password string) bool {
+	// 坚持的方式不应该这样
+	// 它应该 只要redis中有这个登录的key就可以证明 用户当前的登录了的
+	var auth Auth
+	db.Select("id").Where(Auth{Username: username, Password: password}).First(&auth)
+	if auth.ID > 0 {
+		return true
+	}
+
+	return false
+}
+
+func GetUserById(username, password string) (Auth, error) {
+	var (
+		auth Auth
+		err  error
+	)
+
+	err = db.Where(Auth{Username: username}).First(&auth).Error
+	if err != nil {
+		return auth, err
+	}
+	return auth, nil
+}
+
+// user注册
+func AddAuth(data map[string]interface{}) error {
+
+	pst, err := PasswordHash(data["password"].(string))
+
+	if err != nil {
+		return err
+	}
+
+	user := &Auth{
+		Username: data["name"].(string),
+		Password: pst,
+	}
+
+	if err := db.Create(&user).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+// 密码加密: 传入密码  ==> 加密后的密码
+func PasswordHash(pwd string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(pwd), 4)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), err
+}
+
+// 密码验证: 用户发送过来的密码 + 数据库中查出来的密码===>  bool
+func PasswordVerify(pwd string, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(pwd))
+	return err == nil
+}
+
+
+// **service 处理**
+type UserType struct {
+	Username string `json:"name" valid:"Required; MaxSize(50)"`
+	Password string `json:"password" valid:"Required; MaxSize(50)"`
+}
+
+// 增加用户
+func (a *UserType) AddAuthUser() error {
+	article := map[string]interface{}{
+		"name":     a.Username,
+		"password": a.Password,
+	}
+
+	if err := models.AddAuth(article); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// 看看是否上正确的可以 通过bcript签名通过的用户
+func (a *UserType) VerifyUser() (bool, error) {
+	article := map[string]interface{}{
+		"name":     a.Username,
+		"password": a.Password,
+	}
+	logging.Info("错误", fmt.Sprintf("--->", article))
+	findUser, err := models.GetUserById(article["name"].(string), article["password"].(string))
+	logging.Info("获取到的用户是", fmt.Sprintf("findUser--->", findUser))
+	return models.PasswordVerify(article["password"].(string), findUser.Password), err
+}
+
+
+// **controller 是**
+type UserType struct {
+	Username string `json:"name" valid:"Required; MaxSize(50)"`
+	Password string `json:"password" valid:"Required; MaxSize(50)"`
+}
+
+// 生产token并返回 类似于登录
+func GetAuth(c *gin.Context) {
+	var (
+		appG = app.Gin{C: c}
+		user UserType
+	)
+
+	httpCode, errCode := app.BindAndValidForJSON(c, &user)
+	if errCode != e.SUCCESS {
+		appG.Response(httpCode, errCode, nil)
+		return
+	}
+
+	authService := auth_service.UserType{
+		Username: user.Username,
+		Password: user.Password,
+	}
+
+	// 1.把这个用户名的密码给找出来 从数据库
+	// 2. 进行密码核对
+	// 3. 若成功就下发token签名
+
+	isValid, _ := authService.VerifyUser()
+
+	if !isValid {
+		appG.Response(http.StatusInternalServerError, e.ERROR_ADD_TAG_FAIL, nil)
+		return
+	}
+
+	// 开始生产token
+	token, err2 := util.GenerateToken(authService.Username, "")
+	if err2 != nil {
+		appG.Response(http.StatusInternalServerError, e.ERROR_ADD_TAG_FAIL, nil)
+		return
+	}
+
+	appG.Response(http.StatusOK, e.SUCCESS, map[string]interface{}{
+		"token": token,
+	})
+}
+
+func Register(c *gin.Context) {
+	var (
+		appG = app.Gin{C: c}
+		user UserType
+	)
+
+	httpCode, errCode := app.BindAndValidForJSON(c, &user)
+	if errCode != e.SUCCESS {
+		appG.Response(httpCode, errCode, nil)
+		return
+	}
+
+	authService := auth_service.UserType{
+		Username: user.Username,
+		Password: user.Password,
+	}
+
+	err := authService.AddAuthUser()
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, e.ERROR_ADD_TAG_FAIL, nil)
+		return
+	}
+
+	appG.Response(http.StatusOK, e.SUCCESS, nil)
+}
+
+
+// 到main中载入
+// 路由模块和分组 以及jwt验证中间价
+r.GET("/auth", api.GetAuth)
+apiv1 := r.Group("/api/v1")
+apiv1.Use(jwt.JWT())
+{
+    // ++++
+    apiv1.GET("/tags", v1.GetTags)
+}
+```
+
+# 日志
+我们都知道，日志对于一个正经的程序来说，十分的重要。我们这里暂且实现一个本地的文件日志系统，用来获取一些简单的日志，比如api的调用次数的分析，和error的分析. 我们没有使用到其他复杂的lib，只用到了 最简单的log 库，现在我们对他进行一点点的小改造。
+
+## 文件读写工具🔧
+既然我们的目标是把，日志写入到.log 文件中。那么我们就需要对本地文件进行 创建读写等操作，为此我们需要一个工具pkg 来完成 对log file 文件的操作
+
+```go
+package logging
+
+import (
+	"os"
+	"time"
+	"fmt"
+	"log"
+)
+
+var (
+	LogSavePath = "runtime/logs/"
+	LogSaveName = "log"
+	LogFileExt = "log"
+	TimeFormat = "20230102"
+)
+
+func getLogFilePath() string {
+	return fmt.Sprintf("%s", LogSavePath)
+}
+
+func getLogFileFullPath() string {
+	prefixPath := getLogFilePath()
+	suffixPath := fmt.Sprintf("%s%s.%s", LogSaveName, time.Now().Format(TimeFormat), LogFileExt)
+
+	return fmt.Sprintf("%s%s", prefixPath, suffixPath)
+}
+
+func openLogFile(filePath string) *os.File {
+	_, err := os.Stat(filePath)
+/*
+：返回文件信息结构描述文件。如果出现错误，会返回*PathError
+type PathError struct {
+    Op   string
+    Path string
+    Err  error
+}
+*/
+	switch {
+		case os.IsNotExist(err):
+			mkDir()
+		case os.IsPermission(err):
+			log.Fatalf("Permission :%v", err)
+	}
+
+	handle, err := os.OpenFile(filePath, os.O_APPEND | os.O_CREATE | os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatalf("Fail to OpenFile :%v", err)
+	}
+
+	return handle
+}
+
+func mkDir() {
+	dir, _ := os.Getwd()
+	err := os.MkdirAll(dir + "/" + getLogFilePath(), os.ModePerm)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+下面是有关os的一些基础知识要点:
+
++ <font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">os.IsNotExist</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">：能够接受</font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">ErrNotExist</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">、</font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">syscall</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">的一些错误，它会返回一个布尔值，能够得知文件不存在或目录不存在</font>
++ <font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">os.IsPermission</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">：能够接受</font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">ErrPermission</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">、</font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">syscall</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">的一些错误，它会返回一个布尔值，能够得知权限是否满足</font>
++ <font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">os.OpenFile</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">：调用文件，支持传入文件名称、指定的模式调用文件、文件权限，返回的文件的方法可以用于 I/O。如果出现错误，则为</font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">*PathError</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">。</font>
+
+```go
+const (
+    // Exactly one of O_RDONLY, O_WRONLY, or O_RDWR must be specified.
+    O_RDONLY int = syscall.O_RDONLY // 以只读模式打开文件
+    O_WRONLY int = syscall.O_WRONLY // 以只写模式打开文件
+    O_RDWR   int = syscall.O_RDWR   // 以读写模式打开文件
+    // The remaining values may be or'ed in to control behavior.
+    O_APPEND int = syscall.O_APPEND // 在写入时将数据追加到文件中
+    O_CREATE int = syscall.O_CREAT  // 如果不存在，则创建一个新文件
+    O_EXCL   int = syscall.O_EXCL   // 使用O_CREATE时，文件必须不存在
+    O_SYNC   int = syscall.O_SYNC   // 同步IO
+    O_TRUNC  int = syscall.O_TRUNC  // 如果可以，打开时
+)
+```
+
++ <font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">os.Getwd</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">：返回与当前目录对应的根路径名</font>
++ <font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">os.MkdirAll</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">：创建对应的目录以及所需的子目录，若成功则返回</font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">nil</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">，否则返回</font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">error</font>
++ <font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">os.ModePerm</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">：</font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">const</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">定义</font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">ModePerm FileMode = 0777</font>
+
+## log封装
+```go
+// 主要是对log的简单封装 log 显示的时候，顺便把本地日志也存了
+package logging
+
+import (
+	"fmt"
+	"log"
+	"os"
+	"path/filepath"
+	"runtime"
+)
+
+type Level int
+
+var (
+	F *os.File
+
+	DefaultPrefix      = ""
+	DefaultCallerDepth = 2
+
+	logger     *log.Logger
+	logPrefix  = ""
+	levelFlags = []string{"DEBUG", "INFO", "WARN", "ERROR", "FATAL"}
+)
+
+const (
+	DEBUG Level = iota
+	INFO
+	WARNING
+	ERROR
+	FATAL
+)
+
+// 主要是初始化一个 记录系统日志相关的 函数用来收集和向 本地文件写入收集到的错误
+// 获取文件写入文件 文件创建使用了os库
+func Setup() {
+	var err error
+	filePath := getLogFilePath()
+	fileName := getLogFileName()
+	F, err = openLogFile(fileName, filePath)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	logger = log.New(F, DefaultPrefix, log.LstdFlags)
+/*
+  log.New创建一个新的日志记录器。其签名如下 func New(out io.Writer, prefix string, flag int) *Logger {...}
+out定义要写入日志数据的IO句柄。
+prefix定义每个生成的日志行的开头。
+flag定义了日志记录属性    
+
+log.LstdFlags 有下面的这些选项
+const (
+    Ldate         = 1 << iota     // the date in the local time zone: 2009/01/23
+    Ltime                         // the time in the local time zone: 01:23:23
+    Lmicroseconds                 // microsecond resolution: 01:23:23.123123.  assumes Ltime.
+    Llongfile                     // full file name and line number: /a/b/c/d.go:23
+    Lshortfile                    // final file name element and line number: d.go:23. overrides Llongfile
+    LUTC                          // if Ldate or Ltime is set, use UTC rather than the local time zone
+    LstdFlags     = Ldate | Ltime // initial values for the standard logger
+)
+*/
+}
+
+func Debug(v ...interface{}) {
+	setPrefix(DEBUG)
+
+	logger.Println(v)
+}
+
+func Info(v ...interface{}) {
+	setPrefix(INFO)
+
+	logger.Println(v)
+}
+
+func Warn(v ...interface{}) {
+	setPrefix(WARNING)
+	logger.Println(v)
+}
+
+func Error(v ...interface{}) {
+	setPrefix(ERROR)
+	logger.Println(v)
+}
+
+func Fatal(v ...interface{}) {
+	setPrefix(FATAL)
+	logger.Fatalln(v)
+}
+
+func setPrefix(level Level) {
+	_, file, line, ok := runtime.Caller(DefaultCallerDepth)
+	if ok {
+		logPrefix = fmt.Sprintf("[%s][%s:%d]", levelFlags[level], filepath.Base(file), line)
+	} else {
+		logPrefix = fmt.Sprintf("[%s]", levelFlags[level])
+	}
+
+	logger.SetPrefix(logPrefix)
+}
+
+```
+
+## 效果
+```go
+//+++++
+// 我们只需要引入我们自己的 loggin然后去.log 记录就好啦. 下面是例子👇
+code := e.INVALID_PARAMS
+	if ok {
+		...
+	} else {
+	    for _, err := range valid.Errors {
+                logging.Info(err.Key, err.Message)
+            }
+	}
+//+++++
+
+```
+
+记录的格式如下
+
+![](https://cdn.nlark.com/yuque/0/2023/png/1627571/1672898718921-03288477-b985-44d2-80e3-15d291f46022.png)
+
+# 优雅重启
+主要的目标还是，希望程序在替换的时候，能够做到热更新。既程序的移交能够达到下面的目标
+
++ <font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">不关闭现有连接（正在运行中的程序）</font>
++ <font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">新的进程启动并替代旧进程</font>
++ <font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">新的进程接管新的连接</font>
++ <font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">连接要随时响应用户的请求，当用户仍在请求旧进程时要保持连接，新用户应请求新进程，不可以出现拒绝请求的情况</font>
+
+## <font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">信号是什么？理论指导</font>
+首先我们了解一下，当你在shell中 直接 ctrl + c 的时候，实际上是给os发送了一个信号，这个信号标识 os 将要为你做些什么。
+
+
+
+<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">信号是 </font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">Unix</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> 、类 </font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">Unix</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> 以及其他 </font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">POSIX</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> 兼容的操作系统中进程间通讯的一种有限制的方式，它是一种异步的通知机制，用来提醒进程一个事件（硬件异常、程序执行异常、外部发出信号）已经发生。当一个信号发送给一个进程，操作系统中断了进程正常的控制流程。此时，任何非原子操作都将被中断。如果进程定义了信号的处理函数，那么它将被执行，否则就执行默认的处理函数，</font>下面是一些常见的信号 。
+
+| **<font style="color:rgb(59, 62, 72);">命令</font>** | **<font style="color:rgb(59, 62, 72);">信号</font>** | **<font style="color:rgb(59, 62, 72);">含义</font>** |
+| --- | --- | --- |
+| <font style="color:rgb(59, 62, 72);">ctrl + c</font> | <font style="color:rgb(59, 62, 72);">SIGINT</font> | <font style="color:rgb(59, 62, 72);">强制进程结束</font> |
+| <font style="color:rgb(59, 62, 72);">ctrl + z</font> | <font style="color:rgb(59, 62, 72);">SIGTSTP</font> | <font style="color:rgb(59, 62, 72);">任务中断，进程挂起</font> |
+| <font style="color:rgb(59, 62, 72);">ctrl + \</font> | <font style="color:rgb(59, 62, 72);">SIGQUIT</font> | <font style="color:rgb(59, 62, 72);">进程结束 和</font><font style="color:rgb(59, 62, 72);"> </font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">dump core</font> |
+| <font style="color:rgb(59, 62, 72);">ctrl + d</font> | | <font style="color:rgb(59, 62, 72);">EOF</font> |
+| | <font style="color:rgb(59, 62, 72);">SIGHUP</font> | <font style="color:rgb(59, 62, 72);">终止收到该信号的进程。若程序中没有捕捉该信号，当收到该信号时，进程就会退出（常用于 重启、重新加载进程）</font> |
+
+
+```shell
+kill -l
+ 1) SIGHUP   2) SIGINT   3) SIGQUIT  4) SIGILL   5) SIGTRAP
+ 6) SIGABRT  7) SIGBUS   8) SIGFPE   9) SIGKILL 10) SIGUSR1
+11) SIGSEGV 12) SIGUSR2 13) SIGPIPE 14) SIGALRM 15) SIGTERM
+16) SIGSTKFLT   17) SIGCHLD 18) SIGCONT 19) SIGSTOP 20) SIGTSTP
+21) SIGTTIN 22) SIGTTOU 23) SIGURG  24) SIGXCPU 25) SIGXFSZ
+26) SIGVTALRM   27) SIGPROF 28) SIGWINCH    29) SIGIO   30) SIGPWR
+31) SIGSYS  34) SIGRTMIN    35) SIGRTMIN+1  36) SIGRTMIN+2  37) SIGRTMIN+3
+38) SIGRTMIN+4  39) SIGRTMIN+5  40) SIGRTMIN+6  41) SIGRTMIN+7  42) SIGRTMIN+8
+43) SIGRTMIN+9  44) SIGRTMIN+10 45) SIGRTMIN+11 46) SIGRTMIN+12 47) SIGRTMIN+13
+48) SIGRTMIN+14 49) SIGRTMIN+15 50) SIGRTMAX-14 51) SIGRTMAX-13 52) SIGRTMAX-12
+53) SIGRTMAX-11 54) SIGRTMAX-10 55) SIGRTMAX-9  56) SIGRTMAX-8  57) SIGRTMAX-7
+58) SIGRTMAX-6  59) SIGRTMAX-5  60) SIGRTMAX-4  61) SIGRTMAX-3  62) SIGRTMAX-2
+63) SIGRTMAX-1  64) SIGRTMAX
+```
+
+如果我们在程序升级的时候，直接ctrl_C 或则 kill -9 pid 都会导致 ，运行中的程序被掐断，导致正在访问的用户遇到问题。那么如何做才能无痛呢？
+
+
+
+## 如何做
+  主要的流程如下
+
+<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">1、替换可执行文件或修改配置文件</font>
+
+<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">2、发送信号量</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> </font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">SIGHUP</font>
+
+<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">3、拒绝新连接请求旧进程，但要保证已有连接正常</font>
+
+<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">4、启动新的子进程</font>
+
+<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">5、新的子进程开始</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> </font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">Accet</font>
+
+<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">6、系统将新的请求转交新的子进程</font>
+
+<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">7、旧进程处理完所有旧连接后正常结束</font>
+
+<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"></font>
+
+<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">我们使用 </font>[fvbock/endless](https://github.com/fvbock/endless)<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">  实现 </font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">Golang HTTP/HTTPS</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> 服务重新启动的零停机 </font>
+
+<font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">endless server</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> </font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">监听以下几种信号量：</font>
+
++ <font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">syscall.SIGHUP：触发</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> </font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">fork</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> </font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">子进程和重新启动</font>
++ <font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">syscall.SIGUSR1/syscall.SIGTSTP：被监听，但不会触发任何动作</font>
++ <font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">syscall.SIGUSR2：触发</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> </font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">hammerTime</font>
++ <font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">syscall.SIGINT/syscall.SIGTERM：触发服务器关闭（会完成正在运行的请求）</font>
+
+<font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">endless</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> 正正是依靠监听这些</font>**<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">信号量</font>**<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">，完成管控的一系列动作</font>
+
+<font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">endless.NewServer</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> 返回一个初始化的 </font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">endlessServer</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> 对象，在 </font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">BeforeBegin</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> 时输出当前进程的 </font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">pid</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);">，调用 </font><font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">ListenAndServe</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> 将实际“启动”服务</font>
+
+<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"></font>
+
+```go
+package main
+
+import (
+    "fmt"
+    "log"
+    "syscall"
+
+    "github.com/fvbock/endless"
+
+    "gin-blog/routers"
+    "gin-blog/pkg/setting"
+)
+
+func main() {
+    endless.DefaultReadTimeOut = setting.ReadTimeout
+    endless.DefaultWriteTimeOut = setting.WriteTimeout
+    endless.DefaultMaxHeaderBytes = 1 << 20
+    endPoint := fmt.Sprintf(":%d", setting.HTTPPort)
+
+    server := endless.NewServer(endPoint, routers.InitRouter())
+    server.BeforeBegin = func(add string) {
+        log.Printf("Actual pid is %d", syscall.Getpid())
+    }
+
+    err := server.ListenAndServe()
+    if err != nil {
+        log.Printf("Server err: %v", err)
+    }
+}
+```
+
+<font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"></font>
+
+下面我们只需要 简单的验证一下就好啦，主要验证步骤如下
+
+```shell
+go build main.go 
+# 编译
+
+./main
+# 执行
+
+# 日志log
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+...
+Actual pid is 48601
+# 目前pid 是 48601 ，现在我们来到另一个终端 去kill 这个进程，之后你会发现，原来的的终端 48601这个
+
+# 日志log
+...
+Actual pid is 48601
+....
+
+Actual pid is 48755
+48601 Received SIGTERM.
+48601 [::]:8000 Listener closed.
+48601 Waiting for connections to finish...
+48601 Serve() returning...
+Server err: accept tcp [::]:8000: use of closed network connection
+
+# 可以看到 又 fork 一个 48755 
+# 这个是你如果你去调接口它依然能通，请求中的也不会立即断，而是完成之后才会断
+```
+
+<font style="color:rgb(44, 62, 80);background-color:rgb(238, 238, 238);">endless</font><font style="color:rgb(59, 62, 72);background-color:rgb(252, 252, 252);"> 热更新是采取创建子进程后，将原进程退出的方式</font>
+
+
+
+# 整理一下目前为止的代码
+到目前为止我们看看我们都实现了怎么样的功能
+
+    - [x] 基础的config 配置
+    - [x] 基础的 router 配置 
+    - [x] 基础的modle 和gorm 单表操作
+    - [x] 进阶的gorm 关联操作
+    - [x] spring 化的一些概念 （service controller dto entities）
+    - [x] 统一返回格式
+    - [x] 中间件jwt
+    - [x] 日志
+    - [x] 优雅重启
+
+文件夹📁 结构如下（我重新做了调整把它，弄成了类似 我的nest 项目的结构，当然结构无所谓，大家都很灵活，我只是习惯了这样做而已）
+
+
+
+
+

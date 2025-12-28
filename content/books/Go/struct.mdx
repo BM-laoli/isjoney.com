@@ -1,0 +1,130 @@
+---
+title: "Go 结构体详解：定义、参数传递与指针操作"
+date: "2024-12-19"
+summary: "深入讲解 Go 语言中结构体的基本使用、作为函数参数的传递方式以及结构体指针的应用场景。"
+status: "completed"
+tech: ["Go", "Struct", "Pointer"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Go"
+---
+
+# 章节概述如下
+
+
+> 本章节主要讲解的是 构造体 struct 实际上按照 js的语法概念来说就 是对象或者是类
+>
+
+
+
+1. 简单的使用
+2. 结构体作为函数的参数
+3. 结构体还可以存指针
+
+
+
+## 简单的使用
+
+
+```go
+// 概述，所谓的结构体就是一个对象哈，但是go中没有z对象，于是就诞生了结构体
+type Books struct {
+	title string
+	author string
+	subject string
+	book_id int
+}
+
+// 简单的使用
+func initStruct()  {
+	fmt.Println(Books{"Go 语言","部门老李","部门部门",6495407})
+	// 也可以使用 key => value 格式
+	book2 := Books{
+			title: "Go 语言",
+			author: "www.runoob.com",
+			subject: "Go 语言教程",
+			book_id: 6495407
+		}
+
+    fmt.Println(
+		book2
+	)
+    // 下面这样的子也是可以的 创建指针类型结构体 等价于 &book2 &取址运算符 
+    // bookObj := new(Book)
+    // bookObj.title = "xxx"
+
+	// 忽略的字段为 0 或 空
+	fmt.Println(Books{title: "Go 语言", author: "www.runoob.com"})
+
+	var book1 Books
+	
+	// 访问结构中的成员  构造体.成员名
+	book1.title = "java语言"
+	fmt.Println(book1.title)
+}
+```
+
+
+
+## 结构体作为函数的参数
+
+
+```go
+
+// 结构体作为函数的参数
+func funcParmasStruct()  {
+	var Book1 Books
+	Book1.title = "Go 语言"
+	Book1.author = "www.runoob.com"
+	Book1.subject = "Go 语言教程"
+	Book1.book_id = 6495407
+
+	printBook(Book1)
+}
+func printBook( book Books ) {
+	fmt.Printf( "Book title : %s\n", book.title)
+	fmt.Printf( "Book author : %s\n", book.author)
+	fmt.Printf( "Book subject : %s\n", book.subject)
+	fmt.Printf( "Book book_id : %d\n", book.book_id)
+}
+```
+
+
+
+## 结构体还可以存指针
+
+
+```go
+
+// 结构体还可以存指针
+func PointerStruct(){
+	var Book1 Books        /* 声明 Book1 为 Books 类型 */
+	var Book2 Books        /* 声明 Book2 为 Books 类型 */
+
+	/* book 1 描述 */
+	Book1.title = "Go 语言"
+	Book1.author = "www.runoob.com"
+	Book1.subject = "Go 语言教程"
+	Book1.book_id = 6495407
+
+	/* book 2 描述 */
+	Book2.title = "Python 教程"
+	Book2.author = "www.runoob.com"
+	Book2.subject = "Python 语言教程"
+	Book2.book_id = 6495700
+
+	/* 打印 Book1 信息 */
+	printBookStruct(&Book1)  // 指针
+
+	/* 打印 Book2 信息 */
+	printBookStruct(&Book2)
+}
+
+func printBookStruct( book *Books ) {
+   fmt.Printf( "Book title : %s\n", book.title)
+   fmt.Printf( "Book author : %s\n", book.author)
+   fmt.Printf( "Book subject : %s\n", book.subject)
+   fmt.Printf( "Book book_id : %d\n", book.book_id)
+}
+```
+

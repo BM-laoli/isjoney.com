@@ -1,0 +1,49 @@
+---
+title: "Go 递归算法实现：阶乘与斐波那契数列"
+date: "2024-12-19"
+summary: "深入讲解递归算法在 Go 语言中的实现，包括阶乘计算和斐波那契数列的经典案例。"
+status: "completed"
+tech: ["Go", "Recursion", "Algorithm"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "Go"
+---
+
+# 章节概述如下
+
+
+> 这里 不涉及什么语法，主要讲的是 递归算法在go中的实现
+>
+
+
+
+```go
+package main
+import "fmt"
+
+func  main()  {
+	fmt.Println("8的阶乘是",factorin(8))
+	for i :=0; i <10; i++ {
+		fmt.Println("100的斐波那契 \t",fibonacci(i)) 
+	} 
+}
+
+
+// 又是该死的递归哈,这里的这些问题，实际上还是和算法有关
+func factorin(n uint64)( result uint64 )  {
+	if( n>0 ){
+		result = n * factorin(n-1)
+		return result
+	}
+	return 1
+}	
+
+//  斐波那契数列
+func fibonacci(n int) int  {
+	if(n<2){
+		return n
+	}
+	return fibonacci(n-2) + fibonacci(n-1)  
+}
+```
+
