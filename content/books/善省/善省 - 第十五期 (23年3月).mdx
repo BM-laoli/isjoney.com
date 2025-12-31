@@ -1,0 +1,115 @@
+---
+title: "善省 - 第十五期 (23年3月)"
+date: "2024-12-19"
+summary: "记录3月份的工作思考，包括需求估算方法、分治策略应用、空杯心态的重要性，以及自我警醒防止技术能力腐化的反思。"
+status: "completed"
+tech: ["React","TypeScript","前端开发"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "善省"
+---
+
+> 记录一下 3月
+>
+
+# 需要更好的去估算
+一开始我获取到了，一张表 这个就是需求  
+![](https://cdn.nlark.com/yuque/0/2023/png/1627571/1678519878807-d4bc9b72-a34a-4b0c-a3f7-f57690630ad3.png)
+
+![](https://cdn.nlark.com/yuque/0/2023/png/1627571/1678519943592-12f32f6a-44fb-41b5-8f1c-b5b9f86c671b.png)
+
+ 
+
+我需要把这些个状态 转到 App中，一开始我想的比较的简单。直接转一下 就好啦，但是我再后续的深入写的过程中，才发现了 存在的种种问题，比如 它这个表格仅仅是业务文档，并不是代码实现的设计，具体的代码 还需要自己去 run 3.0 4.0 去挖 PC 端的代码。还好是React 如果是Ng 1.0 什么的，那么这个就很完蛋！
+
+总而严重，我这个估算还是过于简单了，或许我们需要一种 有效的 **<font style="color:#DF2A3F;">估算方法 和策略 </font>**来帮助我估算这些事情 所需要的工作量。
+
+
+
+# 关于 “分治”
+还是关于 上面的那个需求 👆，我们不能从 ‘线性逻辑出发’，一点点的判断。最后我们需要在UI上展示两个 一个是 exproed time 一个是 tips ，我们把他们分开来看，分而治之 ！ 这点很重要。
+
+这里前往不要把 一行一行的 expired & tips 组合起来，这样的话，你的判断逻辑，将会变成非常非常的长，且复杂，代码也会很丑陋
+
+关于 tips的各种逻辑判断，什么直接用map 来映射
+
+```typescript
+
+function createTips({
+  notReceived,
+  isDamage,
+  isDelivered,
+  minutes,
+  hasReturnLabels,
+  othterReason,
+  waitToship,
+  rmaType,
+  isExpired,
+}: TipsProps): string {
+  const MapValue = new Map();
+  // isRefund ， typeReason ，isWaitToShip， hasLabel，isDelivered， isExpired
+  // typeReason: notReceived, Damage, othterReason
+  MapValue.set('true-notReceived-false-false-false-false', 'rma.notice.no-expired');
+  MapValue.set('true-notReceived-false-false-false-true', 'rma.notice.expired');
+
+  MapValue.set('true-Damage-false-false-false-false', 'rma.notice.no-expired');
+  MapValue.set('true-Damage-false-false-false-true', 'rma.notice.expired');
+  MapValue.set('true-Damage-false-true-true-false', 'rma.notice.go-PC');
+  MapValue.set('true-Damage-false-true-true-true', 'rma.notice.go-PC');
+
+  MapValue.set('true-othterReason-false-false-true-false', 'rma.notice.no-expired');
+  MapValue.set('true-othterReason-false-false-true-true', 'rma.notice.expired');
+
+  // replace
+  MapValue.set('false-Damage-false-false-false-false', 'rma.notice.go-PC');
+  MapValue.set('false-Damage-false-false-false-true', 'rma.notice.expired');
+  MapValue.set('false-Damage-false-false-true-false', 'rma.notice.no-expired');
+  MapValue.set('false-Damage-false-false-true-true', 'rma.notice.expired');
+  MapValue.set('false-Damage-true-false-false-false', 'rma.notice.replacement.no-expired');
+  MapValue.set('false-Damage-true-false-false-true', '');
+
+  MapValue.set('false-othterReason-false-false-true-false', 'rma.notice.no-expired');
+  MapValue.set('false-othterReason-false-false-true-true', 'rma.notice.expired');
+  MapValue.set('false-othterReason-true-false-false-false', 'rma.notice.replacement.no-expired');
+  MapValue.set('false-othterReason-true-false-false-true', '');
+
+  // 组合
+  let str = '';
+  if (rmaType === RMAType.Refund) {
+    str = 'true';
+  } else {
+    str = 'false';
+  }
+
+  if (notReceived) {
+    str += '-notReceived';
+  } else if (isDamage) {
+    str += '-Damage';
+  } else if (othterReason) {
+    str += '-othterReason';
+  }
+
+  str += `-${String(waitToship)}`;
+  str += `-${String(hasReturnLabels)}`;
+  str += `-${String(isDelivered)}`;
+  str += `-${String(isExpired)}`;
+
+  return MapValue.get(str);
+}
+```
+
+# 关于 “空杯”
+一开始我和 SImple(后端)在分析代码的时候，发现一个问题。
+
+![](https://cdn.nlark.com/yuque/0/2023/png/1627571/1678520390048-6be3c710-ecc2-4b0a-bc97-218c9f38ce10.png) 
+
+Simple认为，它就是一个Integer的，我由于不懂后端，以为他的理解是对的，然后去找kyle 老板 “你给的什么破接口 忽悠我呢？”，但是被反向教育了，这个就是一个string ，这个java的写法。就是这个 接口，你们的代码 也找对了 位置，就是这个！
+
+**<font style="color:#DF2A3F;">这件事情 启发了我的思考 “当你什么都不懂的时候，最好抱着一个空杯的心态去寻求答案，再没有的到 真正的答案前，任何人的见解都是参考，并不是真理！”	</font>**
+
+
+
+# 关于自己正在 “腐化”这件事
+> 主要是 EC 这边 ，没有MKPL 那么的忙，有点闲，滑水和摸鱼 的时间多了很多。在我以前的工作经验值 这很罕见。然后自己发现，自己的代码水平有所下降，思考能力也是，这个需要 警惕！别完了 你还有 “年度计划 季度计划呢？”
+>
+

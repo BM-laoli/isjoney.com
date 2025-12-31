@@ -1,0 +1,124 @@
+---
+title: "善省 - 第十期 (22年10月)"
+date: "2024-12-19"
+summary: "探讨配置式代码重构的最佳实践，提出基于配置中心与过滤器链的新方法，避免多层嵌套配置的复杂性，并分享如何快速构建简易试验场的技术方案。"
+status: "completed"
+tech: ["JavaScript","Babel","Configuration","RxJS"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "善省"
+---
+
+> 善于反省的人，一定会积少成多，从量变开始，最终成就自己 产生质变
+>
+
+
+
+## 有关配置式的代码
+目前正在重构Newegg-Chat 相关的代码，之前的代码 有下面的这些问题
+
++ 代码判断（运行时的值 和配置揉在一起
++ 配置七零八落，有的从这里取值，有的去那取值
++ 配置命名不统一，不规范
+
+
+
+我的老板chtser 提出了这样的想法
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1666420057515-8749cc2a-8b93-4747-96f8-3c46d585d7de.png)
+
+也就是 从config 中心出发，然后分级别逐渐的merge ，但是这样真的是最好的实践方式吗，请你想象一下这样的情况
+
+你获取了一个config1 ，它的组装过程是 config-common -> bizX-conofig-common -> bu1-config-comon -> bu1-spacile-config, 
+
+它经过了 很多层的组装，最后才发展成它想要的样纸，如果这个时候，你的某个common 发生了变化，这样的影响，将会把这种影响 传染到整个系统。当你的配置足够复杂的时候，就非常有可能发生这种事情
+
+  
+因此为来构建另一个方法
+
+首先我们依然有一个Config-common 配置中心, 不同的是，这只是一个大而全的配置库
+
+![画板](https://cdn.nlark.com/yuque/0/2022/jpeg/1627571/1666420509716-241bfc1a-22b7-4753-ba17-cef41dc41ba9.jpeg)
+
+在这个池子里，我们不需要关注里面到底如何配置，我们只需要把东西全部丢进去
+
+```javascript
+const configContner = {
+  UIRule: [
+    { buKey:"1",
+ 			des:"这是一个ui行为",
+     	isShow:true
+    },
+    { buKey:"2",
+ 			des:"这是一个ui行为",
+     	isShow:false
+    }
+  ],
+  Teach: [
+    {.....}
+  ]
+}
+```
+
+假设我们最终要得到一个Xconfig ，它要求 key1 的UI行为 是false ，它不需要 关注其他的了。那么我们是否只需要描述如何组合这些配置，（描述好 一个怎么取取的一个Action） ，如果用漏斗来说更加的贴切
+
+![画板](https://cdn.nlark.com/yuque/0/2022/jpeg/1627571/1666420999190-608785b3-34f8-4d23-aae3-48def22304ca.jpeg)
+
+上述的做法，我们就不用关心 config 如何组合 如何覆盖如何继承，我们只需要和rxjs 一样，把注意力放在如何组合这些配置上就好了。
+
+```javascript
+const configCenter = {....}
+const fConfig = trSteam(configCenter).pip( 
+	filter1(),
+  filter2(),
+  filter3(),
+  ....
+ )
+```
+
+也许你会说，不这不是我想要的，我希望它也是配置式的全是！ 这也很简单，我们需要一个config 来描述
+
+“是不是需要这种过滤”，换言之，也许你并不需要某个过滤器，但是其他的业务也许需要，如果你不需要你可以给他一个配置，告诉它 ：“Hi 老兄，你不用取了，你只需要 filter1,filter2 就好了”
+
+```javascript
+const configCenter = {....}
+const yourConfig = {
+	skip:["filter3"]
+}
+const fConfig = trSteam(configCenter).pip( 
+	filter1(),
+  filter2(),
+  filter3(),
+  ....
+ ).skip(yourConfig.skip);
+
+```
+
+这样依赖，也许你就不用考虑 到底该把配置搞多层多层 ，无限嵌套的恶心逻辑了  
+
+
+## 如何快速的构建自己的试验场🧪？  
+
+```markdown
+# 如何构建快速简易的试验场🧪
+
+
+> 实际上就是一个问题：“如何编译一些不合法的js ，如何使用babel 并且能获取它的HRM能力 ”
+
+
+解决上述问题 只需要简单的配置就好了
+
+
+```shell
+./node_modules/.bin/babel ./src -d ./dist -w
+nodemon ./dist
+npm-run-all --parallel dev:**
+```
+
+
+# 处理更复杂的逻辑，请使用webpackage 或者group
+
+
+> 我推荐使用 group 当你的实验室不需要这么复杂的东西的时候
+```
+

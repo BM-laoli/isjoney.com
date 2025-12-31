@@ -1,0 +1,75 @@
+---
+title: "善省 - 第十一期 (22年11月)"
+date: "2024-12-19"
+summary: "讨论前端实验室构建方案，从Babel转向Vite；强调React.displayName的重要性；分享GA4迁移过程中的问题分析经验，提醒要冷静分析、把握关键。"
+status: ""
+tech: ["前端","Vite","React","GA4"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "善省"
+---
+
+## 关于构建🧪实验室
+> 在之前的版本中 11月的期刊中，我提到了 使用bable 仅此一个插件来做 ，试验场，但是这样的不完善的，比如TS和其他功能，UI的试验场 和 框架的试验场，都没有办法做，所以可以选择使用Vite 去处理
+>
+
+
+
+[前端早早聊技术社区-前端职业规划、学习与成长-用得上、听得懂、抄得走](https://www.zaozao.run/live/ffd32)
+
+
+
+[Vite中文网](https://vitejs.cn/)
+
+[lib.zip](https://www.yuque.com/attachments/yuque/0/2022/zip/1627571/1670667229073-f26db612-30e0-486c-9f39-8869d5dd4a71.zip)
+
+[Working...](https://web.microsoftstream.com/video/fefaa17a-86d5-4df9-973d-fc8797d0605e?channelId=9667d102-0a14-4af0-8e1b-43695786c23c&referrer=https:%2F%2Fsecuritytraining.newegg.org%2F)
+
+
+
+[天纪天机道（竖版）.pdf](https://www.yuque.com/attachments/yuque/0/2022/pdf/1627571/1669738338790-017e68b6-6b62-4c36-82a4-05b153669945.pdf)
+
+
+
+[倪海厦天纪系列之天机道.pdf](https://www.yuque.com/attachments/yuque/0/2022/pdf/1627571/1669738360602-baf4207e-cb26-4cb7-a640-0ac3c6c45cf5.pdf)
+
+## 关于写不写React.dispalyName?
+> **<font style="color:#E8323C;">先给结论，我认为是一定要写的</font>**，最近在项目上遇到一个问题，就是线上我能够同构DevTools 来查看功能或则扩展，**<font style="color:#E8323C;">能够不动代码就能完成业务可行性的判断，</font>**我的意思是，你可以在线上看到每个组件的数据，如果要动要改，现在的数据是否就够用了
+>
+
+对此我们有这样的代码
+
+```tsx
+const SellerStoreBannerItem = () => {
+  return (<>
+    <div>6666</div>>
+    <>)
+}
+SellerStoreBannerItem.displayName = 'SellerStoreBannerItem';
+
+```
+
+如果你写了那么不管是本地调试和PRD版本都能看到具体的组件，而不是一些简化的字母, 或者 全都是匿名 的组件非常不好找，和调试
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1668132905498-5cefee2b-5c41-4f6d-8d44-8215fe3b5b4f.png)
+
+
+
+## 问题分析不到位
+> 在做 “GA4 迁移 ”的这个过程中，已经发现有两次是分析问题不够仔细，没有找到根源导致瞎改的情况出现了，具体的情况如下
+>
+
+
+
+1. 在分析 sellerStore中 Swiper 组件 的时候，发现马上触发了两次 promation 事件，并不是展示一次才触发一次。参考HeroBanner 分析第一次的原因是 由于  IntersectionObserver 中的根元素绑定不正确所致，于是就瞎改去了，然后本地调试，发现还是有问题。 第二次分析之后，我到 HerorBanner 的dev 环境去打debugger去了，现在它 是在第一张图出现的时候 触发一个 IntersectionObserver 中的promistion ，而且这个根原属不是挂到图片上的，而是那个外面的容器上，以此来表示  **<u><font style="color:#E8323C;">这是第一个图片</font></u>** ，然后Swiper 上有一个silder change 事件到这里面又进行来触发，发送promistion ，并且把触发过之后存储下来，所以这才是原理！本因
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1669097462394-f77fa111-de44-43c9-bcdf-ec99311937b4.png)
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1669097593264-14656683-fab4-49c0-a69a-c6ad74b9da66.png)
+
+2. 第二个问题是分析 pc builder 的时候发现有数据问题，分析第一次的时候 发现应该是逻辑问题，然后去找接口 准备改接口来。但是冷静分析之后发现不是逻辑的问题，就是数据的问题，我的逻辑没有问题。
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1669097672588-03a45b19-3cbb-4116-98f4-3f87a3eb7663.png)
+
+这两件事情，都说明：“**<u><font style="color:#E8323C;">分析能力不够，不够冷静</font></u>**” 没有把握关键 ！‼️ 
+

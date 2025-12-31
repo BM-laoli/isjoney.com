@@ -1,0 +1,402 @@
+---
+title: "善省 - 第二十期 (23年8月)"
+date: "2024-12-19"
+summary: "分享项目分析经验，包括Chat项目的分析流程、技术实施细节，以及关于专注力和网络资源甄别的思考。"
+status: "completed"
+tech: ["项目分析","Chat项目","技术实施","专注力","资源甄别"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "善省"
+---
+
+# 项目分析的经验
+> 最近我在分析一个 Chat项目的时候  开阔了一种新的项目分析流程，这让我对项目的整体的把握又更强大了一些
+>
+
+
+
+下图的分析过程
+
+```markdown
+**完成🎉  🐱进行中 ✨明天看看能不能搞定  hold🎨**
+
+# 2023-08-23
+
+ [🐱] Chat的剩下改动
+      [🐱] Issuse
+          [🐱] Ifream
+              [🎉] 分析
+              <https://imk.neweggimages.com/amber/json/691/3674.18.js> loadJs
+              <https://imk.neweggimages.com/amber/json/156/3564.16.js> inject-header-proactive 的 inject 与 seller message 没关系
+              [🎉] 设计
+                   让component 一直load 一个遮罩 ，直到 iframe 发出postMessage 消息“我load完了！” ，关闭自己的load 展示 iframe 的dom 就好了
+
+                   1.改脚本 注册postMessage 事件，注意JS 的加载顺序问题
+                   2.给React 给他挂上监听
+                   3.iframe post出一个信息 给React
+                   4.验证 .... 验证成功
+              [🐱] 实施
+                  等待迁移到 新branch ,
+                  SSL 无package 改动 仅 mact-notification 镜像变动
+
+          [🐱] IP 携带
+              [🎉] 分析
+                  initialCustomerMsgInfoToAgent
+                  initialCustomerInfoToAgent
+                  这两个function里会传ip 到precould
+              [🎉] 设计
+                  Chat(initialCustomerInfoToAgent)已经加了 , CSMessage 只需要在调用的时候 + IP 就好了  => initialCustomerMsgInfoToAgent(initialState?.AdditionInfo?.ip),
+                  验证 .... 验证成功
+              [🐱] 实施
+                  等待迁移到 新branch ,
+
+
+          [🐱] 年月日
+              [🎉] 分析
+              需求: 只需要改成 18:03 08/17/2023 格式就好了,范围只有 CSMessage 生效
+              
+              存量代码分析:
+               类型不一样 class=time-stamp 的 DOM展示也不一样 
+                1.MsgType.Agent,  MsgType.ChatBot,  : AgentAdditionalInfo 取 time
+                2.MsgType.User need retry 不会用到 不用管
+                3.MsgType.User 正常的情况会发: AgentAdditionalInfo 取 time
+                总结 去溯源 AgentAdditionalInfo就可以了
+
+                这里会有一个转化工具 convertDate, 在文件 useChatAgentUtils 中被频繁使用
+                这里会有一个转化工具 convertDate, 在文件 useMsgAgentUtils.ts 中被频繁使用
+                在 ChatAgent 中也被 频繁使用
+                在 ChatBot 中也是被 频繁使用
+                在 useMsgAgent.tsx 中也经常被使用
+                在 useMsgBot 中也经常被使用
+
+              [🎉] 设计
+                  从转化来看 这些time 貌似都是从date字段转化来的, 而 AgentAdditionalInfo 中有一个参数叫做 date ,存在于 BaseMsgInfo 中,
+                  为 ele 设定一个 isCSMessage?:boolean 参数 用于适配 CSMessage 场景
+
+                  不行! 以上的方案被否定了 date是Service在msgList 中 ,我们使用的时候是 外层的 BaseAdditionalInfo, 我们试一下给涉及到的地方 把这个参数全load上
+                ```js
+                export const convertDateV2 = (date?: Date): string => {
+                      const targetDate = date ? new Date(date) : new Date();
+                      
+                      const formattedTime = targetDate.toLocaleTimeString('en-US', {
+                          hour: 'numeric',
+                          minute: 'numeric',
+                          hour12: false
+                      });
+
+                      const formattedDate = targetDate.toLocaleDateString('en-US', {
+                          month: '2-digit',
+                          day: '2-digit',
+                          year: 'numeric'
+                      });
+
+                      return `${formattedTime} ${formattedDate}`;
+                  };
+                ```
+                验证 .... 验证成功
+              [🐱] 实施
+                  等待迁移到 新branch ,
+          
+      [🐱] UI Change
+              [🎉] 分析
+                  已经内置了, 我们只需要在这里渲染它就好了, addMsgReasonTable 搜索这个function 从这里entry去查里面的文件修改就好了, 渲染的地方在 render-msg里的 ReasonTable component 
+              [🎉] 设计
+                  自己去 调整样式去
+                  验证 .... 验证成功
+              [🐱] 实施
+                  等待迁移到 新branch ,
+
+# 备份
+
+SSL UI CustomerServiceContent
+
+```js
+
+return state.Messages == null || state.Messages == undefined ? (
+    <LoadingWithoutOverlay isShown={true} />
+  ) : (
+    <div className="col-wide grid-wrap grid-wrap-xl">
+      <div className="col-wide">
+        <div
+          className="seller-msg-wrap item-cells-wrap bg-lightgray radius-m"
+          data-tab-type="tab-wrap"
+        >
+          {/* <!-- msg-container--> */}
+          <div className="seller-msg-container col-wide auto-flex">
+            <div className="seller-msg-inner bg-white is-active" data-tab-type="tab-content">
+              <div className="seller-msg-inner-header">
+                <div className="user-list-cell">
+                  <div className="user-avatar bg-white">
+                    <img src={state.Logo} alt="avatar" />
+                  </div>
+                  <div className="user-list-info auto-flex">
+                    <div className="user-name">
+                      <span>{state.Name}</span>
+                    </div>
+                    {state.Title && (
+                      <div style={{ marginTop: '5px' }}>
+                        <span>{state.Title}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="seller-msg-inner-content" style={{ maxHeight: '400px' }}>
+                <PerfectScrollbar
+                  options={{ wheelPropagation: false }}
+                  className="seller-msg-inner-space"
+                  containerRef={(dialogRef) => setDialoagScrollRef(dialogRef)}
+                  onYReachStart={_.debounce(handleSearch, 500)}
+                  style={{ maxHeight: '370px' }}
+                >
+                  {state.Messages?.map((message, index) => {
+                    return (
+                      <React.Fragment key={`${message.Message}_${index}`}>
+                        <TransactionCell
+                          msg={message}
+                          transactionIndex={index}
+                          userDefaultLogo={userDefaultLogo}
+                        />
+                      </React.Fragment>
+                    );
+                  })}
+                </PerfectScrollbar>
+              </div>
+              {/* <div className="message message-note no-bg">
+                <div className="message-wrapper">
+                  <div className="message-icon"></div>
+                  <div className="message-information">
+                    Note: For your protection, do not share email address, credit card numbers, or
+                    other personal information in your message.
+                  </div>
+                </div>
+              </div> */}
+              <div
+                className={classNames('seller-msg-area', 'radius-s', {
+                  'is-active': !state.ReplySubmintting && textActive,
+                  'show-error': validating && isTextError(typedText),
+                })}
+                ref={textAreaRef}
+                onClick={() => setTextActive(true)}
+              >
+                <div className="message message-note no-bg no-margin seller-msg-inner-note">
+                  <div className="message-wrapper">
+                    <div className="message-icon"></div>
+                    <div className="message-information">
+                      <p>
+                        Note: For your protection, do not share email address, credit card numbers,
+                        or other personal information in your message.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="input-textarea">
+                  <textarea
+                    id="Reply_Msg4"
+                    ref={textRef}
+                    placeholder="Enter Message…"
+                    className="scrollbar txtstuff"
+                    aria-label="Enter Message"
+                    style={{ height: '63px' }}
+                    onChange={(e) => {
+                      if (e.target.value.length > MaxTextCount) {
+                        e.target.value = e.target.value.substring(0, MaxTextCount);
+                      }
+                      setTypedText(e.target.value);
+                    }}
+                  ></textarea>
+                </div>
+
+                {messageCenterState.UploadImageConfig?.CanUpload && attachmentEnabled && (
+                  <AttachmentUploadContainer
+                    title={'Attachments'}
+                    isMediaTitleShow={false}
+                    containerStyle={'attachments is-list'}
+                    required={false}
+                    uploads={[]}
+                    uploadConfig={messageCenterState.UploadImageConfig as any}
+                    isNotAllowReview={false}
+                    bizType={4}
+                    newFileType={true}
+                    setUploading={(status) => {
+                      setAttachmentUploading(status);
+                    }}
+                    addImageInfo={(data, initIndex, fileName, clientName) => {
+                      if (data) {
+                        setImageList((preImageList) => {
+                          preImageList.push({ data, initIndex, fileName, clientName });
+                          return preImageList;
+                        });
+                      }
+                    }}
+                    removeImageInfo={(initIndex) => {
+                      setImageList((preImageList) => {
+                        const now = preImageList.filter((item) => initIndex !== item.initIndex);
+                        return now;
+                      });
+                    }}
+                  />
+                )}
+                <div className="seller-msg-area-footer display-flex">
+                  <div className="seller-msg-area-l">
+                    <div
+                      className="upload-btn"
+                      onClick={() => {
+                        if (_.isEmpty(imageList) && !attachmentUploading) {
+                          setAttachmentEnabled(!attachmentEnabled);
+                        }
+                      }}
+                    >
+                      <label>
+                        <i className="ico ico-paperclip-regular"></i>
+                        <span>Attachments</span>
+                      </label>
+                    </div>
+                    <span>(Optional)</span>
+                    {renderPopover()}
+                  </div>
+                  <div className="seller-msg-area-r">
+                    {renderTextCounter()}
+                    <button
+                      type="button"
+                      className="button button-m bg-blue"
+                      onClick={() => {
+                        handleReplyMessage();
+                      }}
+                      disabled={attachmentUploading || state.ReplySubmintting}
+                    >
+                      {state.ReplySubmintting ? 'SENDING' : 'SEND'}
+                    </button>
+                  </div>
+                </div>
+
+                {state.ReplyResult == false && renderReplyError()}
+
+                {validating && _.isEmpty(typedText?.trim()) && (
+                  <div className="form-error-msg radius-s font-s at-right">
+                    This field is required.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          {/* <!-- //seller-msg-container--> */}
+        </div>
+      </div>
+    </div>
+  );
+
+```
+
+NgChat Reason UI
+
+```tsx
+   return (
+        <div className="table-container">
+            {tableName && <label className="form-cell-name">{tableName}</label>}
+            <table className="table">
+                <tbody>
+                    {currentPageData.map((item, index) => (
+                        <tr key={index}>
+                            <td
+                                onClick={() => {
+                                    onChange && onChange(item);
+                                }}
+                            >
+                                {item}
+                            </td>
+                        </tr>
+                    ))}
+                    <tr key={'pagination'}>
+                        <td>
+                            <div className="pagination">
+                                {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+                                    (page) => (
+                                        <button
+                                            key={page}
+                                            className={page === currentPage ? 'active' : ''}
+                                            onClick={() => handlePageClick(page)}
+                                        >
+                                            {page}
+                                        </button>
+                                    )
+                                )}
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    );
+```
+```
+
+主要的观点是： 细心且有耐心, 一步一步的去分析 整个链路逻辑就可以了
+
+
+
+再举一个例子  （这里是对 存量逻辑的分析 由外部到内部，再有内部到外部）
+
+```javascript
+// NCTools 获取SEODetail------> 这是一个实时 获取的实时生成的
+// -> API = list/{navigationId}/{navigationType}
+  // -> GetSEODetail
+    // -> GetSEODetail 从 表 SEOAutomationNavigationTreeChatGPT 获取数据 SEODetail
+      // -> 执行的DB method = GetSEODetail， 表=SEOAutomationNavigationTreeChatGPT  ContentType = 4 的 ContentDetail 做为  detail.SEOContentList  (容易误导 这里的type 依然是 interface SEODetailInfo)
+    // ->  handleSEODetailSEOContent( SEODetail.SEOContentList ,USA ) 转化 
+      // -> 从SEOContentList 的 TransactionNumber (USA) 中获取 内链 seoInternalLinkList  GetSEOInternalLinkList 转化
+          // 查表 SEOAutomation_InternalLink 执行叫做 GetSEOInternalLinkList ，返回的是 interface SEOInternalLink {} 里面就有 URL
+      // -> 匹配 s.NavigationTreeChatGPT_TranNumber = SEOcontent.TransactionNumber  做matchedSEOInternalLinkList ,SEOContentDetail = table.ContentDetail
+        // -> handleInternalLink 替换(注意新旧之分 主要就是ContentDetail有没有 seoContent ) 
+          // old handleInternalLink( matchedSEOInternalLinkList, jsonDetail.paragraph[i] )
+          // now handleInternalLink( matchedSEOInternalLinkList, jsonDetail.paragraph[i] )
+            //  SEOContentDetailHTMLForUI = 以上handleInternalLink处理过的 内容
+
+
+// Newegg用 生成内链 ------>
+// handleSEODetailSEOContent 从内向外
+  // <- BuildPageSEOAsync
+    // <- appendPageSEODto_Country
+      // <- appendPageSEODto_Item
+          // <- _SEORepository.UpdateSEOStatus
+            // <- _SEOBusiness.UpdateSEOStatus
+              // <- API = list
+
+// 对 handleInternalLink 的解析 ------>
+  // -> 这里只有生成 Keyword 和 a标签的地方 URL Name Keyword 都是从DB里面来的. 本次 ec-bkdchatgptseoService 只处理 这个keyword的替换
+```
+
+
+
+# 能不能不偏离计划(关于专注的问题)
+> 之前
+>
+
+
+
+# 网络的东西课程需要辨别(垃圾信息越来越多)
+> 网络上的资源什么的 这些东西 需要辨别！
+>
+
+这件事情还得从我上7月低 ，突然有一个 “做沙雕短视频”的想法说起,  我评估了我的这个项目 嗯很简单！我能做，于是就从网络上 从咸鱼买了一些资源 断断续续投资了
+
+
+
+咸鱼：￥1.47
+
+资源：￥0.3 素材
+
+插件：￥7.5 RTX AE Plugin 
+
+额外:  显卡炼丹炉改造￥700 
+
+总投资: ￥708.97
+
+时间成本: 4D 32H
+
+收益: ￥0，准备踏入 炼丹的领域 Python AI etc.....
+
+
+
+我发现从咸鱼买的课程 非常的垃圾，一点都不成体系，看完了 笔记也做了，但是很多东西压根讲不到点子上！很垃圾 真的，好几个课程拼接的 还重复，真的！以后的东西还是需要好好的**<font style="color:#DF2A3F;">甄别！如果不然 沉默成本巨大</font>**
+

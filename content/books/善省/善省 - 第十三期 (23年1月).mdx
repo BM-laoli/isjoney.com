@@ -1,0 +1,376 @@
+---
+title: "善省 - 第十三期 (23年1月)"
+date: "2024-12-19"
+summary: "本期内容包括：RXJS Subject和BehaviorScript的使用陷阱与解决方案、JavaScript空值合并运算符(??)的注意事项、React Native CodePush ERROR_CONFLICT问题解析及快速集成方案、MobX状态管理在热更新中的应用实践。"
+status: ""
+tech: ["RXJS","JavaScript","React Native","CodePush","MobX"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "善省"
+---
+
+> 新的一年开始了，记录下你遇到的问题和 灵感吧！
+>
+
+# 
+# RXJS Subject 和 BehaviorSubject
+今年遇到的第一个问题，也是特别容易中招的地方，我们来看下面的这个代码，你觉得它有没有问题
+
+```javascript
+const $ChatSession = new Subject<{ sessionEnd: boolean }>();
+
+
+useEffect( () => {
+	const ws = new WebSokcet('xxx')
+  ws.onMessage((e) => {
+    switch (e.action) {
+      case 1:
+          $ChatSession.next({sessionEnd: ture})
+        break;
+
+        case 2....:
+        .....
+        break;
+    
+      default:
+        break;
+    }
+  })
+
+  return () => {
+    ws.close()
+  }
+},[])
+
+const whenXXXXendChat = () => {
+  // xxx 特定逻辑
+  $ChatSession.next({sessionEnd: ture})
+	// xxx 特定逻辑
+}
+
+const closeHandle = () => {
+     $ChatSession.subscribe((sessionInfo) => {
+        if (sessionInfo.sessionEnd) {
+            hideChatWindow();
+        }
+    });
+}
+
+const closeHandle2 = () => {
+   whenXXXXendChat()
+   $ChatSession.subscribe((sessionInfo) => {
+        if (sessionInfo.sessionEnd) {
+            hideChatWindow();
+        }
+    });
+}
+
+```
+
+	你会发现 触发 closeHadle2 的时候很正常，但是到了 closeHandler 的时候就诡异了，它永远都不会 进入这个 if，因为 $ChatSession  流中已经没数据了！
+
+那么如何修复这个BUG？
+
+```javascript
+const $ChatSession = new BehaviorSubject<{ sessionEnd: boolean }>({ sessionEnd: false});
+
+```
+
+   只需要改成 BehaviorSubject 就好了，官方文档() 每次定于的时候，它都会先去取一个值出来！
+
+但是... 这样的编程设计真的好吗？这样的rxjs使用真的没问题吗？
+
+# 关于 name = initName ?? "Joney"
+请问这个时候 init传递了一个空，它会是什么呢？
+
+```javascript
+const name = initName ?? "Joney";
+```
+
+注意！ 特别要小心这个陷阱 ，当你的initName = " 的时候，它会是一个 "" 只有undefined 的时候才会是 Joney 所以你需要特别注意，想清楚你想要的是什么？**<font style="color:#DF2A3F;">是默认值都是 </font>**Joney**<font style="color:#DF2A3F;">还是允许它出现  "" 的情况呢？</font>**
+
+
+
+# 问题 CodePush ERROR_CONFLICT
+1. 为什么会有 ERROR_CONFLICT ？
+
+   对于 发布包的命令没有什么好说的，主要需要注意的是 由于code push 内部是对不同的版本包做了一次  “包指纹运算”，用以判断资源是否重复，如果你什么都不改 依然连续的 发布，那么不管是Staging /Production , 否会存在冲突（上一个版本的资源已经纯在，不需要再发布）；
+
+  如果你还想改，那么请修改你的代码，让他们产生一些 不一样，这样在 code push 的 “包指纹运算” 中就能生产 新的 resource 了 ，于是不会产生 包冲突
+
+
+
+2. 如果发布的命令错了怎么办？
+
+如果你发布命令错了，那么一般 有两类修改方式；  发布一个新版本(建议使用-简单)/使用回滚 功能
+
+
+
+## 如何快速集成
+> 从SellerApp的目前的经验来看
+>
+
+我们是通过代码进行集成 ，不放到 原生端里面去，但是原生端里面也是要遵循它的规则 比如1.x.x 版本，和 占位置的 配置字段 得留着 
+
+
+
+```tsx
+import {Button} from '@ant-design/react-native';
+import React from 'react';
+import {AppState, Text, View} from 'react-native';
+import codePush from 'react-native-code-push';
+import {Modal} from '../components/view';
+import {Modal as AntdModal} from '@ant-design/react-native';
+
+const codePushStatusDidChange = async (syncStatus: any) => {
+  switch (syncStatus) {
+    case codePush.SyncStatus.CHECKING_FOR_UPDATE:
+      // 0 - 正在查询CodePush服务器以进行更新。
+      console.info('[CodePush] Checking for update.');
+      break;
+    case codePush.SyncStatus.AWAITING_USER_ACTION:
+      // 1 - 有可用的更新，并且向最终用户显示了一个确认对话框。（仅在updateDialog使用时适用）
+      console.info('[CodePush] Awaiting user action.');
+      break;
+    case codePush.SyncStatus.DOWNLOADING_PACKAGE:
+      // 2 - 正在从CodePush服务器下载可用更新。
+      console.info('[CodePush] Downloading package.');
+      break;
+    case codePush.SyncStatus.INSTALLING_UPDATE:
+      // 3 - 已下载一个可用的更新，并将其安装。
+      codePush.notifyAppReady();
+      console.info('[CodePush] Installing update.');
+      break;
+    case codePush.SyncStatus.UP_TO_DATE:
+      // 4 - 应用程序已配置的部署完全最新。
+      console.info('[CodePush] App is up to date.');
+      break;
+    case codePush.SyncStatus.UPDATE_IGNORED:
+      // 5 该应用程序具有可选更新，最终用户选择忽略该更新。（仅在updateDialog使用时适用）
+      console.info('[CodePush] User cancelled the update.');
+      break;
+    case codePush.SyncStatus.UPDATE_INSTALLED:
+      // 6 - 安装了一个可用的更新，它将根据 SyncOptions 中的 InstallMode指定在 syncStatusChangedCallback 函数返回后立即或在下次应用恢复/重新启动时立即运行。
+      console.info('[CodePush] Installed update.');
+      codePush.notifyAppReady();
+      break;
+    case codePush.SyncStatus.SYNC_IN_PROGRESS:
+      // 7 - 正在执行的 sync 操作
+      console.info('[CodePush] Sync already in progress.');
+      break;
+    case codePush.SyncStatus.UNKNOWN_ERROR:
+      // -1 - 同步操作遇到未知错误。
+      console.info('[CodePush] An unknown error occurred.');
+      break;
+  }
+};
+
+const codePushDownloadDidProgress = (progress: {receivedBytes: number; totalBytes: number}) => {
+  const curPercent = ((progress.receivedBytes / progress.totalBytes) * 100).toFixed(0);
+  console.log('[CodePushUtils] Downloading Progress', `${curPercent}%`);
+};
+
+const syncImmediate = async (deploymentKey: string) => {
+  codePush.sync(
+    {
+      updateDialog: {
+        // 是否显示更新描述
+        appendReleaseDescription: true,
+        // 更新描述的前缀。 默认为"Description"
+        descriptionPrefix: '\n\n更新内容：\n',
+        // 强制更新按钮文字，默认为continue
+        mandatoryContinueButtonLabel: '立即更新',
+        // 强制更新时的信息. 默认为"An update is available that must be installed."
+        mandatoryUpdateMessage: '必须更新后才能使用',
+        // 非强制更新时，按钮文字,默认为"ignore"
+        optionalIgnoreButtonLabel: '稍后',
+        // 非强制更新时，确认按钮文字. 默认为"Install"
+        optionalInstallButtonLabel: '后台更新',
+        // 非强制更新时，检查到更新的消息文本
+        optionalUpdateMessage: '有新版本了，是否更新？',
+        // Alert窗口的标题
+        title: '温馨提示',
+      },
+      deploymentKey,
+      installMode: codePush.InstallMode.IMMEDIATE,
+    },
+    codePushStatusDidChange,
+    codePushDownloadDidProgress,
+  );
+};
+const showModal = (updateDetail: any, deploymentKey: string) => {
+  const {isMandatory, description} = updateDetail;
+  Modal.show(
+    <AntdModal
+      popup={true}
+      style={{borderRadius: 12, paddingVertical: 12, width: 331}}
+      visible={true}
+      maskClosable={false}
+      transparent={true}
+    >
+      <View style={{display: 'flex', marginTop: 0}}>
+        <Text>{description}</Text>
+        <View style={{flexDirection: 'row', justifyContent: 'center', marginTop: 10}}>
+          {!isMandatory && (
+            <Button
+              onPress={() => {
+                Modal.hide();
+              }}
+            >
+              下次提醒
+            </Button>
+          )}
+          <Button
+            onPress={() => {
+              syncImmediate(deploymentKey);
+              Modal.hide();
+            }}
+          >
+            后台更新
+          </Button>
+        </View>
+      </View>
+    </AntdModal>,
+  );
+};
+
+export const checkForUpdate = async (deploymentKey: string) => {
+  const update = await codePush.checkForUpdate(deploymentKey);
+  // if (update) {
+  // showModal(update, deploymentKey);
+  syncImmediate(deploymentKey);
+  // }
+};
+
+export const getUpdateMetadata = async () => {
+  return await codePush.getUpdateMetadata(codePush.UpdateState.RUNNING);
+};
+
+export const codePushSync = (deploymentKey: string) => {
+  AppState.addEventListener('change', (newState) => {
+    newState === 'active' && syncImmediate(deploymentKey);
+  });
+};
+
+```
+
+🐟mbox 结合	
+
+```typescript
+import AppConfig from '@/config';
+
+import {Platform} from 'react-native';
+
+import {checkForUpdate, getUpdateMetadata} from '@/common/utils/codePushUtils';
+import {makeAutoObservable, observable} from 'mobx';
+
+class HotUpdateStore {
+  // APP配置文件
+
+  config = AppConfig;
+
+  // 热更新环境
+
+  buildType = '';
+
+  // 更新key
+
+  deploymentKey = '';
+
+  // 热更新内容
+  hotFixData = {};
+
+  constructor() {
+    makeAutoObservable(this);
+  }
+
+  // 设置热更新
+  setHotUpdateConfig = async (config: any, updateBuildType: string) => {
+    try {
+      this.buildType = updateBuildType;
+      if (config && config.codePush) {
+        this.config = config;
+      }
+
+      const deploymentKey = config.codePush[Platform.OS][updateBuildType];
+
+      checkForUpdate(deploymentKey);
+      const meta = await getUpdateMetadata();
+      if (meta) {
+        this.setHotUpdateData(meta);
+      }
+    } catch (error) {}
+  };
+  setHotUpdateData = (data: any) => {
+    this.hotFixData = data;
+  };
+}
+
+const hotUpdateStore = new HotUpdateStore();
+export default hotUpdateStore;
+
+
+```
+
+用的时候直接用就好啦
+
+```tsx
+  const {setHotUpdateConfig} = useLocalObservable(() => store.hotUpdateStore);
+  useEffect(() => {
+    setFinish(false);
+    const configInit = async () => {
+      try {
+        let config = localConfig;
+        const isDebug = await getStorageDebug();
+
+        if (isDebug === 'true') {
+          console.log('配置开始载入');
+          const [updateConfig, err] = await fetchConfig(configUrl);
+          if (err) {
+            console.log(`加载配置文件失败configUrl:${configUrl}`, err);
+          }
+          const storageConfig = await fetchStorageConfig();
+          config = {
+            ...localConfig,
+            ...updateConfig,
+            ...storageConfig,
+          };
+        }
+        setFinish(true);
+        if (__DEV__) {
+          // console.log('合并后的配置文件', config);
+        }
+        setConfig(config);
+        console.log('222');
+        setHotUpdateConfig(config, config?.codePush?.buildType);
+
+        if (config?.codePush?.open && !__DEV__) {
+          // 热更新配置
+          console.log('222');
+          setHotUpdateConfig(config, config?.codePush?.buildType);
+        }
+      } catch (error) {
+        console.log('加载配置文件失败', error);
+      }
+    };
+    configInit();
+  }, []);
+
+// 配置如下 
+......
+  codePush: {
+    open: true,
+    isRelease: true,
+    buildType: 'prodction',
+    // ios android （staging、production）需要取消
+    ios: {
+      staging: '',
+      prodction: '',
+    },
+    android: {
+      staging: '',
+      prodction: '',
+    },
+  },
+```
+

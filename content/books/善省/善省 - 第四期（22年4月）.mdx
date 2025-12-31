@@ -1,0 +1,307 @@
+---
+title: "善省 - 第四期（22年4月）"
+date: "2024-12-19"
+summary: "记录四月份的工作反思，包括冷静分析的重要性、会议沟通技巧的改进，以及AntdForm和Tabs组件的技术问题解决方案。"
+status: "completed"
+tech: ["React","Antd","Form验证","Tabs缓存"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "善省"
+---
+
+> 记录四月份的事项
+>
+
+## 关于冷静分析
+在工作发现了这样的一件事，protal3.0在safari浏览器中发生了意想不到的报错。而我只是简单的看了一下报错信息，以为是qiankuan的问题，并没有认真的仔细分析。后来ritace老板经过细心的分析之后，发现这个问题是由于 >=? 这周 零空 判断的正则在Safari是不支持的，从而引发了报错。**<font style="color:#E8323C;">得出结论，我的分析和认真以及冷静程度还是不够的，在这一点上需要持续的加强 </font>**
+
+<font style="color:#000000;">后续我们还发现了一个问题 2021-1-2 这种时间格式在 Safari和Firfox上是不兼容的，要换成 2021/1/2的格式才能保持兼容，这其中我也没有认真分析，</font>**<font style="color:#E8323C;">因此我们需要好好的认真分析，这太重要了</font>****<font style="color:#E8323C;">‼️</font>**
+
+## 关于会议
+对于Shopify我们开了几次会议，我发现自己存在下面的问题  
+  1. “做一个好的倾听者” 这一点自己还是有欠缺的，我们应该在别让发言完之后，在陈述，而不是打断别让
+
+2. 不够冷静，容易受到外界影响。尤其是水哥 这个B
+3. 说话的时候需要把语速放慢...说之前先思考几秒，让自己思考一下在陈述
+
+
+
+## 我发现了一个关于AntdForm的问题
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1652173896535-c24eadb8-bb38-4633-9b0f-28efd46f1b02.png)
+
+1. 如果你希望x1 x2是互相关联的关系
+2. 验证要求x1 要< x2 
+3. 问题来了：先x1 = 4 ，x2需要填写5才符合规则，这个时候 x2 保持不动 x1 改动为6 请问如何处罚x2的自动验证？
+4. 处理办法：默认情况下x2 是一个独立的FormItem 为了性能优化 不会自动更新和渲染，你可以使用shoutupdate让他渲染，这样就能够执行里面的验证了
+5. 注意vlidater的参数NamPath[],,NamPath本身是一个 （string|number）[], 其真正的参数是一个二维Array
+
+```typescript
+import React from "react";
+import "antd/dist/antd.css";
+import "./index.css";
+import { Form, Input, Button, Checkbox } from "antd";
+import InputNumber from "rc-input-number";
+import { generateTrigger } from "rc-trigger";
+const { useForm } = Form;
+// console.clear()
+
+const Demo = () => {
+  const [form] = useForm();
+
+  const validateFieldsXXX = ({}) => ({
+    validator(_, value) {
+      console.log("value", value);
+      console.log("value1", form.getFieldValue(["Test", "Test1"]));
+      if (value < form.getFieldValue(["Test", "Test1"])) {
+        return Promise.reject(
+          new Error("Maximum  must be greater than Minimum")
+        );
+      }
+      return Promise.resolve();
+    }
+  });
+
+  const validateFields2 = ({}) => ({
+    validator(_, value) {
+      console.log("验证执行");
+      console.log("value2", value);
+      console.log("value1", form.getFieldValue(["value1"]));
+      if (value < form.getFieldValue(["value1"])) {
+        return Promise.reject(
+          new Error("Maximum  must be greater than Minimum")
+        );
+      }
+      return Promise.resolve();
+    }
+  });
+
+  const validateFields4 = ({}) => ({
+    validator(_, value) {
+      console.log("验证执行");
+      console.log("value4", value);
+      console.log("value3", form.getFieldValue(["valu3"]));
+      if (value < form.getFieldValue(["valu3"])) {
+        return Promise.reject(
+          new Error("Maximum  must be greater than Minimum")
+        );
+      }
+      return Promise.resolve();
+    }
+  });
+
+  return (
+    <Form form={form} name="basic">
+      <Form.Item
+        label="valu1"
+        name="value1"
+        rules={[
+          {
+            required: true,
+            message: "Please input your username!"
+          }
+        ]}
+      >
+        <InputNumber
+          onChange={() => {
+            form.validateFields(["valu2"]);
+          }}
+        />
+      </Form.Item>
+
+      <Form.Item noStyle shouldUpdate={true}>
+        {() => {
+          console.log("渲染执行");
+          return (
+            <Form.Item
+              label="valu2"
+              name="valu2"
+              rules={[
+                {
+                  required: true,
+                  message: "Please input your password!"
+                },
+                validateFields2
+              ]}
+            >
+              <InputNumber />
+            </Form.Item>
+          );
+        }}
+      </Form.Item>
+
+      <Form.Item noStyle shouldUpdate>
+        {() => {
+          return (
+            <>
+              <Form.Item noStyle shouldUpdate={true}>
+                {() => {
+                  console.log("渲染执行");
+                  return (
+                    <Form.Item label="valu3" name="valu3">
+                      <InputNumber />
+                    </Form.Item>
+                  );
+                }}
+              </Form.Item>
+
+              <Form.Item noStyle shouldUpdate={true}>
+                {() => {
+                  console.log("渲染执行");
+                  return (
+                    <Form.Item
+                      label="valu4"
+                      name="valu4"
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please input your password!"
+                        },
+                        validateFields4
+                      ]}
+                    >
+                      <InputNumber />
+                    </Form.Item>
+                  );
+                }}
+              </Form.Item>
+
+              <Form.Item noStyle shouldUpdate>
+                {() => {
+                  return (
+                    <>
+                      <Form.Item
+                        label="Test"
+                        name={["Test", "Test1"]}
+                        rules={[
+                          {
+                            required: true,
+                            message: "Please input your password!"
+                          }
+                        ]}
+                      >
+                        <InputNumber
+                          onChange={() => {
+                            console.log("cjamhe");
+                            // form.validateFields();
+                            form.validateFields([["Test","Test2"]]);
+                          }}
+                        />
+                      </Form.Item>
+                      <Form.Item noStyle shouldUpdate={true}>
+                        {() => (
+                          <Form.Item
+                            key={() => Math.random * 10}
+                            label="Test"
+                            name={["Test", "Test2"]}
+                            rules={[validateFieldsXXX]}
+                          >
+                            <InputNumber />
+                          </Form.Item>
+                        )}
+                      </Form.Item>
+                    </>
+                  );
+                }}
+              </Form.Item>
+            </>
+          );
+        }}
+      </Form.Item>
+
+      <Form.Item
+        name="remember"
+        valuePropName="checked"
+        wrapperCol={{
+          offset: 8,
+          span: 16
+        }}
+      >
+        <Checkbox>Remember me</Checkbox>
+      </Form.Item>
+
+      <Form.Item
+        wrapperCol={{
+          offset: 8,
+          span: 16
+        }}
+      >
+        <Button type="primary" htmlType="submit">
+          Submit
+        </Button>
+      </Form.Item>
+    </Form>
+  );
+};
+
+export default Demo;
+
+```
+
+
+
+## 还有一个Antd的问题
+由于Tab存在一些默认的缓存，在Antd中农有很多的组件都有类似的问题：“缓存”，这就导致了一些问题和BUG
+
+```javascript
+ <PageView loading={loading} title={t("customer.list.pageName")}>
+      <div className="redeem-page-container">
+        <div className="redeem-page-container-wrap">
+          <Tabs
+            animated={false}
+            className="tab-title-wrap"
+            activeKey={queryData}
+            tabBarGutter={40}
+            tabBarStyle={{ padding: "0 32px" }}
+            tabBarExtraContent={{
+              right: (
+                <Button type="primary" onClick={goToCreate}>
+                  {t("customer.createbtn")}
+                </Button>
+              ),
+            }}
+            onChange={(value: string) => {
+              setQueryData(value);
+            }}
+            destroyInactiveTabPane={true}
+          >
+            <TabPane
+              tab={`${t("customer.activeTab")}(${countInfo.activeCount})`}
+              className="tab-pane"
+              key={String(REDEEM_STATUS.Active)}
+            >
+              <RedeemList
+                deactivate={deactivate}
+                deleteRedeem={deleteRedeem}
+                redeemList={redeemList}
+              />
+            </TabPane>
+            <TabPane
+              className="tab-pane"
+              tab={`${t("customer.inactiveTab")}(${countInfo.inActiveCount})`}
+              key={String(REDEEM_STATUS.InActive)}
+            >
+              <RedeemList
+                deactivate={deactivate}
+                deleteRedeem={deleteRedeem}
+                redeemList={redeemList}
+              />
+            </TabPane>
+            <TabPane
+              tab={`${t("customer.allTab")}(${countInfo.allCount})`}
+              className="tab-pane"
+              key=""
+            >
+              <RedeemList
+                deactivate={deactivate}
+                deleteRedeem={deleteRedeem}
+                redeemList={redeemList}
+              />
+            </TabPane>
+          </Tabs>
+        </div>
+      </div>
+    </PageView>
+```
+
+
+

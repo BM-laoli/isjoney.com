@@ -1,0 +1,136 @@
+---
+title: "善省 - 第十九期 (23年7月)"
+date: "2024-12-19"
+summary: "分享SEO项目中的数据库写法问题、C#异步循环处理技巧、前端日志劫持问题解决方案，以及接项目经验总结。"
+status: "completed"
+tech: ["SQL","C#","Async","React Native","项目管理"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "善省"
+---
+
+> 断了几期没有写 不知道自己去干什么去了
+>
+
+# DB的一些写法问题
+> 在 SEO的一个项目中 发现了一些DB 写法问题
+>
+
+这个里面的经验 其实还是和公司Newegg 内部的框架有关 有的是否 你的一些 SQL，在上线的时候必须做调整。一个完整的规范如下
+
+```sql
+SELECT 
+  NavigationTreeChatGPT_TranNumber
+  ,Keyword
+  ,[Identity]
+  ,[Name]
+  ,[URL]
+            ,[OriginKeyword]
+  FROM [Imk].[dbo].[SEOAutomation_InternalLink] InternalLink WITH(NOLOCK) 
+  WHERE [Status]=1 AND NavigationTreeChatGPT_TranNumber IN (@NavigationTreeChatGPT_TranNumbers) 
+  AND CountryCode=@CountryCode
+
+SELECT
+  link.TransactionNumber as TransactionNumber,
+  link.CountryCode as CountryCode,
+  link.Status as Status,
+  link.Name as Name,
+  link.IsDeadlink as IsDeadlink,
+  link.Keyword as Keyword,
+  link.URL as URL
+   FROM imk.dbo.[SEOAutomation_InternalLink ] as link WITH(NOLOCK)
+  LEFT JOIN imk.dbo.[SEOAutomationNavigationTreeChatGPT] as SEOGPT WITH(NOLOCK) ON SEOGPT.TransactionNumber = link.NavigationTreeChatGPT_TranNumber
+  WHERE link.Status = 1 AND SEOGPT.Status = 1
+  
+```
+
+
+
+WITH(NOLOCK) 不能丢
+
+
+
+# 关于C# 的一些 for  循环 中的async 问题
+> 也 是 在SEO 项目 遇到一个问题
+>
+
+```csharp
+var tasks = res?.Select(item => appendPageSEODto_Item(requestBody, item));
+
+await Task.WhenAll(tasks);
+
+// -> 
+ private async Task<bool?> appendPageSEODto_Item(List<PageSEOBuildDto> requestBody, UpdateSEOResult item)
+        {
+            if (item.IsSuccess == 1 && item.Status == Status.Approved)
+            {
+                var tasks = item?.CountryCode?.Split(",")?.Select(countryCode => appendPageSEODto_Country(requestBody, item, countryCode));
+                var results = await Task.WhenAll(tasks);
+                return results?.FirstOrDefault();
+            }
+            return true;
+        }
+// ->
+        private async Task<bool> appendPageSEODto_Country(List<PageSEOBuildDto> requestBody, UpdateSEOResult item, string countryCode)
+        {
+            var storeType = convertPageStoreType(item.NavigationType);
+            if (storeType != PageStoreType.None)
+            {
+
+                if (requestBody.Exists(t => t.StoreId == item.NavigationId && t.NavigationType == item.NavigationType && t.CountryCode == countryCode))
+                {
+                    var body = requestBody.FirstOrDefault(t => t.StoreId == item.NavigationId && t.NavigationType == item.NavigationType && t.CountryCode == countryCode);
+                    var isBuildRes = await BuildPageSEOAsync(item, body);
+
+                    return isBuildRes;
+                }
+                else
+                {
+                    var body = new PageSEOBuildDto()
+                    {
+                        CountryCode = countryCode,
+                        StoreType = storeType,
+                        StoreId = item.NavigationId,
+                        UserId = item.EditUser,
+                        NavigationType = item.NavigationType,
+                    };
+                    var isBuildRes = await BuildPageSEOAsync(item, body);
+                    if (isBuildRes)
+                    {
+                        requestBody.Add(body);
+                    }
+
+                    return isBuildRes;
+                }
+            }
+
+            return true;
+        }
+```
+
+
+
+可以看到 我们对于for 循环中有 async 的场景 都单独给 map  了一次，把每次同步循环 ，变成了 一次性批量的 week ，这样可以准确的 控制里面的异步逻辑
+
+# 控制变量是一个好主意
+> Seller App集成 Logx
+>
+
+
+
+之前再做 LogX的时候 遇到一些问题，
+
+我发现 自己有时候能够劫持到 console.error, 有的时候又不能，这个时候需要去分析 什么时候能，什么时候不能，然后一点点一层层的剥离 组件去验证, 最终才找到了问题的定位 ，劫持的方法需要在 "NavigationContainer" onRedy 之后去 劫持，否则 NavigationContainer 进入之后会覆盖掉你原来的 劫持，怀疑和它 内部的实现有关，这里没做深入了
+
+
+
+# 接到了几个空闲项目
+> 在咸鱼上接到了几个项目
+>
+
+已经在飞书 立项 开发完成了一个 尾款和沟通合作都ok 价格1200 持续了半个月，感觉有点亏 ，下次我应该要按自己小时计算！ 这样才符合规矩
+
+
+
+**<font style="color:#DF2A3F;">绝对不能浪费时间 跟别人套方案，现在有的人很鸡贼 不管是接项目还是在面试的时候 ，都是来白嫖你方案的，这里建议看看 Bilibli 老曾 对 "白嫖"方案的 解决办法</font>**
+

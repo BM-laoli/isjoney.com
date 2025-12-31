@@ -1,0 +1,169 @@
+---
+title: "善省 - 第七期 (22年7月)"
+date: "2024-12-19"
+summary: "讨论APP业务移交的职场感悟，分享团队管理和工具人身份的思考，以及Form表单POST请求的技术踩坑经验，包括x-www-form-urlencoded参数传递和多种HTTP请求头格式详解。"
+status: "completed"
+tech: ["职场感悟","团队管理","HTTP","FormData","XMLHttpRequest"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "善省"
+---
+
+## 关于APP业务被移交的看法
+App的业务已经，被移交到EC团队了。我发现现在的领导做的不是特别好的地方就是，我作为唯一的一个App开发人员，也是主要的App开发负责人，竟然是最后一个知道的，我觉得这个还是比较震惊的，说实话也许我更加希望，能提前知道，比如和我说一下：“_**<font style="color:#F5222D;">可能APP这一块要移交的EC ，你做一下交接准备吧</font>**_”，不过呢画手回来，领导为什么要和你说，你只是一个工具人。
+
+也许可能是自己被社会的毒打不够，确确实实没有认清，自己在领导的眼里只是一个工具人而已，我还是希望能够加入，比较有人情味的 团队，至少在直接领导交流起来，你不仅仅是一个工具人，你应该有一种‘师徒’的的身份回更好，这个经验为得好好的学习，如果有朝一日 我也能成为 所谓的领导，也许这就是一个我的目标
+
+：“**<u><font style="color:#D4B106;">能带好团队，能成为一个好的师傅，就像 美团带我的师傅 松哥一样</font></u>**”，对手下带的人来说，他们不仅仅是一个工具人🔧 ，我们应该是一个团队。
+
+
+
+目前有鉴于这样的情况，我打算从现在开始 （就是说从上周开始，得骑驴找马了，找到不错的机会就马上跑路）一遍复习一遍跑路，虽然知道，今年的行情不好，不到万不得已 不能轻易跑路，但是 又能怎么样呢，目前我已经和领导申请，切换到了EC团队，第一步主要是做EC主站的部分，第二步就是有机会接触App的时候做App的部分，目前正在一点一点地执行这个计划
+
+**<u><font style="color:#D4B106;">“先在EC狗着，学习和融入EC；同时一边骑驴找马，跑路不成  还能留得 青山在，如果是依然在Alex 老王带的MKPL团队，我觉得就很难受了，总结一句话，Alex 这边的MKPL团队，工具人属性拉满 团队好”，  
+</font></u>**
+
+记得曾经看过 乔帮主的演讲，一位学生提问“你在Apple 学习到最有意义的东西是什么？”，乔布斯 思考了大概3分钟之后欧，“我_**<u><font style="color:#E8323C;">现在对人有更长远的看法是，用更长远的眼光去看，我们是组建的是一个团队，不仅仅是现在的团队，不仅仅着眼当下明年什么的，我们看到了未来</font></u>**_”这是他说的 ，[Steve Jobs @ MIT 1992年乔布斯在麻省理工学院被提问“对于你来说，在苹果公司学到的最重要的东西是什么？”_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1Zr4y1t7tF?spm_id_from=333.337.search-card.all.click&vd_source=e136cf9e83301ac4e056f1008bb36bd4)
+
+## 踩坑- 关于 Form表单的东西
+我遇到这样的一个需求：为了能够保证 用户能够下载更大的文件和传递更多的参数，我们希望把原来的GET请求换成POST请求，以便于支持大的body ，
+
+研究发现，大多数情况下，我们是直接使用 form ，拿到数据之后去循环往每一个Input 上去加属性和值，最后使用form上的action 和 method = get，_brand = traget 直接新开tab的方式的方式去呈现 下载好的文件，可以完成 直接展示，但是如果使用这种方式  吧method 换成post 会承载cookie 和请求头无法 携带和自定义的问题，而且后端又不改，所有我们换成了 bolob 使用二进制流的方式去，下载（失去了直接预览的功能），这其中最重要的一个问题就是**<font style="color:#E8323C;">“如何传递x-wwww-urlincode”</font>**的参数
+
+```javascript
+// 下面的代码的上传文件的时候 formData
+<input id="uploadFile" name="file" type="file">
+<script>
+ const file = document.getElementById('uploadFile')
+        let formData = new FormData()
+        formData.append('file', file.files[0])
+        const req = new XMLHttpRequest()
+        req.onreadystatechange = function(){
+          if (req.readyState === 4) {
+            const response  = JSON.parse(req.responseText)
+            if (response.code === '200') {
+              console.log('success')
+            } else {
+              console.log('fail')
+            }
+          }
+        }
+        req.open('post', 'https://sxxx.com/uploadfile', true)
+        req.send(formData)
+</script>
+
+// 下面的代码是x-wwww-urlincode 的方式
+var xhr = new XMLHttpRequest();
+xhr.open("post","http://127.0.0.1:8000/post");
+xhr.setRequestHeader("content-Type","application/x-www-form-urlencoded");
+xhr.send("name=js&age=18"); // 特别要注意这里！
+xhr.onreadystatechange = function() {
+    if(xhr.readyState === 4 && xhr.status ===200){
+        console.log(xhr.responseText);
+    }
+}
+xhr.onerror = function (error) {
+    console.log(error)
+}
+
+// 下面的其他的一些基础的xhr的请求方式
+//1.未携带参数的get请求
+var xhr = new XMLHttpRequest();
+xhr.open("get","http://127.0.0.1:8000");
+xhr.send();
+xhr.onreadystatechange = function() {
+    if(xhr.readyState === 4 && xhr.status ===200){
+        console.log(xhr.responseText);
+    }
+}
+xhr.onerror = function (error) {
+    console.log(error)
+};
+
+
+//2.携带参数的get请求
+var xhr = new XMLHttpRequest();
+xhr.open("get","http://127.0.0.1:8000?name=js&age=18");
+xhr.send();
+xhr.onreadystatechange = function() {
+    if(xhr.readyState === 4 && xhr.status ===200){
+        console.log(xhr.responseText);
+    }
+}
+xhr.onerror = function (error) {
+    console.log(error)
+}
+
+
+
+
+//3.未携带参数的post请求
+var xhr = new XMLHttpRequest();
+xhr.open("post","http://127.0.0.1:8000/post");
+xhr.send();
+xhr.onreadystatechange = function() {
+    if(xhr.readyState === 4 && xhr.status ===200){
+        console.log(xhr.responseText);
+    }
+}
+xhr.onerror = function (error) {
+    console.log(error)
+}
+
+
+
+//4.携带参数的post （JSON）
+var xhr = new XMLHttpRequest();
+xhr.open("post","http://127.0.0.1:8000/post");
+xhr.setRequestHeader("content-Type","application/json");
+xhr.send(JSON.stringify({name:"js",age: 18}));
+xhr.onreadystatechange = function() {
+    if(xhr.readyState === 4 && xhr.status ===200){
+        console.log(xhr.responseText);
+    }
+}
+xhr.onerror = function (error) {
+    console.log(error)
+}
+```
+
+
+
+```markdown
+post请求头的常见数据格式
+1、application/json（JSON数据格式）
+
+xhr.setRequestHeader("Content-type","application/json; charset=utf-8");
+1
+这种类型是我们现在最常用的，越来越多的人把它作为请求头，用来告诉服务端消息主体是序列化后的 JSON 字符串。由于 JSON 规范的流行，除了低版本 IE 之外的各大浏览器都原生支持 JSON.stringify，服务端语言也都有处理 JSON 的函数，使用 JSON 不会遇上什么麻烦。
+2、application/x-www-form-urlencoded
+
+xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded; charset=utf-8");
+1
+这应该是最常见的 POST 提交数据的方式了。浏览器的原生 form 表单，如果不设置 enctype 属性，那么最终就会以 application/x-www-form-urlencoded 方式提交数据
+**3、multipart/form-data **
+
+xhr.setRequestHeader("Content-type", "multipart/form-data; charset=utf-8");
+1
+这又是一个常见的 POST 数据提交的方式。我们使用表单上传文件时，必须让 form 的 enctyped 等于这个值
+4、text/xml
+
+xhr.setRequestHeader("Content-type", "text/xml; charset=utf-8");
+1
+它是一种使用 HTTP 作为传输协议，XML 作为编码方式的远程调用规范，这种方式现在不常用
+
+响应头常见数据格式
+1）、text/html ： HTML格式
+2）、text/plain ：纯文本格式
+3）、application/json：json格式
+4）、text/xml ： XML格式
+5）、image/gif ：gif图片格式
+6）、image/jpeg ：jpg图片格式
+7）、image/png：png图片格式
+8）、application/pdf：pdf格式
+9）、application/msword ： Word文档格式
+10）、application/octet-stream ： 二进制流数据（如常见的文件下载）
+5、前后端交互时，常用的content-type
+application/json
+```
+

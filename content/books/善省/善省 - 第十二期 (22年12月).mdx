@@ -1,0 +1,367 @@
+---
+title: "善省 - 第十二期 (22年12月)"
+date: "2024-12-19"
+summary: "本期内容涵盖Scott的2023年择业建议、Nodejs系统迁移与完整性改进、跨端框架技术分享、个人职业思考以及WebSocket代理实现等技术话题。"
+status: "completed"
+tech: ["Nodejs","NestJS","WebSocket","跨端框架","Redis","Zookeeper"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "善省"
+---
+
+> 22年年底了，本期我们主要还是聊聊 遇到的一些问题和值得思考的事情🤔 
+>
+
+# Scoot给的建议
+> 12月前期的一场分享
+>
+
+Scott分享「2023年择业重点 」
+
+分享脑图
+
+![](https://cdn.nlark.com/yuque/0/2022/png/1627571/1671172381095-76342044-8aac-479c-a4d3-217911fe9c6d.png)  
+_**要点总结**_
+
+  
+1、技术人员经常面对电脑，获取的信息大多来自网上，跟人打交道少，对人的判断有天生的不足、对人的认识是有限的；
+
+2、只满足了公司的要求本身还不够，公司的「期望」也能满足了才有可能在职场上不被k掉；
+
+3、后端语言首推 Java，选 Go 也可以，但是路线可能稍微陡峭一些；
+
+4、工程师容易陷进牛角尖中，例如绩效没有好，晋升没有升，HR说话不好听等，自己骂骂咧咧几句（心里面）就行了，第二天该干嘛干嘛；  
+核心要义：要学会「重启」自己：重新搞心理建设，把心态建设好。  
+
+
+问答时间：  
+请教 Scott : 现在前端行业的基础设施是不是已经比较完善了，前端技术人员需求量会成逐年下降的趋势吗 ?
+
+> 需求量不会下降，只不过是对人的要求变高了，不仅要懂技术，还要懂业务。很好的岗位的需求量变少，例如大厂们，但是他们不代表主流。
+>
+
+请教 Scott : 如果有 Java 基础，如何深入扩 
+
+> 找事情做，想要深入扩展这个东西不是靠看书、看文档能得来的，一定要是在业务场景、做事情中练出来的。
+>
+
+请教 Scott : 作为一个程序员，平时只和电脑打交道，如何在平时培养商业思维呢？
+
+> 多和产品、运营、创业者聊天，如果他们不愿意聊，多给他们干活，免费干。
+>
+
+请问下：Socct老师定义的心智成熟是怎样的 
+
+> 纯真应该保留，但不应该是全部，剩下的部分是心智成熟，才能与这个社会更好地相处。
+>
+
+请教 Scott : 对于扩边界，对于 3D 建模方向，有什么建议嘛？
+
+> 尽量往后端扩
+>
+
+请问下 Scott ：工作和生活都重要，那卷工作和卷生活要怎么平衡呢？
+
+> 以前好的时代，或者在国企还可以，但是现在这种情况不太可能，大部分时间还是用来工作，抽出时间生活。用当下更多时间交换后面的时间。
+>
+
+请教 Scott：前端成长需要要先保证自身的前端技术达标，请问怎样才算是达标
+
+> 不以技术本身来看，公司的技术问题是不是都可以搞得定，看解决问题的能力：经验+技术+天赋的综合体，越练习就会越好。
+>
+
+请教 Scott：如何看待 Web3 呢？
+
+> 是一个大韭菜盘，多了类似一种货币交换，只是一个技术上的概念。
+>
+
+# Nodejs系统的完整性
+主要是迁移原来的登录中转系统，这个系统都是我一手写的，由于公司系统升级，需要我从原来的NES集群，给整到K0s里面去(K0s就是我们公司自己搭建的一个集群管理中心底层还是k8s支撑)。
+
+讲道理这个事情我应该再7/8月都给他做了。（但是自从App做了一个基础之后，就再也没有人问津了，所以招来做App的人都被裁掉了，无论是后端还是前端，前端还剩我一个人，去年进来的 我 Ace Aoda.....都被裁完了，了解和熟悉这个项目的目前只有我一个人）从另一个侧面，我深刻体会到一个思想 _**<font style="color:#DF2A3F;background-color:#F1A2AB;">非核心业务部门的非核心团队，非常的危险，裁员往往就是它们</font>**_，公司好的时候就可以养着，但一旦经济情况不好就特别容易遭淹，与此类似的例子还有 天猪大大的遭遇（阿里Egg 框架的主要开发者）。
+
+然后说会到Nodejs系统的完整性，我在做迁移的时候，发现目前这个Nodejs应用，它么有链接上zookeeper （配置中心），也没有提供一种很好的启动参数管理（没有配置，所有配置都写在启动脚本去了...这是有问题的），它也没有接入log中心和我们公司系统内部的 prometheus。这些都需要我后面把它们一一处理了
+
+技术上来说就是 @willsoto/nestjs-prometheus 日志 .env预先配置，启动参数去读取文件，而不是读每一个参数,  当然辩证来看，如果读启动参数的话，确实改的时候比较方便,  redis 配置也没搞好，node-zookeeper-client
+
++ <font style="color:#DF2A3F;">@willsoto/nestjs-prometheus</font>
++ <font style="color:#DF2A3F;">env设计和启动参数</font>
++ <font style="color:#DF2A3F;">redis 链接</font>
++ <font style="color:#DF2A3F;">node-zookeeper-client </font>
+
+
+
+下面👇 是实现
+
+一开始原来的版本
+
+```typescript
+// 设计一个全局的modle 然后别的地方再饮用 里面的service 的时候就不需要在自己的module 去导入了
+// 官方文档有写
+
+// 由于 node-zk 是异步 所以我也使用 异步 模块来实现
+
+@Global()
+@Module({
+  providers: [
+    ZKService,
+    {
+      provide: ZOOKEEPER_CLIENT,
+      useFactory: async (optionsProvider: ConfigService) => {
+        const zookeeperClient = await getZKClient({
+          url: optionsProvider.get(EnumInterInitConfigKey.zkHost),
+        });
+        return zookeeperClient;
+      },
+      inject: [ConfigService],
+    },
+  ],
+  exports: [ZKService],
+})
+//.....
+ const getClient = async (options: any) => {
+        const {url, ...opt} = options;
+
+        const client = zookeeper.createClient(url, opt);
+
+        client.once('connected', () => {
+          Logger.log('zk connected success...');
+        });
+
+        client.on('state', (state: string) => {
+          const sessionId = client.getSessionId().toString('hex');
+        });
+
+        client.connect();
+        return client;
+      };
+
+// 这样写的话，用的时候直接丢就好啦
+@Global()
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      expandVariables: true,
+      load: [configuration],
+    }),
+    FaqModule,
+    ZKModule.forRootAsync(),
+  ],
+  exports: [FaqModule],
+})
+export class CoreModule {}
+
+// 只需要在用的地方 直接用ZkServic 就ok ，但是这样不够优雅，于是进化成啦🧬 这样 把它内聚一下
+
+@Global()
+@Module({
+  providers: [ZKService],
+  exports: [ZKService],
+})
+export class ZKModule implements OnModuleDestroy {
+  static forRootAsync(): DynamicModule {
+    return {
+      module: ZKModule,
+      imports: [],
+      providers: [ZKService, this.createClient()],
+    };
+  }
+  constructor(
+    @Inject(ZOOKEEPER_CLIENT)
+    private readonly zkCk: any,
+  ) {}
+
+  onModuleDestroy() {
+    this.zkCk.close();
+  }
+
+  private static createClient = (): Provider => ({
+    provide: ZOOKEEPER_CLIENT,
+    useFactory: async (optionsProvider: ConfigService) => {
+      const getClient = async (options: any) => {
+        const {url, ...opt} = options;
+
+        const client = zookeeper.createClient(url, opt);
+
+        client.once('connected', () => {
+          Logger.log('zk connected success...');
+        });
+
+        client.on('state', (state: string) => {
+          const sessionId = client.getSessionId().toString('hex');
+        });
+
+        client.connect();
+        return client;
+      };
+
+      const zookeeperClient = await getClient({
+        url: optionsProvider.get(EnumInterInitConfigKey.zkHost),
+      });
+
+      return zookeeperClient;
+    },
+    inject: [ConfigService],
+  });
+}
+
+// 用的地方就变成啦 forootAsync 
+ ZKModule.forRootAsync(),
+
+// 其他的redis 还是mq 都可以这样用 都是这样用的
+   
+```
+
+```typescript
+import { ClusterModule, ClusterModuleOptions } from '@liaoliaots/nestjs-redis';
+.....
+  ClusterModule.forRootAsync({
+      imports: [ConfigModule, ZooKeeperModule],
+      inject: [MpsConfigService, MpsZKService],
+      useFactory: async (
+        configService: MpsConfigService,
+        zkService: MpsZKService,
+      ): Promise<ClusterModuleOptions> => {
+        const data = JSON.parse(
+          (await zkService.getData(configService.zooKeeperRedisNode)) as string,
+        ) as ZooKeeperRedisResponse[];
+        const cluster =
+          process.env.K0S_CLUSTER_LOCATION ||
+          configService.redisClusterLocationDefault;
+        const { Host, Password } = data.find((_) => _.Name === cluster)!;
+        const nodes = Host.split(',').map((_) => ({
+          host: _.split(':')[0],
+          port: Number(_.split(':')[1]),
+        }));
+
+        return {
+          readyLog: true,
+          config: {
+            nodes,
+            redisOptions: { password: Password },
+            onClientCreated(client) {
+              client.on('error', (err) => {
+                Logger.error(err, 'CoreModule');
+              });
+              client.on('ready', () => {
+                Logger.log('Connected to Redis.', 'CoreModule');
+              });
+            },
+          },
+        };
+      },
+    }),
+  // 用的时候直接引入 第三方写的 
+  import { ClusterService } from '@liaoliaots/nestjs-redis'; 就ok ，它会自动租册
+
+// 比如说mq是没有的，怎么办？也很简单，使用动态模块 的特性 自己搞一个就好了
+    MessageQueueModule.forRootAsync(), 具体代码就不写啦
+      
+```
+
+
+
+由上面的两个例子，我们了解 ，很重要！动态注入 和动态模块，在Nest中的运用 
+
+[Single Page Apps for GitHub Pages](https://docs.nestjs.cn/8/fundamentals?id=%e5%8a%a8%e6%80%81%e6%a8%a1%e5%9d%97)
+
+
+
+# 想多了
+> 我这个人，越来越有一种坏习惯了，总是想要的东西很多，一下子 golang 一下子Android 一下子 ios 一下子react 一下子vue2/3 一下子UE...... 还flutter 什么的，总而言之，想要的太多了 这个可不是一个好习惯，想要的很多没有错，但是要有个度，有个访问，这正是所谓的中庸之道，熟话说，很多人都认为人应该全面发展，殊不知，往往有所成就的人，并不是取长补短，而是充分发挥自己的长处 。**<font style="color:#DF2A3F;background-color:#F1A2AB;">扬长而避短才是这个时代需要的</font>**
+>
+
+**<font style="color:#DF2A3F;background-color:#F1A2AB;"></font>**
+
+**<font style="color:#DF2A3F;background-color:#F1A2AB;"></font>**
+
+# D2大会分享 [D2 分享笔记 2 - 自渲染跨端框架在字节跳动的实践与展望 - 2022.12.17 上午](https://www.yuque.com/d2conference/17thd2map/alt3fnxezegv7ysd)
+<font style="color:rgb(38, 38, 38);">在跨端领域，一直都是群星璀璨的，前者有React Native 、Flutter 等。后者有各个大厂的综合自研方案如：阿里的Weex，</font><font style="color:rgb(18, 18, 18);">kraken</font><font style="color:rgb(38, 38, 38);">，腾讯的HippyApp，字节的Lynx 等。目前各种方案在跨端领域遍地开花，方案虽多但它们或多或少都离不开两个话题</font>
+
++ <font style="color:rgb(38, 38, 38);">使用前端技术栈希望更贴切前端开发，为开发提效</font>
++ <font style="color:rgb(38, 38, 38);">专注性能上的提升，绞尽脑汁的提升性能，给用户带来媲美甚至超越Native的体验</font>
+
+
+
+今年 D2 的前端专场提供了这么一场分享，由来 自字节  <font style="color:rgb(38, 38, 38);">Renderkit 的</font>负责人<font style="color:rgb(38, 38, 38);"> </font> 刘国良老师，为我们分享了《**自渲染跨端框架在字节跳动的实践与展望**》，全程听下来，发现自己格局还是小了，虽然自己也用过一些跨端方案，但对其理解和方案对比都浮于表面。跟着国良老师的分享，让我更清晰的了解了一段UI 渲染的真正的底层逻辑，不管你是何种方案跨端，对性能的极致追求最终还得落到最核心最底层的渲染管线上，<font style="color:rgb(38, 38, 38);">Renderkit的渲染思路和破题方法借鉴了行业先驱但又有自己独特的理解；我在 整体思路的讲解中受益匪浅。对跨端的底层有了更深刻的认识。  
+</font>
+
+![画板](https://cdn.nlark.com/yuque/0/2022/jpeg/1627571/1672301003982-87542429-8957-4d4e-8667-254350cb9e17.jpeg)
+
+# 新加坡🇸🇬 
+机会永远都不说留给没有准备的人的，机会和成本往往不是 能够达到一个非常好的平衡，这个时候你需要的就是二者取其一！，如果有机会去新加坡，我选择去，毕竟这年头，这种机会不总是有的
+
+
+
+
+
+# 关于websocket 相关的项目(代理)
+> 最近遇到一个意思的需求：本地的环境无法连接，我需要连接到线上的两个接口 一个是init的post 接口 ，一个是init之后拿其返回的session 去发ws:// 和 wss://， 但是如果本地 前端的8080 直接去call 线上这两个api会有 cors问题，所以我使用了node去 做了一个代理。 目前会先代理到 post 的init 接口，然后在去代理到ws的接口，建立起长链接
+>
+
+```javascript
+const express = require('express')
+const axios = require('axios')
+const bodyParser = require('body-parser')
+const { createProxyMiddleware } = require('http-proxy-middleware')
+
+
+const app = express();
+const port = 3000;    //端口号
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json())
+
+// cors
+// 允许跨域
+app.all('*', function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", '*');
+  res.header("Access-Control-Allow-Headers", "Content-Type,Content-Length, Authorization, Accept,X-Requested-With");
+  res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Credentials","true");
+  if(req.method === "OPTIONS") res.send(200);
+  else  next();
+});
+
+// `http://localhost:3000${initialState.Config.Technique?.ChatBotConnection?.HubUrl}` 直链线上
+
+// proxy init API
+app.post('*',  async (req, res) => {
+  try {
+    const v = await axios.post('https://chat.newegg.com' + req.url, req.body, {
+      headers: {
+        "cookie": "NID=725z2Q2Q0M72721j9D; NVTC=248326808.0001.febfd2a17.1672812596.1673491265.1673493057.6; NV_NVTCTIMESTAMP=1673493330"
+      }
+   })
+
+   res.send(v.data)
+  } catch (error) {
+   console.log('error => ', error);
+    res.send(error.info)
+  }
+})
+
+// proxy ws 
+app.use("/onlinechatservice/connection/chatwithbot",
+    createProxyMiddleware({
+      target: 'https://chat.newegg.com',
+      changeOrigin: true,
+      ws:true,
+    })
+);
+
+ 
+app.listen(port, () => {
+  console.log(`Example app listening at http://localhost:${port}`)
+})
+
+```
+
+
+
+
+
+
+
+
+
