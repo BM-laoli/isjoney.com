@@ -1,0 +1,1405 @@
+---
+title: "任务三：自动化构建"
+date: "2024-12-19"
+summary: "深入讲解前端自动化构建工具的使用，包括Grunt和Gulp的基础用法、任务配置、插件使用、工作流封装以及CLI脚手架开发等核心内容。"
+status: "completed"
+tech: ["Grunt","Gulp","自动化构建","前端工程化"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "拉钩教育大前端"
+---
+
+## 一、概述和常用工具介绍 grunt  gulp 
+### 1. 前置知识
+所谓自动化，就是把一些重复性高的东西，给机器去做，而不是我们的人去搬砖！，自动化就是如此，在传统的项目中，我们需要打包 然后复制到服务器，然后服务器再启动，这实际上非常的low，low爆了。
+
+我们为了实现自动化的构建，我们需要先了解一些辅助工具（轮子）
+
+- [x] scss是css预编译期的文件结尾写法
+- [x] sass是npm的一个包用来编译scss成css
+- [x] NPM Script 就是你的yarn start  / npm run xxx 的这个xxx ，它是你自己写在pack.json中的，
+- [x] browser-sync 能够自动启动一个服务器，把你的代码运行起来
+- [x] preserve.  或者 pre -xxxx.这个就是NPM Script的钩子机制，正在你跑xxx的时候先执行 pre-xxx 再执行你的xxx
+- [x] npm-run-all 是一个让多个scirp同时执行的包 
+
+### 2. 搞一个小demo
+> 现在我们来明确一下目标：我们需要用sass 和 NPM script 和browser-sync 来进行一个，自动化 编译sass 和自动更新浏览器的热编译的一个小demo
+>
+
+首先，我们需要起一个项目，这里yarn init  我就不做过多的说明了, 构建好项目如下图
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1621476550544-b55121b0-d1d7-451b-af92-e776e1be6720.png)
+
+然后，我们需要安装一些包
+
+```shell
+yarn add sass browser-sync npm-run-all
+```
+
+再后面呢，我们来看看如何使用 sass
+
+```shell
+# 一般来说，我们只需要指定一些命令就好了 比如,我现在通过命令行手输的方式 去编译 main.scss到css文件夹中
+
+./node_modules/.bin/ sass scss/main.scss css/style.css
+```
+
+但这不是我们想要的，于是我们来配置 一些NPM Script，来实现自动化,pack.json
+
+```javascript
+  "scripts": {
+    # 这是拿来执行 编译 scss的 加watch就是时刻监视
+    "build": "sass scss/main.scss css/style.css --watch",  
+    # 这个是拿来 监听如果有什么文件变化 就更新的--files \"css/*.css\""
+    "serve": "browser-sync . --files \"css/*.css\"",
+    # 这个是拿来 解决 同步的运行 build server
+    "start": "run-p build serve"
+  },
+```
+
+ 这样我们的一个简单自动化工作流就完工了！非常的简单哈
+
+### 3. 看看我们有哪些工具可以用
+对于一个复杂的项目光是单存的像上面这样搞是远远不够的，不足的，我们需要处理一些复杂逻辑的时候就凉凉了！所以你需要一些其他工具
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1621519456926-d5c098bc-9b5d-4d03-9db7-079293ce3421.png)
+
+这三个各有各个的利弊，Grunt呢，实际上是通过磁盘进行一条条构建任务的，是最早的自动化构建工具。gulp是基于内存的，也是任务执行比较的流行，FIS的百度的，现在基本上凉凉了，也没有人去维护他
+
+新手需要规则，老手渴望自由
+
+## 二、Grunt
+### 1. 基础的用法
+> 本节会详细的讲解 Grunt的任务如何定义，异步任务如何执行，如果哦任务执行错误会怎么处理
+>
+
+首先我们需要初始化一个项目（同样的这里不多BB）
+
+我们需要用到的包
+
+```shell
+yarn init --yes
+yarn add grunt
+```
+
+	创建一个入口文件，这个文件 就是grunt的入口，你可以在这里面做你想做的任意的事情
+
+gulpfile.js
+
+```javascript
+// Grunt 的入口文件
+// 用于定义一些需要 Grunt 自动执行的任务
+// 需要导出一个函数
+// 此函数接收一个 grunt 的对象类型的形参
+// grunt 对象中提供一些创建任务时会用到的 API
+
+module.exports = grunt => {
+  grunt.registerTask('foo', 'a sample task', () => {
+    console.log('hello grunt')
+  })
+
+  grunt.registerTask('bar', () => {
+    console.log('other task')
+  })
+
+  // // default 是默认任务名称
+  // // 通过 grunt 执行时可以省略
+  // grunt.registerTask('default', () => {
+  //   console.log('default task')
+  // })
+
+  // 第二个参数可以指定此任务的映射任务，
+  // 这样执行 default 就相当于执行对应的任务
+  // 这里映射的任务会按顺序依次执行，不会同步执行
+  grunt.registerTask('default', ['foo', 'bar'])
+
+  // 也可以在任务函数中执行其他任务
+  grunt.registerTask('run-other', () => {
+    // foo 和 bar 会在当前任务执行完成过后自动依次执行
+    grunt.task.run('foo', 'bar')
+    console.log('current task runing~')
+  })
+
+  // 默认 grunt 采用同步模式编码
+  // 如果需要异步可以使用 this.async() 方法创建回调函数
+  // grunt.registerTask('async-task', () => {
+  //   setTimeout(() => {
+  //     console.log('async task working~')
+  //   }, 1000)
+  // })
+
+  // 由于函数体中需要使用 this，所以这里不能使用箭头函数
+  grunt.registerTask('async-task', function () {
+    const done = this.async()
+    setTimeout(() => {
+      console.log('async task working~')
+      done()
+    }, 1000)
+  })
+}
+
+// // 导出的函数都会作为 gulp 任务
+// exports.foo = () => {
+//   console.log('foo task working~')
+// }
+
+// gulp 的任务函数都是异步的
+// 可以通过调用回调函数标识任务完成
+exports.foo = done => {
+  console.log('foo task working~')
+  done() // 标识任务执行完成
+}
+
+// default 是默认任务
+// 在运行是可以省略任务名参数
+exports.default = done => {
+  console.log('default task working~')
+  done()
+}
+
+// v4.0 之前需要通过 gulp.task() 方法注册任务
+const gulp = require('gulp')
+gulp.task('bar', done => {  // 这个阿
+  console.log('bar task working~')
+  done()
+})
+
+
+
+```
+
+接下来，就去目录中执行 之后命令行就好了
+
+```shell
+yarn grunt xxx (xxx是你定义的任务的名称)
+```
+
+
+
+如果我们需要标记一个任务是失败的。你需要这样做
+
+```javascript
+# 一般来说 在任务中返回一个false就好了。如果是异步的 你就往 你的done里面丢一个false就好了
+```
+
+
+
+### 2.配置方法
+> 前面的东西呢，我们都是在自己手动的一个一个配，有没有什么烦啊能把这些零散的任务归纳整理一下呢？答案是有的那就是配置文件
+>
+
+gulpfile.js
+
+```javascript
+module.exports = grunt => {
+  // grunt.initConfig() 用于为任务添加一些配置选项
+  grunt.initConfig({
+    // 键一般对应任务的名称
+    // 值可以是任意类型的数据
+    foo: {
+      bar: 'baz'
+    }
+  })
+
+  grunt.registerTask('foo', () => {
+    // 任务中可以使用 grunt.config() 获取配置
+    console.log(grunt.config('foo'))
+    // 如果属性值是对象的话，config 中可以使用点的方式定位对象中属性的值
+    console.log(grunt.config('foo.bar'))  // 这个就能直接拿到 baz了！
+  })
+}
+```
+
+### 3.多目标任务
+> 什么是多目标任务，你可以理解成多任务吧，就是一个任务去映射多个文件什么的，具体的用法就是使用initConfig来干这件事，子任务必须要做在具有initConfig的配置下
+>
+
+gulpfile.js
+
+
+
+```javascript
+module.exports = grunt => {
+  // 多目标模式，可以让任务根据配置形成多个子任务
+  // grunt.initConfig({
+  //   build: {
+  //     foo: 100,
+  //     bar: '456'
+  //   }
+  // })
+
+  // grunt.registerMultiTask('build', function () {  
+  // 这样就能拿到这个你initCOnfig中拿到的数据 this.target 就是 build 字符串  this.data就是 { foo：100.bar:456 }
+  //   console.log(`task: build, target: ${this.target}, data: ${this.data}`)
+  // })
+
+  grunt.initConfig({
+    build: {  
+      options: {
+        msg: 'task options'
+      },// 这个option是作为任务的配置选项，除了它之外，所有的其它建值都将会作为build的子任务去执行 
+      foo: {
+        options: {
+          msg: 'foo target options'
+        } // 自己的options可以覆盖外面的option
+      },
+      bar: '456'
+    }
+  })
+
+  grunt.registerMultiTask('build', function () {
+    console.log(this.options())  // 这样这个this.options()  返回的就是这个options对象
+  })
+}
+
+```
+
+```shell
+# 运行任务
+yarn grunt build
+
+# 运行子任务
+yarn grunt build:foo
+
+
+```
+
+### 4.插件相关的使用
+> 有了上面的这个些知识之后，我们发现实际上grunt的核心就是任务，由于任务在前端自动化构建中都是差不都的，所以我们可以使用grunt中的插件来做一些相同或者差不多的任务来提升开发的效率
+>
+
+首先去下载插件，我们这里就拿我们的这个一个叫做  'grunt-contrib-clean' 的插件，它的作用就去删除指定的文件或者文件夹，
+
+```shell
+yarn add grunt-contrib-clean
+```
+
+然后去根据插件的文档来配置插件
+
+```javascript
+module.exports = grunt => {
+  grunt.initConfig({
+    clean: {
+      temp: 'temp/**'  // 这句话的意思就是删除当前目录下的temp下的所有文件
+    }
+  })
+  
+  grunt.loadNpmTasks('grunt-contrib-clean')
+}
+```
+
+
+
+最后我们去验证一下 这个任务是否可行
+
+```shell
+yarn grunt  clean
+# 这样就行了
+```
+
+## 
+#### 1、 我们来看看最常见的grunt 插件
+我们这里主要介绍了如下的插件：grunt-babe，grunt-babel，grunt-contrib-watc，grunt-sass，load-grunt-tasks
+
+首先我们来构建我们的项目文件夹的结构，一开始的是实际上我们只有 src文件夹，dit文件夹是一个空的
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1621524944912-00be827c-d8fe-47dd-8f85-5351defc949d.png)
+
+在文件夹中dist就是我们需要构建输出的文件夹。而src就是我们的源代码文件夹
+
+然后呢，我们先预置一些文件进去，做一个小的demo来看看这东西到底如何完
+
+main.scss	
+
+
+
+
+
+```css
+$jumbotron-bg: #fff;
+$jumbotron-padding: 3rem;
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.jumbotron {
+  margin-bottom: 0;
+  padding-top: $jumbotron-padding;
+  padding-bottom: $jumbotron-padding;
+  background-color: $jumbotron-bg;
+
+  @media (min-width: 768px) {
+    padding-top: 6rem;
+    padding-bottom: 6rem;
+  }
+
+  .jumbotron-heading {
+    font-weight: 300;
+  }
+
+  .container {
+    max-width: 40rem;
+  }
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.site-footer {
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+  font-family: monospace;
+
+  a {
+    text-decoration: none;
+  }
+
+  @keyframes beat {
+    from,
+    to {
+      transform: none;
+    }
+
+    50% {
+      transform: scale3d(1.4, 1.4, 1.4);
+    }
+  }
+
+  .heart {
+    display: inline-block;
+    color: #f20;
+    font-weight: normal;
+    font-style: normal;
+    animation: beat 0.4s ease-in-out infinite;
+  }
+}
+
+```
+
+app.js
+
+```javascript
+
+$(($) => {
+  const $body = $('html, body')
+
+  $('#scroll_top').on('click', () => {
+    $body.animate({ scrollTop: 0 }, 600)
+    return false
+  })
+})
+
+```
+
+
+
+准备好这些材料之后，我们需要把他们烹饪在一起  
+
+gruntfile.js
+
+```javascript
+const sass = require('sass')  
+const loadGruntTasks = require('load-grunt-tasks')
+// 上面两个是需要我们去使用的 
+
+module.exports = grunt => {
+  grunt.initConfig({
+    sass: {
+      options: {
+        sourceMap: true,
+        implementation: sass
+      },
+      main: {
+        files: {
+          'dist/css/main.css': 'src/scss/main.scss'  // 指定输出和输入路径
+        }
+      }
+    },
+    babel: {
+      options: {
+        sourceMap: true,
+        presets: ['@babel/preset-env']  
+      },
+      main: {
+        files: {
+          'dist/js/app.js': 'src/js/app.js'
+        }
+      }
+    },
+    watch: {  // watch 就是
+      js: {
+        files: ['src/js/*.js'],
+        tasks: ['babel']
+      },
+      css: {
+        files: ['src/scss/*.scss'],
+        tasks: ['sass']
+      }
+    }
+  })
+
+  // grunt.loadNpmTasks('grunt-sass')
+  loadGruntTasks(grunt) // 自动加载所有的 grunt 插件中的任务
+
+ // 做一个整体的映射
+  grunt.registerTask('default', ['sass', 'babel', 'watch'])  // 注意个顺序是有讲究的。
+```
+
+然后我们去运行它就好了
+
+```shell
+# 首先是实时监控文件变化的
+yarn grunt watch 
+
+# 开始default任务
+yarn grunt就好了
+```
+
+## 三、Gulp
+> Grunt实际上基本也凉凉了，这里就不讲了哈，我们来看看最流行的 构建工具gulp
+>
+
+
+
+### 1.基础的使用
+> 实际上，gulp的使用和grunt 也差不多
+>
+
+首先，我们初始化一个项目，按照好所需要依赖
+
+```shell
+yarn add gulp
+```
+
+然后，我们去写一个配置文件，gulpfile.js,在里面去写我们需要的东西
+
+```javascript
+// // 导出的函数都会作为 gulp 任务
+// exports.foo = () => {
+//   console.log('foo task working~')
+// }
+
+// gulp 的任务函数都是异步的
+// 可以通过调用回调函数标识任务完成
+//  这要注意一点📢，就是在gulp中所有的任务都是异步的，你需要一个done 
+exports.foo = done => {
+  console.log('foo task working~')
+  done() // 标识任务执行完成
+}
+
+// default 是默认任务
+// 在运行是可以省略任务名参数
+exports.default = done => {
+  console.log('default task working~')
+  done()
+}
+
+// v4.0 之前需要通过 gulp.task() 方法注册任务，现在我们直接导出任务函数就好了
+const gulp = require('gulp')
+
+gulp.task('bar', done => {
+  console.log('bar task working~')
+  done()
+})
+
+```
+
+最后，我们去命令行运行一个，看看这个gulp自动化构建，任务能不能正常的工作
+
+```shell
+#  这个xxx就是 gulp中的 任务名称
+yarn gulp xxx
+
+# 这个是默认任务
+yarn gulp 
+```
+
+### 2.组合任务
+> 组合任务和之前在grunt中提及的任务也非常的类似
+>
+
+这里呢，我们只需要在gulpfile.js 写一下就好了
+
+
+
+```javascript
+const { series, parallel } = require('gulp')
+
+const task1 = done => {
+  setTimeout(() => {
+    console.log('task1 working~')
+    done()
+  }, 1000)
+}
+
+const task2 = done => {
+  setTimeout(() => {
+    console.log('task2 working~')
+    done()
+  }, 1000)  
+}
+
+const task3 = done => {
+  setTimeout(() => {
+    console.log('task3 working~')
+    done()
+  }, 1000)  
+}
+
+// 让多个任务按照顺序依次执行   这里就是执行多任务的关键，这个你可以理解成：“串行”
+exports.foo = series(task1, task2, task3)
+
+// 让多个任务同时执行, 这个你可以理解诶“并行”
+exports.bar = parallel(task1, task2, task3)
+
+```
+
+执行就是
+
+```shell
+yarn gulp foo
+yarn gulp bar
+```
+
+
+
+### 3.异步任务
+> 这儿，我们来进一步深入的理解一下 ，gulp中的异步任务的玩法
+>
+
+与上面同理👆🏻 我们只需要编辑 file文件就好了
+
+```javascript
+const fs = require('fs')
+
+
+// 就是两个基础的正常的 任务，使用回调的方式来处理
+exports.callback = done => {
+  console.log('callback task')
+  done()
+}
+
+exports.callback_error = done => {
+  console.log('callback task')
+  done(new Error('task failed'))
+}
+
+
+
+
+// 下面两个就是两个异步的任务，放回一个promise
+exports.promise = () => {
+  console.log('promise task')
+  return Promise.resolve()
+}
+
+exports.promise_error = () => {
+  console.log('promise task')
+  return Promise.reject(new Error('task failed'))
+}
+
+const timeout = time => {
+  return new Promise(resolve => {
+    setTimeout(resolve, time)
+  })
+}
+
+
+// 我们甚至可以使用async 去修饰任务
+exports.async = async () => {
+  await timeout(1000)
+  console.log('async task')
+}
+
+exports.stream = () => {
+  const read = fs.createReadStream('yarn.lock')
+  const write = fs.createWriteStream('a.txt')
+  read.pipe(write)
+  return read
+}
+
+// read.on  等价于 read gunlp会自动的处理 这个on监听，就像上面的👆🏻的代码一样，可以允许直接返回一个 read
+// exports.stream = done => {
+//   const read = fs.createReadStream('yarn.lock')
+//   const write = fs.createWriteStream('a.txt')
+//   read.pipe(write)
+//   read.on('end', () => {  
+//     done()
+//   })
+// }
+
+```
+
+### 4.构建过程中的核心工作原理 （基于流的处理方案）
+> 以前我们如果要写一个纯的静态页面，我们需要 手动的去压缩然后，整理压缩文件之后，才手动的把这个文件发布到服务器上去，这其实不是一个好的解决方案，我们需要自动化,所谓的自动化构建，<font style="color:#F5222D;">就是通过配置和任务的方式去做一些重复性的事情</font>
+>
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1621576132365-78363f2e-42c0-4144-836d-baee60f8137f.png)
+
+比如这里就以 ，自动话的构建一个 自动压缩文件的gulp工作流
+
+首先，我们准备一个项目（同理这一步比较简单，就不多bb了，项目的结构大概如下所示）
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1621576183451-db9b25fc-d13a-41ab-bcef-e974d9921793.png)
+
+```shell
+# 这是需要用到的npm包
+yarn add gulp
+```
+
+然后，我们去构建一个gile规则，写几个构建任务
+
+```javascript
+const fs = require('fs')
+const { Transform } = require('stream')
+
+exports.default = () => {
+  // 文件读取流
+  const readStream = fs.createReadStream('normalize.css')
+
+  // 文件写入流
+  const writeStream = fs.createWriteStream('normalize.min.css')
+
+  // 文件转换流
+  const transformStream = new Transform({
+    // 核心转换过程
+    transform: (chunk, encoding, callback) => {
+      const input = chunk.toString()
+      const output = input.replace(/\s+/g, '').replace(/\/\*.+?\*\//g, '')
+      callback(null, output) // 这个null 就是指定要输出的 路径，这里就不制定了
+    }
+  })
+
+  return readStream
+    .pipe(transformStream) // 转换 注意📢这里的执行，我们是以从左到又的方式去搞的
+    .pipe(writeStream) // 写入
+}
+
+```
+
+总结：上面的代码我们 只做了这样的事情，读取文件，做文件的处理，输出文件
+
+最后我们来运行这个任务
+
+```shell
+yarn gulp 就好了，执行完之后呢，我们的这个css就呗压缩处理完成了
+```
+
+### 5.操作文件的API
+> Gulp 实际上就是一个基于流的node操作程序，gulp也封装了很多 文件读取操作，而且非常的方便和强大
+>
+
+Gulp整个处理流程就是：读取  ===>  转换   =====>  写入
+
+ 	
+
+我们这里先来看看，如何基础的使用
+
+首先，我们创建一个空项目, 
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1621737996282-90e5c7e9-86a4-4609-ade4-0876e0fba027.png)
+
+然后，我们需要去安装一些辅助插件
+
+```shell
+yarn gulp // 
+yarn gulp-clean-cs //  这个是用来处理css的
+yarn gulp-rename  // gulp的插件
+```
+
+最后我们构建我们的file文件配置
+
+```javascript
+const { src, dest } = require('gulp')
+const cleanCSS = require('gulp-clean-css')
+const rename = require('gulp-rename')
+
+exports.default = () => {
+  return src('src/*.css')
+    .pipe(cleanCSS())  
+    .pipe(rename({ extname: '.min.css' }))
+    .pipe(dest('dist'))
+}
+
+```
+
+接下来我们就去命令行看看是否是可行的
+
+```shell
+yarn gulp 
+```
+
+### 6.一个小而全的项目构建过程
+> 我们这里提前准备了一些文件，我们看看 如果使用gulp进行这个工程的自动化，这样板代码在请来信老李哈
+>
+
+  	首先，我们需要拉取对应的模板代码片段
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1621743989619-1ad734d3-8e6f-4e67-836f-b7ece07647d9.png)
+
+然后，我们需要安装一些依赖文件
+
+```javascript
+# 基本上每一个插件都是一个函数，这个函数就是去处理我们的文件流
+
+    "@babel/core": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",  // 这两个是babel就不多说了
+    "browser-sync": "^2.26.7",  
+    "del": "^5.1.0", // 这个可以用来删除文件，不是gulp插件，但是也可以用
+    "gulp": "^4.0.2",
+    "gulp-babel": "^8.0.0", //  这个和上面两个bable是合在一起使用的
+    "gulp-clean-css": "^4.2.0", // 这个是清除css文件的
+    "gulp-htmlmin": "^5.0.1",    // 这个是压缩html的
+    "gulp-if": "^3.0.0",   // 这个是做在读取流中 做if判断的
+    "gulp-imagemin": "^6.1.0",  // 这个是压缩图片的
+    "gulp-load-plugins": "^2.0.1", // 统一plugin配置， 这个是加载plugin的
+    "gulp-sass": "^4.0.2", // 这个是加载sass处理的
+    "gulp-swig": "^0.9.1", // 这个是做html的模板语法编译用的
+    "gulp-uglify": "^3.0.2", // 压缩js的
+    "gulp-useref": "^3.1.6" // 做指令 编译的plugin
+
+// 这里都是我们需要用到的东西
+    
+```
+
+再后，我们需要看看我们需要做哪些事情，我把他们都列成一组 Todo
+
+    - [x] css的编译
+    - [x]  脚本编译
+    - [x] 页面模板编译
+    - [x] 静态资源的编译
+    - [x] 清除文件
+    - [x] 自动加载插件
+    - [x] 开发服务器
+    - [x] 监听文件变化和构建优化
+    - [x] . useref文件的引用和处理
+    - [x]  文件压缩
+    - [x] 文件压缩和其它内容的补充
+
+我们来看看如何编写file
+
+```javascript
+const { src, dest, parallel, series, watch } = require('gulp')
+
+const del = require('del')
+const browserSync = require('browser-sync')
+
+const loadPlugins = require('gulp-load-plugins')
+// 这个是一个gulp中的一个辅助插件，用于方便我们开发调试，不用我们每次都写require(‘插件名字’)
+// 因为之后，所有gulp的插件都会成为这个loadPulugs() 返回的对象上的属性
+// 具体的规则是这样的：插件名 gulp-sass ，会变成 plugins.sass。
+// 插件名  gulp-sass-loader  会变成 plugins.sassLoader
+const plugins = loadPlugins()
+const bs = browserSync.create()
+
+const data = {
+  menus: [
+    {
+      name: 'Home',
+      icon: 'aperture',
+      link: 'index.html'
+    },
+    {
+      name: 'Features',
+      link: 'features.html'
+    },
+    {
+      name: 'About',
+      link: 'about.html'
+    },
+    {
+      name: 'Contact',
+      link: '#',
+      children: [
+        {
+          name: 'Twitter',
+          link: 'https://twitter.com/w_zce'
+        },
+        {
+          name: 'About',
+          link: 'https://weibo.com/zceme'
+        },
+        {
+          name: 'divider'
+        },
+        {
+          name: 'About',
+          link: 'https://github.com/zce'
+        }
+      ]
+    }
+  ],
+  pkg: require('./package.json'),
+  date: new Date()
+}
+
+// 6、清除之前旧的dist中的文件
+const clean = () => {
+  return del(['dist', 'temp'])
+  // 临时文件temp用于提供到开发阶段使用的 只有useref影响到的采需要放到temp中 
+}
+
+// 1.这个是样式的编译任务
+const style = () => {
+  return src('src/assets/styles/*.scss', { base: 'src' })
+    .pipe(plugins.sass({ outputStyle: 'expanded' }))
+    .pipe(dest('temp'))
+    .pipe(bs.reload({ stream: true }))
+}
+
+// 2这是编译es6
+const script = () => {
+  return src('src/assets/scripts/*.js', { base: 'src' })
+    .pipe(plugins.babel({ presets: ['@babel/preset-env'] }))
+    .pipe(dest('temp'))
+    .pipe(bs.reload({ stream: true }))
+}
+
+// 3、1 这个是做 ，模板编译的
+const page = () => {
+  return src('src/*.html', { base: 'src' })
+    .pipe(plugins.swig({ data, defaults: { cache: false } })) // 防止模板缓存导致页面不能及时更新,这个就是cache的参数的作用
+    .pipe(dest('temp'))
+    .pipe(bs.reload({ stream: true }))
+}
+
+// 4、这个是做 图片处理和压缩的的
+const image = () => {
+  return src('src/assets/images/**', { base: 'src' })
+    .pipe(plugins.imagemin())
+    .pipe(dest('dist'))
+}
+// 5.这个是处理字体文件的 压缩 和打包
+const font = () => {
+  return src('src/assets/fonts/**', { base: 'src' })
+    .pipe(plugins.imagemin())
+    .pipe(dest('dist'))
+}
+
+// 6、这个是排除的意思，extra.意思是我们部队public做任何处理，这是一个简单的复制操作
+const extra = () => {
+  return src('public/**', { base: 'public' })
+    .pipe(dest('dist'))
+}
+
+// 7. 这个是一个小型的开发服务器，作用呢就是可以允许你进行一些热更新 热编译 ，它不是一个gulp插件，只不过我们用gulp去管理它 
+const serve = () => {
+  
+  // 这个是gulp的一个api用来看看：“如果这些监听的文件变化了，就重写执行这个style/scrip/...任务”
+  watch('src/assets/styles/*.scss', style)
+  watch('src/assets/scripts/*.js', script)
+  watch('src/*.html', page)
+  // watch('src/assets/images/**', image)  // 这些在编译任务，在 开发阶段是没有必要的
+  // watch('src/assets/fonts/**', font)
+  // watch('public/**', extra)
+  watch([
+    'src/assets/images/**',
+    'src/assets/fonts/**',
+    'public/**'
+  ], bs.reload)
+
+  
+  // 这个是bs的正式配置
+  bs.init({
+    notify: false, // 这个页面中的提示
+    port: 2080,  
+    // open: false,
+    // files: 'dist/**',
+    server: {
+      baseDir: ['temp', 'src', 'public'],  // 监视的路径 详情
+      routes: {// 这个router是会先于baseDir的配置，首先网页被访问 先去看看node_module下有没有资源没有的话就去baseDir找
+        '/node_modules': 'node_modules'
+      }
+    }
+  })
+}
+
+// 8、这个是useref的gulp中的一个插件，主要处理特殊htmlzhushi 
+```html
+// 比如这一行注释，就是useref插件能处理的东西
+  <!-- build:css assets/styles/vendor.css -->
+  <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.css">
+  <!-- endbuild -->
+
+// 这个的意思就是：把 /node_modules/bootstrap/dist/css/bootstrap.css 这个路径下的这个css打包到assets/styles/vendor.css 下，css就是我们在file中定义的 css任务
+```
+// 我们看看这个配置的的写法 
+const useref = () => {
+  return src('temp/*.html', { base: 'temp' }) // 首先是获取这些源文件
+    .pipe(plugins.useref({ searchPath: ['temp', '.'] })) // 把这些文件 传递到 useref 中，pipe之后就可以直pipe(dest('dist')) 到dist目录中
+    // html js css 这个就是压缩的过程
+    .pipe(plugins.if(/\.js$/, plugins.uglify()))
+    .pipe(plugins.if(/\.css$/, plugins.cleanCss()))
+    .pipe(plugins.if(/\.html$/, plugins.htmlmin({
+      collapseWhitespace: true,
+      minifyCSS: true,
+      minifyJS: true
+    })))
+    .pipe(dest('dist'))
+}
+
+// 重要、这个 是组合任务，parallel是并发的，因为我们这个两个是没有先后依赖的
+const compile = parallel(style, script, page)
+
+// 重要、上线之前执行的任务
+const build =  series(
+  clean,
+  parallel(
+    series(compile, useref), // 这个useref是为了补充compile任务的，所有应该是串行任务的
+    image,
+    font,
+    extra
+  )
+)
+
+const develop = series(compile, serve)
+
+module.exports = {
+  clean,
+  build,// 我们需要先运行这个devlop
+  develop
+}
+
+```
+
+最后，我们需要去把这些任务都配置到package.json
+
+```json
+
+  "scripts": {
+    "clean": "gulp clean",
+    "build": "gulp build",
+    "develop": "gulp develop"
+  },
+```
+
+我们还需要去 gitignoe 配
+
+```javascript
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Directory for instrumented libs generated by jscoverage/JSCover
+lib-cov
+
+# Coverage directory used by tools like istanbul
+coverage
+
+# nyc test coverage
+.nyc_output
+
+# Grunt intermediate storage (http://gruntjs.com/creating-plugins#storing-task-files)
+.grunt
+
+# Bower dependency directory (https://bower.io/)
+bower_components
+
+# node-waf configuration
+.lock-wscript
+
+# Compiled binary addons (https://nodejs.org/api/addons.html)
+# 这个比较重要，就是去掉release的构建产物
+build/Release
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# TypeScript v1 declaration files
+typings/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+
+# next.js build output
+.next
+
+# 去掉打包好的dist产物和 temp产物
+dist
+
+temp
+
+```
+
+## 四、封装一个工作流
+> 以上，是一个单一的一个fgulp工作流，现在我们来想法子，把这套工作流给抽离出来，与项目与配置无关的cli
+>
+> 达到的效果就是：你npm把这个模块下载下来就能自动的给你配置好这些构建任务，并开始构建和执行
+>
+> 就好像你下载一个vue cli之后，默认的情况下你不需要给它配什么，直接运行默认的配置大多数情况下也是够用的，它会自动去读取你的项目结构并在你需要打包的时候做对应的编译任务。我们现在要做的就是把上面我们写的这个gulp工作流也给打包进来，变成一个与vue cli类似的东西
+>
+
+### 1. 确定目标
+我们需创建一个cli脚手架项目 ，功能就是要把上面的这些工作流，给它加到这里面来
+
+### 2. 初始化项目文件目构造
+> 注意这个里的这个文件夹目录 ，随便你怎么搞，它只是构建你这个cli项目的我们约定的而已，一般情况下也很少人有人改这个项目目录结构
+>
+
+
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1622385839968-36834fea-7a2d-42d9-a6aa-4da650c5db6b.png)
+
+### 3. 提取gulpfile
+我们需要把整个 之前的gulpfile里的配置 cv过去 到lib下的文件中去,并且把需要的dev依赖都安装下去
+
+lib/index.js
+
+```javascript
+const { src, dest, parallel, series, watch } = require('gulp')
+
+const del = require('del')
+const browserSync = require('browser-sync')
+
+const loadPlugins = require('gulp-load-plugins')
+
+const plugins = loadPlugins()
+const bs = browserSync.create()
+
+const data = {
+  menus: [
+    {
+      name: 'Home',
+      icon: 'aperture',
+      link: 'index.html'
+    },
+    {
+      name: 'Features',
+      link: 'features.html'
+    },
+    {
+      name: 'About',
+      link: 'about.html'
+    },
+    {
+      name: 'Contact',
+      link: '#',
+      children: [
+        {
+          name: 'Twitter',
+          link: 'https://twitter.com/w_zce'
+        },
+        {
+          name: 'About',
+          link: 'https://weibo.com/zceme'
+        },
+        {
+          name: 'divider'
+        },
+        {
+          name: 'About',
+          link: 'https://github.com/zce'
+        }
+      ]
+    }
+  ],
+  pkg: require('./package.json'),
+  date: new Date()
+}
+
+const clean = () => {
+  return del(['dist', 'temp'])
+}
+
+const style = () => {
+  return src('src/assets/styles/*.scss', { base: 'src' })
+    .pipe(plugins.sass({ outputStyle: 'expanded' }))
+    .pipe(dest('temp'))
+    .pipe(bs.reload({ stream: true }))
+}
+
+const script = () => {
+  return src('src/assets/scripts/*.js', { base: 'src' })
+    .pipe(plugins.babel({ presets: ['@babel/preset-env'] }))
+    .pipe(dest('temp'))
+    .pipe(bs.reload({ stream: true }))
+}
+
+const page = () => {
+  return src('src/*.html', { base: 'src' })
+    .pipe(plugins.swig({ data, defaults: { cache: false } })) // 防止模板缓存导致页面不能及时更新
+    .pipe(dest('temp'))
+    .pipe(bs.reload({ stream: true }))
+}
+
+const image = () => {
+  return src('src/assets/images/**', { base: 'src' })
+    .pipe(plugins.imagemin())
+    .pipe(dest('dist'))
+}
+
+const font = () => {
+  return src('src/assets/fonts/**', { base: 'src' })
+    .pipe(plugins.imagemin())
+    .pipe(dest('dist'))
+}
+
+const extra = () => {
+  return src('public/**', { base: 'public' })
+    .pipe(dest('dist'))
+}
+
+const serve = () => {
+  watch('src/assets/styles/*.scss', style)
+  watch('src/assets/scripts/*.js', script)
+  watch('src/*.html', page)
+  // watch('src/assets/images/**', image)
+  // watch('src/assets/fonts/**', font)
+  // watch('public/**', extra)
+  watch([
+    'src/assets/images/**',
+    'src/assets/fonts/**',
+    'public/**'
+  ], bs.reload)
+
+  bs.init({
+    notify: false,
+    port: 2080,
+    // open: false,
+    // files: 'dist/**',
+    server: {
+      baseDir: ['temp', 'src', 'public'],
+      routes: {
+        '/node_modules': 'node_modules'
+      }
+    }
+  })
+}
+
+const useref = () => {
+  return src('temp/*.html', { base: 'temp' })
+    .pipe(plugins.useref({ searchPath: ['temp', '.'] }))
+    // html js css
+    .pipe(plugins.if(/\.js$/, plugins.uglify()))
+    .pipe(plugins.if(/\.css$/, plugins.cleanCss()))
+    .pipe(plugins.if(/\.html$/, plugins.htmlmin({
+      collapseWhitespace: true,
+      minifyCSS: true,
+      minifyJS: true
+    })))
+    .pipe(dest('dist'))
+}
+
+const compile = parallel(style, script, page)
+
+// 上线之前执行的任务
+const build =  series(
+  clean,
+  parallel(
+    series(compile, useref),
+    image,
+    font,
+    extra
+  )
+)
+
+const develop = series(compile, serve)
+
+module.exports = {
+  clean,
+  build,
+  develop
+}
+
+```
+
+安装对应的需要的dev
+
+
+
+然后我们为了方便测试，把我们的老项目的也就是 gulp上面第六讲的这个项目中的gulp相关的都干掉，然后让自己的gulp cli link到这个项目中，这样我们就能方便的进行调试了
+
+```shell
+# 在你的cli项目中link一下
+yarn link 
+
+# 回到之前那的项目中 link回来
+yarn link "你的cli项目名字"
+```
+
+	在旧的项目 的gulpfile.js 中把我们的cli导出的东西 拿过来就行了
+
+/ 旧项目 / gulpfile.js
+
+```shell
+module.exports = require('你的cli项目名字')
+```
+
+我们去试一下
+
+```shell
+yarn build
+
+# 然后发现保存了，原因是 我们在旧项目中的node_moudle下没有gulp的命令了。我们暂时解决一下 ，这个问题在我们正式发布npm之后，就不会存在这个问题了
+yarn add gulp-cli gulp --dev
+
+# 如果你发现还是错误了，那么大概就是你的packJson文件，因为之前的 packJson的之前的项目来的写死的，我们要抽离出来 在项目中配置一下这个配置文件，就像webpack得config
+```
+
+### 4.创建一个 配置文件
+.pages.config.js , 就像vue 下的vue.config文件一样	
+
+```javascript
+
+
+// 这个就是在旧项目中配的，这些数据应该属于 当前使用cli的项目，而不是cli自己本身的
+module.exports = {  
+  build: {  // 你项目中的路径
+    src: 'src',
+    dist: 'release',
+    temp: '.tmp',
+    public: 'public',
+    paths: {
+      styles: 'assets/styles/*.scss',
+      scripts: 'assets/scripts/*.js',
+      pages: '*.html',  //  注意这些 通配符
+      images: 'assets/images/**',
+      fonts: 'assets/fonts/**'
+    }
+  },
+  data: {  // 你项目的data
+    menus: [
+      {
+        name: 'Home',
+        icon: 'aperture',
+        link: 'index.html'
+      },
+      {
+        name: 'Features',
+        link: 'features.html'
+      },
+      {
+        name: 'About',
+        link: 'about.html'
+      },
+      {
+        name: 'Contact',
+        link: '#',
+        children: [
+          {
+            name: 'Twitter',
+            link: 'https://twitter.com/w_zce'
+          },
+          {
+            name: 'About',
+            link: 'https://weibo.com/zceme'
+          },
+          {
+            name: 'divider'
+          },
+          {
+            name: 'About',
+            link: 'https://github.com/zce'
+          }
+        ]
+      }
+    ],
+    pkg: require('./package.json'),
+    date: new Date()
+  }
+}
+
+```
+
+ 当我们在项目中配置完了的时候。我们还需要去cli中把之前写死的 config 都改改
+
+ 在你的cli项目的lib /inde.js中获取这个配置文件
+
+### 5. 把项目中的gulpfiel去掉？ 
+> 我们希望把这个gulpfile 去掉 怎么做呢？这个时候你的bin目录就有作用的
+>
+
+1. 在gulp中有这样的几个shell 参数 可以指定gulp去运行某指定目录下的gulpFile
+
+```shell
+yarn gulp build --gulpfile  ./node_moudle/你的cli项目名/lib/index.js
+# 我们可以在cli项目中 自己建一个 cli 自己去执行 上面的语句。这个就是把gulpfile去掉的思路
+```
+
+2. 在bin下建立一个js文件
+3. 在你的cli项目中 的pack.json中配置这个bin
+
+```javascript
+#!/usr/bin/env node  这个是必要的 
+
+# 具体下面的代码配置到底是如何来的，我们可以去看node_module下的 源代码bin怎么写的，
+
+# process.argv 能拿到 所有的shell参数
+process.argv.push('--cwd')
+process.argv.push(process.cwd())
+process.argv.push('--gulpfile')
+// 这个是clli 项目lib下的 index ,我们可以通过这个方法来找这个文件
+process.argv.push(require.resolve('..'))  // 实际上你这个就是 ../
+
+require('gulp/bin/gulp') // 这个就是源代码中的gulp-cli的执行方式 
+
+```
+
+```javascript
+  ],
+  "homepage": "https://github.com/zce/zce-pages#readme",
+  "bugs": {
+    "url": "https://github.com/zce/zce-pages/issues"
+  },
+  "license": "MIT",
+  "author": "zce <w@zce.me> (https://zce.me)",
+  "files": [
+    "lib",
+    "bin"
+  ],
+  "main": "lib/index.js",
+  "bin": "bin/zce-pages.js",
+  "directories": {
+    "lib": "lib"
+  },
+```
+
+以上就可以完美的运行了
+
+
+
+
+
+### 6 发布到npm
+> 默认的时候 npm不会public 上 bin 因此我们需要file指定一下
+>
+
+```javascript
+  "files": [
+    "lib",
+    "bin"
+  ],
+```
+
+## 总结
+想法是建立在里的技能之上的，你的技能越多想法越多你就越有更多的尝试
+

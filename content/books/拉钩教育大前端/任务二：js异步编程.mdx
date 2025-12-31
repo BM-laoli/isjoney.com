@@ -1,0 +1,664 @@
+---
+title: "任务二：js异步编程"
+date: "2024-12-19"
+summary: "深入讲解JavaScript异步编程的核心概念，包括同步与异步模式、回调函数、Promise的基本用法与链式调用、异常处理、静态方法、并行执行以及Generator和Async/await的使用。"
+status: ""
+tech: ["JavaScript","异步编程","Promise","Generator","Async/Await"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "拉钩教育大前端"
+---
+
+# 概述
+
+
+# 同步模式
+
+
+# 异步模式
+
+
+# 回调函数
+
+
+> 实际上所有的 js 异步都是基于回调实现的 发布订阅什么的。实际上都是回调的另一种实现
+>
+
+
+
+# Promise 概述
+
+
+> 最早出现在commonjs社区中，2015年写入es规范，解决的问题就是_回调地狱_,实际上promise是一个对象/类
+>
+
+
+
+# Promise 基本用法
+
+
+> 基础代码的示例
+>
+
+
+
+```javascript
+const promise = new Promise(function(resolve,reject){
+  resolve(100)
+  reject(new Error('出错了'))
+})
+
+promise.then((value)=>{
+  log('成功了',value)
+},(error)=>{
+  log)('失败了',error)
+})
+
+log('1')  // 依然会优先打印这个 1
+```
+
+
+
++ 注意：promise就算没有 进行异步操作，但是它依然会被放到任务队列中等待执行
+
+
+
+# Promise 使用案例
+
+
+> 需求 ：使用promise 封装ajax  
+前置条件。你已经有一个源代码仓库，并配配置了webpack 。有一个api 文件夹。下面有一个jsonwe文件，并做了静态资源的webpack配置
+>
+
+
+
+```javascript
+// 封装
+function ajax (rul) {
+  return new Promise((resolve,reject)=>{
+    const xhr = new XMLHttpRequest()
+    xhr.open('GET'.rul)
+    xhr.responseType = 'json'
+    xhr.onload = ()=>{
+      if ( this.status === 200 ){
+        resolve(this.response)
+      }else{
+        reject(new Error(this.statusText))
+      }
+    }
+    xhr.send()
+    
+  })
+}
+
+
+// 使用
+ajax('api/foo.json').then((value)=>{
+  log('ok',value)
+},(error)=>{
+  log('error',erroe)
+})
+```
+
+
+
+# Promise 误区
+
+
+> 不要使用Promise进行回调地狱这样的操作
+>
+
+
+
+```javascript
+ajax('api/foo.json').then((value.rul)=>{
+  ajax(value.rul).then(function(value.rul){
+    ajax(value.rul).then( function (value.rul){
+      ...
+    })
+  })
+})
+```
+
+
+
+# Promise 链调用
+
+
+> 注意 链式调用原理不是我们以往的返回this 而是返回一个新的 Promise
+>
+
+
+
+```javascript
+function ajax (rul) {
+  return new Promise((resolve,reject)=>{
+    const xhr = new XMLHttpRequest()
+    xhr.open('GET'.rul)
+    xhr.responseType = 'json'
+    xhr.onload = ()=>{
+      if ( this.status === 200 ){
+        resolve(this.response)
+      }else{
+        reject(new Error(this.statusText))
+      }
+    }
+    xhr.send()
+    
+  })
+}
+
+ajax('/api/user.json')
+  .then(()=>{
+    return ajax('/api/user.json')
+  })  // 返回的新的Promise
+  .then(()=>{
+    return ajax('/api/user.json')
+  })
+  // 返回的新的Promise
+  // ...一直then下去
+```
+
+
+
+> 有关于then的问题
+>
+
+
+
+```javascript
+// 对于这个then有下面的情况 哈 
+// 1.还是返回promise ，那么后面的这个then就是为这个新返回的promise服务的
+// 2.返回普通的值 return '1' ，那么后面的then拿到的就是 1 。如果啥也不返回 ，拿到的就是undefined
+
+ajax('/api/user.json')
+  .then((res)=>{
+    log(res)
+    return ajax('/api/user.json')
+  })  // 返回的新的Promise
+  .then((res2)=>{
+    log(res2)
+    return '1'
+  })
+  .then((res3)=>{
+    log(res2)  // '1'
+  })
+```
+
+
+
+> 总结
+>
+
+
+
++ then() 返回是一个全新的Promise
++ then() 方法的后面的then是做上一个then返回的Promise进行处理
++ then() 返回的值会作为 下一次 then中的参数
+
+
+
+# Promise 异常处理
+
+
+> Promise 的 reject 会在 发生错误或者 异常 时调用 。除了then的第二个参数，是reject 也可以使用catch 来搞定这个回调
+>
+
+
+
+> 实际上 catch  = then( undefind,error )
+>
+
+
+
+```javascript
+function ajax (rul) {
+  return new Promise((resolve,reject)=>{
+    const xhr = new XMLHttpRequest()
+    xhr.open('GET'.rul)
+    xhr.responseType = 'json'
+    xhr.onload = ()=>{
+      if ( this.status === 200 ){
+        resolve(this.response)
+      }else{
+        reject(new Error(this.statusText))
+      }
+    }
+    xhr.send()
+    
+  })
+}
+
+ajax('/api/user.json')
+  .then((value)=>{
+    return ajax('/api/user.json')
+  }.(error)=>{
+    log(error) 
+  })  
+  .catch((error2)=>{
+    log(error2)
+    return ajax('/api/user.json')
+  })
+```
+
+
+
+> 容易发生错误的地方 和 所要注意的点
+>
+
+
+
+```javascript
+// 请回答下面的代码有没有什么区别？
+
+// 代码A
+ajax('/api/user.json')
+  .then(function onFullfilled(value){ 
+    log(value)
+  },function onRejected(error){
+    log(error)
+  } )  
+
+// 代码B
+ajax('/api/user.json')
+  .then(function onFullfilled(value){ 
+    log(value)
+  })
+  .cath(function onRejcted(error) {
+    log(error)
+  })  
+
+
+// 实际上代码A的回调的onRejcct 只是给 ajax('/api/user.json') 这个Promise服务的
+// 而代码B的cath是可以捕获到所有的 Promise链上的错误
+// 推荐使用 它
+```
+
+
+
+> 为了代码不出错，更好处理兼容问题。我们如何做呢？_unhandledRejection_事件获取全局的promise错误
+>
+
+
+
+```javascript
+// 浏览器上 加一个全局错误处理 保证安全
+window.on('unhandledRejection',(evnet)=>{
+   const {reason,promise} = evnet
+  // 参数1 就是失败的原因，参数2 是一个异常的Promise对象
+  event.prenventDefualt()
+},false)
+
+// node 环境中也是一样的
+procee.on('unhandledRejection',()=>{
+  log(reason,promise)
+  // 参数1 就是失败的原因，参数2 是一个异常的Promise对象
+})
+```
+
+
+
+# Promise 静态方法
+
+
+> 所谓的静态方法就是使用static修饰的方法 Promise 是一个calss ，它上面有这样的一个方法。作用就是把传入的参数 转化为Promise
+>
+
+
+
+> 传入的是一个 值类型的时候
+>
+
+
+
+```javascript
++++上一节的ajax代码封装
+
+Promise.resolve('fool') // 返回一个原生的es规范的Promise
+  .then(function(value) {
+    log(value) // 获取到的就是一个fool
+  })
+```
+
+
+
+> 传入的是一个 promise的时候
+>
+
+
+
+```javascript
+new Promise(function(resolve,reject){
+  resolve('fool')
+})
+
+var promise = ajax('xxx')
+var promise2 = Promise.resolve(promise)
+// promise  === promise2  实际上是全等的
+```
+
+
+
+> 传入的上一个是对象，并且对象上有一个then方法的，时候
+>
+
+
+
+```javascript
+Promise.resolve({
+  then:function(onFulfilled,onRejceted){
+    onFulfilled('foo')
+  }
+})
+.then((value)=>{
+  log(value) // 就是foo。也就 是说 { then 就是promise过后的东西，这种对象也是 “实现”了 thenable 接口 }，就是很多类Promise 库的功能
+})
+```
+
+
+
+> reject 呢？ reject是一样的，不论传递啥都返回 失败的原因 和上面的几乎一样
+>
+
+
+
+# Promise 并行执行 (all方法。race方法)
+
+
+> 并行操作 的需求怎么办？
+>
+
+
+
+```javascript
+function ajax (rul) {
+  return new Promise((resolve,reject)=>{
+    const xhr = new XMLHttpRequest()
+    xhr.open('GET'.rul)
+    xhr.responseType = 'json'
+    xhr.onload = ()=>{
+      if ( this.status === 200 ){
+        resolve(this.response)
+      }else{
+        reject(new Error(this.statusText))
+      }
+    }
+    xhr.send()
+    
+  })
+}
+
+ajax('/api/users.json')
+ajax('/api/posts.json')
+// 发起并行请求很简单，如何做到同时获取数据呢？
+
+// 使用all就能解决
+let promise = Promise all(
+  [ajax('/api/users.json'),
+   ajax('/api/users.json')]
+)
+
+promise.then(function(values){
+  log(values)
+}).catch(function(error){
+  log(error)
+})
+
+// 实战，需求如下：首先是获取第一个ajax结果，根据这个结果并行发起请求并统一获取所有数据
+ajax('/api/urls.json')
+  .then(res => {
+    const urls  = Object.values(value)
+    const task = urls.map(url => {
+      ajax(url)
+    })
+
+    return Promise.all(task)
+  })
+  .then(value =>{
+    log（value）
+  })
+```
+
+
+
+> all和race的区别，all需要全部race是只要有一个就够了，而且返回的就是首先完成的哪一个
+>
+
+
+
+```javascript
+const request = ajax('/api/posts.json')
+const timeOut = new Promise((resolve,reject)=>{
+  setTimeout(()=> reject(new Error('出错了')))
+})
+
+Promise.rece([
+  request,
+  timeOut
+])
+.then((value)=>{ log(value) })
+.catch((error) => { log(error) })
+```
+
+
+
+# Promise 执行顺序
+
+
+> 通过几个面试题，我们来看看执行的顺序 ，宏任务 / 微任务,加入 宏任务和微任务的目的就是_提示整体的响应能力（银行柜台排队案例辅助记忆）_
+>
+
+
+
+> 代码实例
+>
+
+
+
+```javascript
+// 轻微 A  B两 的输出是怎么样的
+
+// A
+log('global start')
+
+Promise.resolve()
+  .then(()=>{
+    log('1')
+  })
+  .then(()=>{
+    log('2')
+  })
+  .then(()=>{
+    log('3')
+  })
+
+log('global end')
+
+// B
+log('global start')
+
+settimeOut(()=>{
+  log('hhh')
+},0)
+
+Promise.resolve()
+  .then(()=>{
+    log('1')
+  })
+  .then(()=>{
+    log('2')
+  })
+  .then(()=>{
+    log('3')
+  })
+
+log('global end')
+
+// 答案是a是正常的走任务队列去了。 star -> end -> 1 -> 2 -> 3
+// 答案是b是正常的走任务队列去了。 star -> end -> 1 -> 2 -> 3  -> hah
+
+// 上述原因就是  定时器 是一个宏任务，会重新去任务执行队列中排队，微任务会在本轮直接执行
+```
+
+
+
+> 几个简单的分类 宏任务 和微 任务
+>
+
+
+
+# Generator 异步方法（上）
+
+
+> Generator 翻译就是 生成器 ，  
+generator 生成器 next()函数的执行 会返回一个done ，表示是否执行完毕了 还是 处于暂停状态
+>
+
+
+
+```javascript
+ function *foo ()=> {  // 给普通函数加上 * 号修饰就变成一个  生成器 对象
+  log('start')
+
+  try{
+    const res =  yield 'foo'
+    log(res)
+  }.catch(e){
+    log(e)
+  }
+}
+
+const generator = foo() // 调用它 返回一个 生成器 对象 
+// const result = generator.next() // 通过它的 next 让这个函数foo进行执行。并且 暂停找 yiel 中上，返回yield => 这边的值
+log(result) // foo
+
+const generator.next('hhh') // 这个时候 generator 中的 <= yield 这边的值就是'hhh'
+
+// 如果传递一个Error 那么就在内部 try一下就好了。
+generator.throw(new Error('出错了'))
+```
+
+
+
+# Generator 异步方法（中）
+
+
+> 我们来看看如何使用 Gnerator来实现 异步函数的编程处理
+>
+
+
+
+```javascript
+
+function * main(){
+  const users = yield ajax('/api/users.json')
+  log(users)
+
+  const posts =  yield ajax('/api/posts.json')
+  log(posts)
+}
+
+const g = mian() // 执行生成器
+const result = g.next()
+
+result .value.then(data=>{  // 连续获取值
+  const result2 = g.next(data)
+  if(result.done) return
+  // 如果获取到了这个值。并且H函数是不是暂停的。我们继续往下执行
+  result2 .value.then((data)=>{
+    const result3 = g.next(data)
+    // ....一直又是一个回调地狱了，我们建议使用递归来处理
+  })
+   
+})
+```
+
+
+
+# Generator 异步方法（下）
+
+
+> 需求 我需要一个通用的一个生成器 ，用来处理 所有的异步场景
+>
+
+
+
+```javascript
+// 用户自己定义一个处理函数
+function * main (){
+
+  try {
+  const userlist =  yield ajxa('/api/users.json')  // 又一代女awite 的刚觉了 
+  log(userlist)
+
+  const posts =  yield ajxa('/api/posts.json')
+  log(posts)
+
+  const ruls =  yield ajxa('/api/rulls.json')
+  log(ruls)
+
+  }.catch (error) {
+    log(error)
+  }
+
+} 
+
+// 处理 并执行 生成器
+const g = main()
+
+function handleResult (result) {
+    if( result.done ) return 
+    
+    result.value.then(data => {
+      handleResult(g.next(data))
+    }.error => {
+      g.throw(error)
+    })
+
+  }
+
+// 如何执行它？
+function co(generator) {
+  const g = generator()
+  handleResult( g.next() )
+}
+
+// 正式的使用
+// co(main)就好了。这个是之前没有async 的时候的实现 github上还有一个库叫co就是拿来处理这个的
+```
+
+
+
+# Async 语法糖
+
+
+> 这个就是上一节代码的语法糖,内部的执行和上面的东西是一样的  
+_这个async 函数会  返回一个 promise_
+>
+
+
+
+```javascript
+// 这个async 函数会  返回一个 promise
+async function  main (){
+
+  try {
+  const userlist =  await ajxa('/api/users.json')  // 又一代女awite 的刚觉了 
+  log(userlist)
+
+  const posts =  await ajxa('/api/posts.json')
+  log(posts)
+
+  const ruls =  await ajxa('/api/rulls.json')
+  log(ruls)
+
+  }.catch (error) {
+    log(error)
+  }
+
+} 
+
+// 就不需要co执行器 去包装一层了,底层实现是和上面那个co执行器是一样的
+main()
+```
+

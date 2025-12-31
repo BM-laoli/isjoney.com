@@ -1,0 +1,170 @@
+---
+title: "四、规范化标准"
+date: "2024-12-19"
+summary: "详细介绍ESLint的快速上手、配置文件详解、结合自动化工具和webpack的使用方法，以及StyleLint、Prettier和GitHooks工具机制的应用。"
+status: ""
+tech: ["ESLint","StyleLint","Prettier","GitHooks","Husky"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "拉钩教育大前端"
+---
+
+## eslint快速的上手
+第一步：安装
+
+```shell
+yarn add eslint --dev 
+```
+
+安装完成后，会在node_moudele下的bin文件夹内会加入一个可执行的二进制文件，使用它就能对代码进行校验
+
+
+
+第二步：运行它
+
+```javascript
+yarn eslint # 这样就能进行运行了
+```
+
+接下来我们以一个demo做例子，这个例子我们在这里就不去写他了，就是写一个错误的代码
+
+先写一个错误的代码，让eslint 去检查他
+
+
+
+使用起来也比较的简单
+
+```shell
+yarn eslint .\xxx.js  --fix 
+# 这个就能去检查具体的指定的文件了
+```
+
+##   
+eslint 配置文件详解
+这个配置文件很重要， .eslintrc.js，可以自定义很多规则
+
+```javascript
+module.exports = {
+  env: {
+    browser: true,
+    es2020: true
+  },
+  extends: [
+    'standard'
+  ],
+  parserOptions: {
+    ecmaVersion: 11
+  },
+  rules: {
+  }
+}
+
+# 注意这个时候你的验证规则还和你选择初始化的时候的风格有关，这些个配置会继承一部分。你可以仔细的去node_moudle下找到他们
+```
+
+下面的就是常见的env的配置详情，具体去看官方文档哈![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1624805870895-638ed572-416f-4b07-a130-a1405096dd88.png)
+
+## eslint 配置注释
+这个注释就是 禁用
+
+```javascript
+const str1 = "${name} is a coder" // eslint-disable-line no-template-curly-in-string 
+
+console.log(str1)
+
+
+```
+
+## eslint 结合自动化工具
+这里的结合自动化工具，指代的是gullp
+
+
+
+我们只需要在特定的gulp任务中的pipe管道加一个 plugins就好了
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1624806537591-14198422-08ea-420f-a30c-a0a617d96ec1.png)
+
+注意哈，eslint是需要安装的你更具体是安装就好了，安装好之后直接去运行对应的任务就好了
+
+如果你遇到了全局变量的问题，你可以在配置文件中加已给全局配置属性就好了 .eslintrc.js
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1624806648583-046f7a67-9b26-4097-a287-8a52e6c99ff0.png)
+
+## eslint 结合webpack 
+eslint集成在webpack，是通过loader处理的、（这里我们集成的项目是react项目不用creactApp创建的reactApp）
+
+1、 先去安装到webpack中
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1624806946762-071a7164-3098-44a0-ba8f-8d97e891bbcb.png)
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1624806989222-80fbe514-d7f0-4250-b114-ab45712085c2.png)
+
+## eslint 解析webpack 后续配置
+我们对这个项目安装一个特殊的plugin用于支持 jsx 语法
+
+```shell
+yarn add esllint-plugin-react --dev
+
+# 这个模块实际上就是一个eslit配置，你直接找源文件就好了
+```
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1624807170802-400614ce-48f6-4149-85b3-f2346ac16b61.png)
+
+上述的配置就是自己去加，还有一种方式
+
+plugin选项可以配置集成，如何使用继承下来的验证，就需要在rules中加入 配置的前缀地址
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1624807244290-2ddd5bec-956f-40cb-a857-4810a49c0698.png)
+
+## eslint 检查 TypeScript
+这里主要是完成配置ts的lint规则
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1624807462043-17ed105a-ac8e-4616-8251-3d74c425235c.png)
+
+## StyleLint是个什么东西
+这个东西和eslint差不多，这里就不多说了,注意哈 需要安装依赖！
+
+配置文件就是styleLintrc.js
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1624807675050-907b7612-cfe4-4a6f-8e96-9a4977eea0ad.png)
+
+
+
+## Prettier的使用
+这个东西就是一个自动格式化的代码的东西，别文件格式化代码是一个包，你需要安装它
+
+执行命令就好了
+
+```shell
+yarn perttier style.css --write
+# 进行某个文件的格式化并且重写写回去，同时你可以使用通配符和配置文件一次性搞定
+```
+
+## GitHooks工具机制	
+GitHooks是提交git时的一种检查机制，
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1624807989034-2242cf51-dd96-43da-bbe0-048ab1c983f1.png)
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1624808028772-07df7a58-1f88-4d11-9c53-8f75af3c4094.png)
+
+在.git/hooks下我们可以来加入一个pre.commit 钩子这些hooks文件需要说明的是：都是Linux脚本
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1624808146979-04a20ef3-c97e-4d96-a308-0e531d411507.png)
+
+
+
+## Eslint 结合GitHooks
+既然我们可以检测到这个hooks，那么我们就能做更多的操作了
+
+更多的时候我们不常写 shell脚本，我们一般使用一个lib库安装到前端项目中 HusKy包
+
+安装完成后，会发现项目的.git/hooks下多了很多shell配置
+
+我们再json中加入一个配置项来提供脚本，这样就好了
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1624808491777-62e291e6-4063-47c9-9eb4-b2f23b8cea12.png)
+
+
+
+实际上这里不复杂就是一个commit前githooks会发出一个hooks钩子，你拿到hooks后正在shell脚本中处理就好了，同事我们不必自己写shell我们可以借助一些lib辅助实现lint操作
+

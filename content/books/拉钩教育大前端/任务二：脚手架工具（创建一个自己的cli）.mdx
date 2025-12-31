@@ -1,0 +1,574 @@
+---
+title: "任务二：脚手架工具（创建一个自己的cli）"
+date: "2024-12-19"
+summary: "深入讲解脚手架工具的概念、分类和使用，包括Yeoman平台、自定义Generator开发、Plop工具使用以及脚手架原理实现，涵盖从基础使用到自定义开发的完整流程。"
+status: "completed"
+tech: ["脚手架","Yeoman","Generator","Plop","CLI"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "拉钩教育大前端"
+---
+
+## 一、脚手架工具概述和常用的脚手架工具
+### 1.概述
+  实际上脚手架的本质，是一种创建同类型项目，为相同类型项目提供，基础结构，项目开发规范和约定的这样一种工程化意义的东西
+
+  就像你使用大些IDE的时候，他们创建项目的时候实际上就是一个 ，脚手架构建的过程，java配一个项目乱七八糟的东西的时候，也是一种 脚手架的过程
+
+  对于前段应用来说，由于项目类型多还杂，所以这些脚手架都是分散的。不会集成再某个东西里去
+
+
+
+下面就是我本章节的大纲
+
+- [x] 脚手架的使用
+- [x] 常见的脚手架工具
+- [x] 通用的脚手架工具
+- [x] 开发一个属于自己的脚手架、
+
+
+
+### 2. 常用的脚手架
+首先我们的的有这样的三个维度去分类，一种呢是和技术框架耦合的 比如ng-cli   vue-cli  react-cli等
+
+第二种呢，就是通用型的脚手架，比如yeoman 
+
+第三种呢，是在项目开发中途加入的，是一个插件式 的脚手架，主要作用就是很方便的通过命令行方式生成样板 文件Plop就是
+
+
+
+## 二、Yeoman
+Yeoman 是一个 通用型的脚手架运行平台，主要它是一个平台，不是某一类的脚手架，你可以在这个平台上部署任意类型的脚手架。从而实现 通用性 
+
+
+
+### 1. 基础使用
+全局安装，
+
+首先我们需要安装yeoman平台
+
+```shell
+yarn global add yo
+```
+
+然后我们需要安装对应的generator 让它跑在yeoman平台上( 这我们要创建一个node项目，所以我们下载一个node 的 generator )
+
+```shell
+yarn global add generator-node
+```
+
+	然后就是使用了，实际上使用起来还是比较简单的
+
+```shell
+# 首先我们跑到一个空文件夹里
+mkdir laoli-modeule
+
+# 然后我们使用yo 去跑这个node的generator
+yo node （这里运行的时候不需要把generator 加上去 可以直接使用-后面的名称）
+
+# 当你输入完以上的信息之后，yeoman就会去自动的生成项目文件结构去了，你在上述的命令行选项中的每一步都会影响到你这个项目的最终结构
+
+```
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1621401526389-1e803647-dfdb-42a8-9264-e8d89fee4a47.png)
+
+### 2. Sub Generator
+这个就是 解决这样的有个问题：‘如何在已经存在的项目中 ，添加一些样板文件呢？意思就是现有项目中动刀子’
+
+我们还是拿我们之前的 laoli-modeule 项目来说
+
+
+
+1. 首先外面需要重写packjson文件
+
+```shell
+yo node:cli
+# 注意啊 这个cli是node这个父模块下的子模块，cli就是我们需要创建一个node的cli项目 
+
+# 重写完之后，我们需要使用yarn 去更新整个包
+yarn 
+
+# 然后我们需要把这个，cli 指令link到电脑中，这样你就能使用它了
+ my-modoule
+ 
+ # 这里需要注意的是，我们这个cli 子 sub generator 是node这个 下的子generator，在使用的时候你得先看看到底有没有这个子generator
+```
+
+### 3. 自定义的Generator 
+_<u><font style="color:#F5222D;">不要想得太复杂，你其实就是在创建一个NPM模块</font></u>_
+
+不同的generator，可以实现不同的generator ，如果要自定义的时候怎么办呢？比如我需要搞一个个人项目的template  的generator如何做呢？阿
+
+以下就是使用vue项目 为例子
+
+在正式的开始之前，你需要了解以下 重要的知识：
+
+- [x] 我们来看看	前置的重要内容		
++ 重点1 我们的generator有自己的目录结构，你需要遵循它
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1621402281410-7664047f-5fcc-4a12-9cab-cb550d9ba9fa.png)
+
++ 重点2  我们起名字的时候需要 generator-<name> 这样的格式
+
+
+
+- [x] 实操-搞一个叫做testl的自定义生成器，并且实现写入文件的功能📃, 这个生成器的名字叫做generator-sample
+
+```shell
+# 运行以下命令的前提是：你创建好了一个空文件夹，并且在里面初始化了 packJson文件
+
+# 1. 安装一个yomane的基类 
+
+yarn add yeoman-generator 
+
+
+```
+
+创建好文件夹目录结构，如下图所示
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1621434314700-fa5e4809-0d4f-4d43-9aa0-d41c11512e8b.png)
+
+
+
+我们需要在代码中，完成这个自定义的generator的核心业务代码，就是去写文件, 这个文件就是这个index.js
+
+```javascript
+// 此文件作为 Generator 的核心入口
+// 需要导出一个继承自 Yeoman Generator 的类型
+// Yeoman Generator 在工作时会自动调用我们在此类型中定义的一些生命周期方法
+// 我们在这些方法中可以通过调用父类提供的一些工具方法实现一些功能，例如文件写入
+
+const Generator = require('yeoman-generator')
+
+module.exports = class extends Generator {
+  writing () {
+    writing () {
+    // Yeoman 自动在生成文件阶段调用此方法
+
+    // 我们这里尝试往项目目录中写入文件
+    this.fs.write(
+      this.destinationPath('temp.txt'),
+      Math.random().toString()
+    )
+  }
+}
+```
+
+当我们创建完毕之后，我们现在去把这个模块link到全局环境中去
+
+```shell
+yarn link 
+
+# 运行它 注意阿 这个generator是可以忽略的
+yo sample 
+```
+
+
+
+#### 3.1、根据模板创建文件
+> 如果要大量的创建指定文件什么的，就需要模板了
+>
+
+
+
+我们不需要别的 只需要加一些东西就好了。注意我们的模板还是遵循ejs的模板语法  (还是之前的index.js)
+
+```javascript
+// 此文件作为 Generator 的核心入口
+// 需要导出一个继承自 Yeoman Generator 的类型
+// Yeoman Generator 在工作时会自动调用我们在此类型中定义的一些生命周期方法
+// 我们在这些方法中可以通过调用父类提供的一些工具方法实现一些功能，例如文件写入
+
+const Generator = require('yeoman-generator')
+
+module.exports = class extends Generator {
+  writing () {
+    // 通过模板方式写入文件到目标目录
+    // 模板文件路径
+    const tmpl = this.templatePath('foo.txt')
+    // 输出目标路径
+    const output = this.destinationPath('foo.txt')
+    // 模板数据上下文
+    const context = { title: 'Hello zce~', success: false }
+
+    this.fs.copyTpl(tmpl, output, context)
+}
+```
+
+模板长这样：foo.txt
+
+```javascript
+这是一个模板文件
+内部可以使用 EJS 模板标记输出数据
+例如：<%= title %>
+
+其他的 EJS 语法也支持
+
+<% if (success) { %>
+哈哈哈
+<% }%>
+```
+
+#### 3.2、接受用户的输入命令行
+ 我们需要一些交互效果，在控制台中,如何做呢？也不难
+
++ 还是一样的我们还是修改核心业务逻辑就好了, 实现generator的prompting方法就好了
+
+```javascript
+// 此文件作为 Generator 的核心入口
+// 需要导出一个继承自 Yeoman Generator 的类型
+// Yeoman Generator 在工作时会自动调用我们在此类型中定义的一些生命周期方法
+// 我们在这些方法中可以通过调用父类提供的一些工具方法实现一些功能，例如文件写入
+
+const Generator = require('yeoman-generator')
+
+module.exports = class extends Generator {
+  prompting () {
+    // Yeoman 在询问用户环节会自动调用此方法
+    // 在此方法中可以调用父类的 prompt() 方法发出对用户的命令行询问
+    return this.prompt([
+      {
+        type: 'input',
+        name: 'name',
+        message: 'Your project name',
+        default: this.appname // appname 为项目生成目录名称
+      }
+    ])
+    .then(answers => {
+      // answers => { name: 'user input value' }
+      this.answers = answers
+    })
+  }
+  writing () {
+
+    // 模板文件路径
+    const tmpl = this.templatePath('bar.html')
+    // 输出目标路径
+    const output = this.destinationPath('bar.html')
+    // 模板数据上下文
+    const context = this.answers
+
+    this.fs.copyTpl(tmpl, output, context)
+  }
+}
+```
+
+#### 3.3、 vue项目中使用Generator
+现在我们来做这样的一个好玩的需求哈，给你一个vue项目，你把它整成 上述的内容，
+
+1. 第一，我们需要使用vue2-cli生成一个vue项目 
+2. 第二，我们需要新建一个生成器 项目
+3. 第三，我们来把整个vue2的项目不包括node_moudlue 全部拷贝到 cli项目的template 目录下，这样我们的cli就能非常方便的使用他们了！
+4. 第四，我们来考虑一下 我们需要接受用户输入的什么信息呢,这样就好了，需要的模板有了 ，输入的数据也有了
+
+```javascript
+const Generator = require('yeoman-generator')
+
+module.exports = class extends Generator {
+  prompting () {
+    return this.prompt([
+      {
+        type: 'input',
+        name: 'name',
+        message: 'Your project name',
+        default: this.appname
+      }
+    ])
+    .then(answers => {
+      this.answers = answers
+    })
+  }
+
+  writing () {
+    // 把每一个文件都通过模板转换到目标路径
+
+    const templates = [
+      '.browserslistrc',
+      '.editorconfig',
+      '.env.development',
+      '.env.production',
+      '.eslintrc.js',
+      '.gitignore',
+      'babel.config.js',
+      'package.json',
+      'postcss.config.js',
+      'README.md',
+      'public/favicon.ico',
+      'public/index.html',
+      'src/App.vue',
+      'src/main.js',
+      'src/router.js',
+      'src/assets/logo.png',
+      'src/components/HelloWorld.vue',
+      'src/store/actions.js',
+      'src/store/getters.js',
+      'src/store/index.js',
+      'src/store/mutations.js',
+      'src/store/state.js',
+      'src/utils/request.js',
+      'src/views/About.vue',
+      'src/views/Home.vue'
+    ]
+
+    templates.forEach(item => {
+      // item => 每个文件路径，遍历赋值
+      this.fs.copyTpl(
+        this.templatePath(item),
+        this.destinationPath(item),
+        this.answers
+      )
+    })
+  }
+}
+```
+
+5. 去刨坑，把数据丢进去就哈了 ( 这里为了演示方便，我们只改一下 REDME文件 )
+
+```javascript
+# <%= name %>
+
+## Project setup
+```
+yarn install
+```
+
+### Compiles and hot-reloads for development
+```
+yarn run serve
+```
+
+### Compiles and minifies for production
+```
+yarn run build
+```
+
+### Run your tests
+```
+yarn run test
+```
+
+### Lints and fixes files
+```
+yarn run lint
+```
+
+### Customize configuration
+See [Configuration Reference](https://cli.vuejs.org/config/).
+
+```
+
+6. 有坑阿，如果你的文件中，需要且套的 ejs 模板标记怎么办呢？
+
+比如index.html
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="icon" href="<%%= BASE_URL %>favicon.ico">
+    // 只需要 <%% 转义就好了
+    <title><%= name %></title>
+  </head>
+  <body>
+    <noscript>
+      <strong>We're sorry but my-vue-project doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+    </noscript>
+    <div id="app"></div>
+    <!-- built files will be auto injected -->
+  </body>
+</html>
+
+```
+
+#### 3.4、 Generator
+既然我们搞定了这个，我们看看如何发布这个呢？npm public就好了，一般情况，我们发布npm的时候，首先会搞一个git仓库，用来同步更新我们发布的npm包，这里就不一一的演示了
+
+进行发布!!
+
+```shell
+yarn publish 
+
+# 如果有错，就需要看看你的代理 是不是配错了！注意淘宝的镜像是一个只读的！你不能push东西上去 这样就 搞定了,去下载来使用吧
+
+```
+
+### 8. Plop
+这个东西实际上也是一个好玩的东西，它呢比较小型，可以直接耦合到项目中，可以在项目中 创建 特定类型的文件，我们一般把这个东西集成在项目中，用来快速的生成 样板文件
+
+
+
+#### 1.以React入主，看看如何使用它 
+在根目录下配置一个 config文件，它是 plopfile.js
+
+```javascript
+// Plop 入口文件，需要导出一个函数
+// 此函数接收一个 plop 对象，用于创建生成器任务
+
+module.exports = plop => {
+  plop.setGenerator('component', {
+    description: 'create a component',
+    prompts: [
+      {
+        type: 'input',
+        name: 'name',
+        message: 'component name',
+        default: 'MyComponent'
+      }
+    ],
+    actions: [  // 这里就是所有 类似 事件的东西
+      {
+        type: 'add', // 代表添加文件
+        path: 'src/components/{{name}}/{{name}}.js',
+        templateFile: 'plop-templates/component.hbs'
+      },
+      {
+        type: 'add', // 代表添加文件
+        path: 'src/components/{{name}}/{{name}}.css',
+        templateFile: 'plop-templates/component.css.hbs'
+      },
+      {
+        type: 'add', // 代表添加文件
+        path: 'src/components/{{name}}/{{name}}.test.js',
+        templateFile: 'plop-templates/component.test.hbs'
+      }
+    ]
+  })
+}
+```
+
+我们来看看模板是长啥样的
+
+plop-templates/所有的文件
+
+/component.css.hbs
+
+```javascript
+.{{name}} {
+  
+}
+```
+
+/component.hbs
+
+```javascript
+import React from 'react';
+
+export default () => (
+  <div className="{{name}}">
+    <h1>{{name}} Component</h1>
+  </div>
+)
+```
+
+
+
+/component.test.hbs
+
+```javascript
+import React from 'react';
+import ReactDOM from 'react-dom';
+import {{name}} from './{{name}}';
+
+it('renders without crashing', () => {
+  const div = document.createElement('div');
+  ReactDOM.render(<{{name}} />, div);
+  ReactDOM.unmountComponentAtNode(div);
+});
+
+```
+
+如何启动它？
+
+```shell
+yarn plop component
+# 注意 yarn的时候 yarn 会自动的去node_module下的 bin目录下的可执行文件
+```
+
+## 三、脚手架的原理
+我们来看看 脚手架工具的原理，实际上cli就是一个node 脚手架应用. 实际上，所有的cli 工具 就是 结合了很多模板进行了很多的操作。创建文件而已，我们需要使用一个ejs模板引擎库
+
+1. 关键一个项目结构
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1621436813054-b5854da4-e43f-440a-9020-7c29c8fc6658.png)
+
+2. 构建核心代码  。
+
+```javascript
+#!/usr/bin/env node
+
+// Node CLI 应用入口文件必须要有这样的文件头
+// 如果是 Linux 或者 macOS 系统下还需要修改此文件的读写权限为 755
+// 具体就是通过 chmod 755 cli.js 实现修改
+// 有些mac设备上 无论是link（反正如果涉及到读写文件的操作都需要权限 如果你的link 没有生效可以尝试使用sudo -s 加以解决）
+
+// 脚手架的工作过程：
+// 1. 通过命令行交互询问用户问题
+// 2. 根据用户回答的结果生成文件
+
+const fs = require('fs')
+const path = require('path')
+const inquirer = require('inquirer')
+const ejs = require('ejs')
+
+inquirer.prompt([
+  {
+    type: 'input',
+    name: 'name',
+    message: 'Project name?'
+  }
+])
+.then(anwsers => {
+  // console.log(anwsers)
+  // 根据用户回答的结果生成文件
+
+  // 模板目录
+  const tmplDir = path.join(__dirname, 'templates')
+  // 目标目录
+  const destDir = process.cwd()
+
+  // 将模板下的文件全部转换到目标目录
+  fs.readdir(tmplDir, (err, files) => {
+    if (err) throw err
+    files.forEach(file => {
+      // 通过模板引擎渲染文件
+      ejs.renderFile(path.join(tmplDir, file), anwsers, (err, result) => {
+        if (err) throw err
+
+        // 将结果写入目标文件路径
+        fs.writeFileSync(path.join(destDir, file), result)
+      })
+    })
+  })
+})
+```
+
+我们来看看 template模板是什么
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title><%= name %></title>
+</head>
+<body>
+  
+</body>
+</html>
+```
+
+3. 运行它
+
+```shell
+yarn link
+
+# 直接使用你这个项目的名字就好了,比如我这里是laoli
+
+laoli   
+```
+

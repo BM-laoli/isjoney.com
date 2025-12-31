@@ -1,0 +1,938 @@
+---
+title: "任务一：函数式编程"
+date: "2024-12-19"
+summary: "深入讲解函数式编程的核心概念，包括纯函数、高阶函数、闭包、柯里化、函数组合、函子等，以及lodash和folktale库的实战应用。"
+status: "completed"
+tech: ["JavaScript","函数式编程","高阶函数","柯里化","函子"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "拉钩教育大前端"
+---
+
+# <font style="color:rgb(64, 72, 91);">什么是函数式编程</font>
++ <font style="color:rgb(64, 72, 91);">面向对象思维</font>
+
+<font style="color:rgb(106, 115, 125);">把现实世界中的事物抽离的一种方法，通过封装、多态。继承来展示事物间的联系</font>
+
++ <font style="color:rgb(64, 72, 91);">函数式编程思维</font>
+
+<font style="color:rgb(106, 115, 125);">所谓函数式编程就的核心概念及是一个</font>**<font style="color:rgb(106, 115, 125);">对于一个函数存在输入和输出，相同的输入只有相同的输出，x-> f(),对于x来说只有一个输出f()结果与之对应</font>**<font style="color:rgb(106, 115, 125);">，这就是函数式编程。是一种数学上的映射关系，反之就是副作用函数 细节：对于副作用函数，就不能称为 纯函数</font>
+
++ <font style="color:rgb(64, 72, 91);">面型过程的编程</font>
+
+<font style="color:rgb(106, 115, 125);">第一步干什么 ，第二步烦什么......</font>
+
+# <font style="color:rgb(64, 72, 91);">函数是一等公民</font>
+## <font style="color:rgb(64, 72, 91);">函数是一等公民</font>
++ <font style="color:rgb(64, 72, 91);">函数可以存在变量中</font>
++ <font style="color:rgb(64, 72, 91);">函数作为参数</font>
++ <font style="color:rgb(64, 72, 91);">函数作为返回值</font>
+
+<font style="color:rgb(106, 115, 125);">js中万物皆对象，既然是对象就可以new 就可以存，就可以改...就可以作为参数，就可以返回</font>
+
+### <font style="color:rgb(64, 72, 91);">函数的特性 变量</font>
+```javascript
+我们看一个简单的优化
+const BlogController = {
+  index(posts) { return Views.index(posts) },
+  show(posts) { return Views.show(posts) },
+  delet(posts) { return Views.delete(posts) }
+}
+// 我们可以进行下面这样子的优化，这样就完了！
+const BlogController = {
+  index:View.index,
+  show:View.show,
+  delete:View.delete
+}
+// 这里体现的就是函数作为一等公民的第一个特性，函数是一个对象 是一个变量
+```
+
+### <font style="color:rgb(64, 72, 91);">函数的特性 参数</font>
+<font style="color:rgb(106, 115, 125);">高阶函数就是接受函数返回函数的 函数</font>
+
++ <font style="color:rgb(64, 72, 91);">自己模拟forEach函数</font>
+
+```javascript
+function forEach(array.fn ) {
+  for ( let i = 0; i <array.length; i++ ) {
+    fn(i,array[i])
+  }
+};
+
+let arr = [1,2,3,4];
+forEach( arr,function(i,item){
+  console.log(i,index)
+} )
+```
+
++ <font style="color:rgb(64, 72, 91);">自己模拟一个filter方法</font>
+
+```javascript
+function filter( array,fn )  {
+    let results = [];
+    for( let i =0; i< array.length; i++ ) {
+      if( fn(i,array[i]) ){
+        results.push(array[i])
+      };
+    }
+
+    return results;
+};
+
+// 一点毛病都没有
+let arr = [1,2,3,4];
+let res = forEach( arr,function(i,item){
+    return item % 2;
+} )
+
+console.log(res)
+```
+
+
+
+<font style="color:rgb(106, 115, 125);">这里要体现的特性就是</font>_<font style="color:rgb(106, 115, 125);">函数是一个参数</font>_<font style="color:rgb(106, 115, 125);">，好处又很多比如，粒度细化，封装细化，可控可灵活</font>
+
+### <font style="color:rgb(64, 72, 91);">函数的特性 返回值</font>
++ <font style="color:rgb(64, 72, 91);">实现once函数，作用就是只运行执行一次</font>
+
+```javascript
+function once(fn){
+  let done = false ; // 控制函数是否被执行
+  return function(){
+    if(!done){
+      done = true;  // 设置回去
+      return fn.applay(this,aruguments)  // 这里的this 是调用者自己，arguments是fn的剩余参数， arugunmebts 就是fn和碗面的剩余参数
+    }
+  }
+};
+
+let paly = once(function(money){
+    console.log(`支付:${money}RMB`);
+});
+
+paly(1);
+paly(2);
+paly(3);
+```
+
+## <font style="color:rgb(64, 72, 91);">使用高阶函数</font>
+<font style="color:rgb(106, 115, 125);">使用高阶函数可以帮我们屏蔽细节，可以做好封装</font>
+
+### <font style="color:rgb(64, 72, 91);">常用的高阶函数和实现</font>
+<font style="color:rgb(106, 115, 125);">数组的好多方法，你都可以模拟一遍;</font>
+
++ <font style="color:rgb(64, 72, 91);">模拟map方法</font>
+
+```javascript
+// 明确作用，我们的map就是返回一个数组
+const map = (array, fn)=>{
+    let result = [];
+    for( let value of array ){
+      result.push(fn(value)) // 要不要放回，返回是是什么 都由 调用的函数决定 
+    };
+    return result;
+}
+let arr  = [1,2,3,4];
+arr = map(arr,v=> v*2);
+```
+
++ <font style="color:rgb(64, 72, 91);">模拟ervey方法</font>
+
+```javascript
+// 明确目的，就是找到每一额符合条件的
+const every =( array,fn )=>{
+  let result = true;  // 反正思想，先假定可以,再去做判断
+  for ( value of array   ) {
+    result = fn(value); // 是否为真，得看你这个函数的具体实现
+    if(!result){
+      break;
+    };
+  };
+  return result; 
+}
+
+let arr = [6,2,8,4,5];
+res = every(arr,(v) => v % 2 == 0  )
+```
+
++ <font style="color:rgb(64, 72, 91);">模拟some方法</font>
+
+```javascript
+// 明确 目的，来检测是否有一个满足条件
+const some = (array,fn)=>{
+  let result = false; // 假定都不满足
+  for ( let value of array ) {
+    result = fn(value);
+    if( result ){
+      break;
+    };
+  };
+  return result;
+};
+
+let arr= [1,2,3,4,5];
+res = some(arr , (v)=> v % 2 == 0) 
+```
+
+## <font style="color:rgb(64, 72, 91);">闭包</font>
+<font style="color:rgb(106, 115, 125);">请去看bilibili，前端面试，排名第一的老师讲的闭包概念</font>**<font style="color:rgb(106, 115, 125);">所谓的闭包就是指。函数执行的时候开辟了一个栈内存（执行栈），如果对某些变量有引用，那么js就不会去回收调它，正常情况下函数执行完成，从执行中中移除，变量也随之销毁，如果一个函数在另一个函数中执行了，并且引用了另一个函数中的变量，那么这个变量就存在引用不会被释放掉就形成了闭包，它会一直在堆中</font>**<font style="color:rgb(106, 115, 125);">，官方的说法就是 函数和周围的状态（词法环境EC-Stack）的引用捆绑在一起形成闭包</font>
+
+<font style="color:rgb(64, 72, 91);">上文中谈到的once函数就是形成了一个闭包</font>
+
+## <font style="color:rgb(64, 72, 91);">闭包代码演示</font>
+<font style="color:rgb(106, 115, 125);">明确需求，我们需要做这样的一件事，是哟Match函数计算某个数的平方或者m³，但是不想每次的都去重新调用一次这个方法，因为会产生性能问题。解决的方案就是 是哟闭包把一些经常调的值缓存下来，比如下面的例子就缓存了4 和 5这个两个基准值</font>
+
++ <font style="color:rgb(64, 72, 91);">实例代码计算一个数的平方或者立方</font>
+
+```javascript
+  // Math.pow(4,2);
+  // Math.pow(5,2);
+  
+function makePower (  power ) {
+  return function ( number ) {
+    return Math.pow( number,power );
+  }
+};
+
+let power2 = makePower(2);
+let power3 = makePower(3);
+
+console.log(power2(3));
+console.log(power2(3)); 
+console.log(power3(5));
+
+```
+
+<font style="color:rgb(106, 115, 125);">这里还介绍了如何使用浏览器进行断点调试,详细可以见image下的图片</font>
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1620199141796-a4e186d6-2874-4978-8131-4fa7f14f4f40.png)
+
+掘金博文-[你不知道的 Chrome 调试技巧](https://juejin.cn/book/6844733783166418958/section)
+
+## <font style="color:rgb(64, 72, 91);">纯函数的概念</font>
+<font style="color:rgb(106, 115, 125);">什么是纯函数呢，纯函数就是给定值就一点有一个对应的值输出，而且没有可以观察到的副作用</font><font style="color:rgb(64, 72, 91);">  
+</font><font style="color:rgb(136, 136, 136);">//  数组的splice就不是</font>
+
+## <font style="color:rgb(64, 72, 91);">lodash</font>
+<font style="color:rgb(106, 115, 125);">lodash是一个非常厉害的js工具库，它的实现基本上全部都是纯函数，而且有专门的模块来践行FP的编程范式，所以这个现在依然还是有及其重要的价值的,具体的实例，请去看官方的文档, 使用lodash可以帮助我们结构一些细粒度的函数，对构建大型项目中的函数组合非常有价值</font>
+
+## <font style="color:rgb(64, 72, 91);">纯函数的好处</font>
+<font style="color:rgb(106, 115, 125);">我们看看lodas中如何进行缓存 函数</font>
+
+```javascript
+const _ = requrie('lodash')
+function getAre(r){
+  console.log('哈哈哈');
+  return Math.PI *r * r;
+};
+
+// 进行缓存,只要值不变就从内存中去取
+let getAreaWithMemory = _.memoize(getAre)
+console.log( getAreaWithMemory(4) )
+console.log( getAreaWithMemory(4) )
+console.log( getAreaWithMemory(4) )
+console.log( getAreaWithMemory(4) )
+
+// 模拟实现,具有一定的局限性 这个key哈一定是有局限性的
+function  memoize (f) {
+  let cache = {};
+  return function (key) {
+    let key = JSON.stringify(argumnets)
+    cache[key] = cache[key] || f.appaly(f,...argumnets) // 这句话的意思就是判断一下是否进行来看缓存，如果是的话，就直接返回了，如果里面有值的话就会去调用f，
+    return cache[key]
+  }
+}
+```
+
++ <font style="color:rgb(64, 72, 91);">纯函数更加的利于测试</font>
++ <font style="color:rgb(64, 72, 91);">并行处理</font>
+
+<font style="color:rgb(106, 115, 125);">在多线程的环境下并行操作共享的内存数据可很有可能会出现意外的情况 纯函数不需要访问共享的内存数据，在并行环境下也可以是随意的运行纯函数</font>
+
+## <font style="color:rgb(64, 72, 91);">副作用</font>
+<font style="color:rgb(106, 115, 125);">副作用Juin是让一个纯函数变得不纯，纯函根据形同的输入输出相同的值，如果函数依赖外部的状态就没有办法保证相同的输出，就会带来副作用，主要的来源有数据库，用户输入，配置文件....总而言之所有的外部交互都很有可能处理副作用，我们也不能完全的阻断副作用，我们需要尽量的控制在可控的范围内不发生就好了</font>
+
+## <font style="color:rgb(64, 72, 91);">柯里化（Haskell Brook Cury）</font>
+<font style="color:rgb(106, 115, 125);">我们直接上代码来看看解决了什么问题</font>
+
+```javascript
+function  checkAge(age) {
+   let min  = 18 ;
+   return age  >= min ;
+};
+// 这个函数是有问题的,就是现在min是硬编码是不行的,为了解决这个问题就把这个东西放到函数参数的位置就行了
+
+function checeAge (min,age) {
+  return age >= min;
+}
+// 我们需要优化,如果我们每次都调用这个方法会造成内存的效率
+// console.log(checkAge(18,20));
+// console.log(checkAge(18,24));
+// console.log(checkAge(18,22));
+
+function chencAge(min){
+  return function (age) {
+    return age >= min;
+  }
+};
+let checAge18 = checkAge(18); // 这样就解决了性能问题,基准值就确定下来了
+console.log(checkAge(20));
+console.log(checkAge(24));
+console.log(checkAge(22));
+
+// es6语法的改造
+function checkAge = min => ( age => age >= min );
+```
+
+<font style="color:rgb(64, 72, 91);">  
+</font>
+
+_<font style="color:rgb(64, 72, 91);">总结一下柯里化，就是处理函数参数的一种方法，当一个函数有多个参数的时候可以先传递一部分的参数调用它（这部分参数以后永远不变），然后返回一个新的函数接受剩余的参数，再返回结果</font>_
+
+## <font style="color:rgb(64, 72, 91);">lodash中的柯里化函数</font>
+<font style="color:rgb(106, 115, 125);">我们上一个小结做的柯里化函数不够通用，我们来学习是哟一下lodash总的柯里化函数_.curry(fn)，这个函数的作用就可以转化任意多参数的函数 变成一个一元函数</font>
+
+```javascript
+const _ = require('lodash')
+
+// 3个参数 叫做3元函数
+function getSum(a,b,c){
+  return a + b+ c;
+}
+
+const curried = _.curry(getSum); 
+console.log(curried(1,2,3));
+
+// 传递部分参数,传递部分的参数，然后返回这个哈数。再通过这个函数去追加后面的参数，
+console.log(curried(1)(2,3) );  // 返回一个二元函数
+console.log(curried(1,2)(2) );  //  这样就变成了一个一元函数
+```
+
+## <font style="color:rgb(64, 72, 91);">loadsh柯里化函数实战</font>
+<font style="color:rgb(106, 115, 125);">我们要提取 字串串中的 空格 或者数组</font>
+
+```javascript
+''.match(/\s+/g);// 匹配字符串中的空格（/ \s +/）
+''.match(/\d+/g); // 匹配字符串中的所有的数字
+// 非常的麻烦
+
+// 改造开始 === 纯函数,注意，我们需要把这个函数缓存起来，因此我们借助了lodash把函数柯里化调
+const _ = require('lodash');
+function  (reg,str) {
+    return str.match(reg)
+};
+ const mathcOfCurry = _.curry( mathc );
+ 
+ const haveSpace = mathcOfCurry(/\s+/g); 
+console.log(haveSpace('heheh hehe'))；
+
+
+// 处理filter转化成纯函数  拓展也非常的方便
+const fillter = _.curry( function(fn,arry){
+  return array.fillter(fn)
+})
+
+console.log(fillter(haveSpace,['Jonhn conner','Jonhn_con']));
+
+// 极限优化 
+const findSpace = fillter(haveSpace);
+console.log( findSpace(['Jonhn conner','Jonhn_con'])) ;
+
+// 这样我们的改造就完成了，不断的优化更加通用
+```
+
+## <font style="color:rgb(64, 72, 91);">模拟实现lodash中的curry方法</font>
+<font style="color:rgb(106, 115, 125);">对标loadsh进行模拟实现</font>
+
+```javascript
+function getSum(a,b,c){
+  return a + b+ c;
+}
+
+const curried = _.curry(getSum); 
+console.log(curried(1,2,3));     // 直接调用函数
+console.log(curried(1)(2,3) );  // 放回函数再手动调用
+
+
+function curry(func){
+  
+  return function  curriedFn(...args){ // es6剩余参数 args是一个数组
+    // 判断实际参数和形式参数个数
+    if( args.length < func.length  ){  // 如何获取形式参数的个数呢？可以使用func.length
+    // 注意，如果参数不对等就返回一个函数的调用，并且把之前传递的已经用的且调用过的函数缓存起来（通过闭包缓存了args），第二次正式调用的时候把之前缓存的数参数值和后传入的值（arguments）合并一下 放进函数进行调用就好了 
+      return function () { 
+        return curriedFn(...args.concat(Array,from(arguments)))  // 数组解开 剩余参数传递进入,这样如果参数是三个就直接调用本身再去判断就好了
+      }；
+    }
+    return func(...args) // 这里有两种语法一种的...agrs 剩余参数 
+    // return func.applyar(func,args) // 这里有两种语法一种是 apply方法
+  }
+};
+
+// 同样的知 道用来验证一下就好了
+const currie dMy = curry(getSum); 
+console.log(curriedMy(1,2,3));     // 直接调用函数
+console.log(curriedMy(1)(2,3) );  // 放回函数再手动调用
+```
+
+<font style="color:rgb(64, 72, 91);">  
+</font>
+
+## <font style="color:rgb(64, 72, 91);">总结柯里化</font>
++ <font style="color:rgb(64, 72, 91);">函数的柯里化可以让我们给一个函数场地较少的参数得到一个已经记忆了某些固定参数的新函数</font>
++ <font style="color:rgb(64, 72, 91);">这是一个对函数参数的缓存</font>
++ <font style="color:rgb(64, 72, 91);">让函数变得更加的灵活，让函数的粒度变得更加的小</font>
++ <font style="color:rgb(64, 72, 91);">可以把多元函数转化一元行数，可以组合使用函数产生强大的功能</font>
+
+## <font style="color:rgb(64, 72, 91);">函数组合概念</font>
+<font style="color:rgb(106, 115, 125);">首先我们来看看函数组合，解决了什么样问题哈，如果对函数的使用不佳 非常有可能会写出很多的很多的 “洋葱代码”，套娃套娃....，而函数的的组合就解决了这样的问题</font>
+
+<font style="color:rgb(106, 115, 125);">函数的组合非常的重要</font>_<font style="color:rgb(106, 115, 125);">compose</font>_<font style="color:rgb(106, 115, 125);">，如果一个函数需要经过多个处理，才能得到最终的值，这个时候可以把中间的函数合并成一个函数</font>
+
++ <font style="color:rgb(64, 72, 91);">函数就像是数据的管道，把数据放进来，通过去就是结果，</font>
++ <font style="color:rgb(64, 72, 91);">默认的函数组合是从右边===>左边走的、</font>![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1620199682989-c6ae6dcc-c5b6-490d-8896-b39747ed977d.png)
+
+
+
+```javascript
+function compose(f,g) {
+  return function(value){
+    return f(g(value))  // 修常见的组合方式
+  };
+};
+
+// 比如我现在需要获取数组中最后一个元素
+
+function revers (array){
+  return array.revers()
+}
+
+function first (array) {
+  return array[0]
+}
+
+const last = compose(first,revers);  // 这就是组合了
+
+console.log(last([1,2,3,4,5]));
+```
+
+## <font style="color:rgb(64, 72, 91);">lodash中的组合函数</font>
+<font style="color:rgb(106, 115, 125);">上文中，我们自己模拟的实现了compose 现在我们来看看lodash中的组合行数</font>
+
+```javascript
+const _ = require("lodash");
+
+// 需求：获取数组的最后一个项，并且把最它转化成大写的方式
+const revers = arr => arr.revers()
+const first = arr => arr[0]
+const toUpper = s => s.toUpperCaser()
+
+const f = _.flowRight( toUpper,first,revers )
+// 这样就完成了！
+f(['one','tow','three'])
+```
+
+## <font style="color:rgb(64, 72, 91);">组合函数的原理模拟</font>
+<font style="color:rgb(106, 115, 125);">我们来研究一下内部的原理</font>
+
+```javascript
+// 首先是处理参数，然后是看内部的处理逻辑
+  function compose(...args){  // 由于参数不固定，所以我们写...args剩余参数运算
+    return function( value ){
+      return args.reverse().reduce( function(acc,fn){
+        return fn(acc)
+      } ,value)
+    }
+  }
+
+  // es6的语法改造
+  const compose =(...args) => value => args.resverse().reduce((acc,fn)=> fn(acc),value)
+```
+
+<font style="color:rgb(64, 72, 91);">  
+</font>
+
+## <font style="color:rgb(64, 72, 91);">函数组合-结合律</font>
+<font style="color:rgb(106, 115, 125);">休息哈喝口水哈 这个就是结合率</font>
+
+```javascript
+const _  = requeir("loadsh");
+const f = _flowRigth(_.toUpper,_.frist,_.revers);
+
+// 以上是正常的使用，接下来问你来组合函数
+const f = _flowRigth(_.toUpper,_.flowRigth(_.frist,_.revers ));
+const f = _flowRigth(_.toUpper,_.frist,_.revers);
+
+// 上述是一样的效果
+```
+
+## <font style="color:rgb(64, 72, 91);">函数组合-调试</font>
+<font style="color:rgb(106, 115, 125);">如何调试这样的一个组合函数</font>
+
+```javascript
+// NEVER SAY DIE =---> never-say-die
+const _  = requeir("loadsh")
+
+// 进行切割
+const splice= _.curry((sep,arr)=>  _.split(arr,sep) )； // 这样做的好处就是只需要接一个参数就好了 元本能的splice是需要写多个参数的 使用柯里化解决
+const join = _.curry(( sep,arr )=> _.join(arr,sep));
+const f = _.flowRight( join('-' ), _.toLower ,solice(' '))  // 从右到左进行运行
+
+// 进行调试
+// const f = _.flowRight( join('-' ), _.toLower ,solice(' '))  // 从右到左进行运行
+const log = v => { 
+  consloe,log(v)
+  return v
+ }
+ 
+const f = _.flowRight( join('-' ), log,_.toLower ,log,solice(' '))  // solice函数会法返回，进入了log就会记录
+
+const map  = _.curry((fn,array)=> _.map(array,fn ))； // 柯里化函数
+const f = _.flowRight( join('-'),map(_.toLower),splice(' ') )  // 这样就改造完了
+
+// 我们如果多次使用log 杜宇调试同时一样的输出，是不清晰的，需要改造一下,我们使用柯里化的方式
+const trace = _.curry((tag,v)=>{
+  console.log(tag,v)
+  return v
+})
+
+]
+const f = _.flowRight( join('-'),trace('map之后的函数'),map(_.toLower), trace('splice之后的函数'),splice(' ') )  // 这样就改造完了
+```
+
+## <font style="color:rgb(64, 72, 91);">lodash-fp模块</font>
+<font style="color:rgb(106, 115, 125);">以上的方式是否是有点复杂，是的，有点复杂，这不用担心lodash中有fp，解决 了上述的问题，如果一个函数有多个参数，但是我们想要的只是一个参数,就可以实现柯里化</font>
+
+<font style="color:rgb(106, 115, 125);">普通的loadsh中的方法使用的 数据在先，函数灾后的模式 在lodash中提供了fp模块（已经柯里化好之后的函数）,函数优先，数据在后</font>
+
+```javascript
+
+// NEVER SAY DIE =---> never-say-die
+const _  = requeir("loadsh")
+
+// 如果你有影响的话，如果使用的组件写cruuy就很麻烦
+const splice= _.curry((sep,arr)=>  _.split(arr,sep) )； // 这样做的好处就是只需要接一个参数就好了 元本能的splice是需要写多个参数的 使用柯里化解决
+const join = _.curry(( sep,arr )=> _.join(arr,sep));
+const f = _.flowRight( join('-' ), _.toLower ,solice(' '))  // 从右到左进行运行
+
+const f = fp.flowRight(fp.join('-'),fp.map(fp.toLower),fp.splice(' '))
+// 这样就好了
+```
+
+## <font style="color:rgb(64, 72, 91);">lodash-map方法的小问题</font>
+```javascript
+const _ = requert('lodash')
+
+
+console.log( _.map(['23',"8","10"]).paseInt )
+// 打印的结果是不对的，原因剧是在pasint上的第二个参数上是要转换的进制
+
+// 解决和这个问题，可以直接写crruy柯里化，去除paseInt中的第二个参数
+const fp =  require('lodash') 
+const.log(fp.map( paserIntm,['23',"8","10"] )  )
+
+```
+
+## <font style="color:rgb(64, 72, 91);">Poinrfree</font>
+<font style="color:rgb(106, 115, 125);">这是一种编程的范式, 是一个编写代码的风格，核心</font>**<font style="color:#F5222D;">你不需要关心处理的数据，你只需要关注结果</font>**<font style="color:rgb(106, 115, 125);">,我们不关心数据是怎么样的。我们只需要考虑如何把运算抽离出来</font>
+
+    1. <font style="color:rgb(64, 72, 91);">我们需要完成这样的需求 输入 ‘ Helo Word ’ 要输出 ‘helo_word’</font>
+    2. <font style="color:rgb(64, 72, 91);">Poinerfeee 和非 PointerFree各自的实现方式</font>
+
+```javascript
+// 使用模式
+import fp from 'loadsh/fp'
+const f = fp.flowRigth( fp.repacle(/\s+/g,'_') ,fp.toLower)
+// 不使用模式
+function f ( word ) {
+  return word.toLowerCase().repalce(/\s+/g,'_')
+}
+```
+
+## <font style="color:rgb(64, 72, 91);">Poinrfree案例</font>
+<font style="color:rgb(106, 115, 125);">需求如下：输入 world wild web ===> w, w. w. 就是这样的需求</font>
+
+```javascript
+const fp = require('lodash/fp')
+
+const firstLetterToUpper = fp.flowRight(   fp.join('. ') , fp.map(fp.first), fp.map(fp.toUpper), fp.splice(' '))
+
+// 我们发现有一个地方 做了两个map 显然这是一个可以被优化的地方
+const toUpperAndFirst = fp.flowRight( fp.first, fp.toUpper )
+// 优化之后的代码吗 nice 非常的NB
+const firstLetterToUpper = fp.flowRight( fp.join('. ') ,fp.map( toUpperAndFirst )  , fp,splice(' ') )
+```
+
+<font style="color:rgb(64, 72, 91);">  
+</font>
+
+## <font style="color:rgb(64, 72, 91);">Functot 函子</font>
+<font style="color:rgb(106, 115, 125);">所谓的函子 就是一个类 ，这个类内部维护一个部对外暴露的值，通过 类暴露出来的（new对象.xxx） map方法传递任意函数进行数据处理，返回一个新的 new对象，再是使用of 静态方法 取出来</font>**<font style="color:rgb(106, 115, 125);">作用就是控制副作用，处理异常，处理异步等...</font>**
+
+<font style="color:rgb(106, 115, 125);">必要的属性</font>
+
++ <font style="color:rgb(64, 72, 91);">容器：包含了值和值的变形关系(变形关系就是一个简单函数)</font>
++ <font style="color:rgb(64, 72, 91);">函子：一个特殊容器，用普通对象来实现 包含的 of map cousteor 三个基础方法</font>
+
+<font style="color:rgb(106, 115, 125);">代码实例</font>
+
+```javascript
+// 最简单的数据操作 
+class Container {
+  constructor (value) {
+    this._value = value
+  }
+
+  map(fn) {
+    return new Container(this._value)
+  }
+}
+
+let r  = new Container(5)
+        .map(x => x+1)
+        .map(x => x *x)
+//  Container类型的对象 { _value:36 }
+
+// 完整版本
+class Container {
+  
+  static of  (value) {
+    return new Container(value)
+  }
+
+  constructor(value){
+    this._value = value
+  }
+
+  map( fn ) {
+    return new Container.of( fn( this._value ) )
+  }
+}
+
+let r = Container.of(5)
+        .map(x=>x+2)
+        ,map(x=>x * x)
+// 注意我们拿到的r是一个函子对象 ，并不是一个我想要的值
+```
+
+## <font style="color:rgb(64, 72, 91);">函子总结</font>
+<font style="color:rgb(106, 115, 125);">首先我们来总结一下，前面 有关于函子的知识点</font>
+
+<font style="color:rgb(106, 115, 125);">我们来看一些 之前的Container的函子的的一个小问题</font>
+
+```javascript
+class Container {
+  
+  static of  (value) {
+    return new Container(value)
+  }
+
+  constructor(value){
+    this._value = value
+  }
+
+  map( fn ) {
+    return Container.of( fn( this._value ) )
+  }
+}
+
+// null undefined传入，就会出异常，这个时候就出现了与预期值不一样的情况，也就是说出现了 副作用
+let r = Container(null).of(x=>x+1) // 异常 报错
+// 接下来来 我们看看如何解决这个异常
+```
+
+## <font style="color:rgb(64, 72, 91);">MayBe 函子</font>
+<font style="color:rgb(106, 115, 125);">我们使用MayBe函子就能解决上面的问题。核心就是在 map的时候先进行一下判断</font>
+
+```javascript
+class MayBe {
+  
+  static of  (value) {
+    return new MayBe(value)
+  }
+
+  constructor(value){
+    this._value = value
+  }
+
+  map( fn ) {
+    return this.isNothing() ? MayBe.of(null) : MayBe.of( fn( this._value ) )
+  }
+
+  isNothing() {
+    return this._value === null || this._value === undefined 
+  }
+}
+
+// 虽然不报错但是还是有问题哈,看下面代码你能知道代理发生了null吗？当从运行时看的话。是看不出来的。如何解决呢？
+let r = MyaBe(6)
+      .map(x=>x+1)
+      .map(x => null )
+      .map(x =>  x.spice(','))
+```
+
+<font style="color:rgb(106, 115, 125);">但是上面那个也是还是有问题的。就是你不知道 哪里发生了null ，虽然不报错，但是不好调试和观察</font>
+
+## <font style="color:rgb(64, 72, 91);">Either函子</font>
+<font style="color:rgb(106, 115, 125);">如何处理上述的错误就是使用Either函子,实际上 它是两个函子的Left Right的结合 代码示例</font>
+
+```javascript
+class Right {
+  static of  (value) {
+    return new Right(value)
+  }
+
+  constructor(value){
+    this._value = value
+  }
+
+  map( fn ) {
+    return Right.of( fn( this._value ) )
+  }
+}
+
+class Left {
+  static of  (value) {
+    return new Left(value)
+  }
+
+  constructor(value){
+    this._value = value
+  }
+
+  map( fn ) {
+    return this
+  }
+}
+
+// 这样我们就能记录一些错误的日志了
+const paserJSON = (str) => {
+  try{
+    return Right.of(JSON.parse(str)) 
+  }catch(e){
+    return Left.of({error:e.message})
+  }
+}
+
+let r = paserJSON('{ name:zs }')  // 一个错误格式的字符串 函数会记录下错误的讯息
+```
+
+<font style="color:rgb(64, 72, 91);">  
+</font>
+
+## <font style="color:rgb(64, 72, 91);">IO函子</font>
+<font style="color:rgb(106, 115, 125);">先说用途，再说些相关的概念 用途：用于吧一些副作用 控制起来。延迟执行 概念：IO的一个of 和 map 方法都有些不同。_value也和之前的 函子不一样，它存的是一个fn 函数 它_value ：[Function]这个Function何时执行看外面的调用者如何处理，</font>
+
+```javascript
+// 这个是 示例代码
+const fp = require('lodash/fp')
+
+class IO {
+  static of ( value ){
+    return new IO(function () {
+      return value
+    })
+  }
+
+  constructor (fn) {
+    this._value = fn
+  }
+
+  map (fn) {
+    return new IO(fp.flowRight(fn,this._value)) 
+  }
+}
+
+// 我们传递一个进程 函数 
+let r = IO.of(process).map(p => p.exexPath )
+
+r._value() // 这个函数实际上还是 p => p.exexPath  函数，和fn（之前的结合）
+```
+
+<font style="color:rgb(64, 72, 91);">  
+</font>
+
+## <font style="color:rgb(64, 72, 91);">Folktale</font>
+<font style="color:rgb(106, 115, 125);">这个东西是一个库，一个标准的函数式编程的库，里面有很多的函子，里面有很多大量的</font>
+
+```javascript
+const { compose,curry } = require('folktale/core/lambda')
+const { toUpper,first } = require('lodash/fp')
+
+//第一个参数是传入的函数的参数的个数
+
+let f = curry(2,function(x,y) {
+  console.log( x +y)
+})
+
+f(3,4)
+f(3)(4)
+
+// 函数组合 
+let f = compose(toUpperr,first)
+f(['one'.'tow'])
+
+可以看到和我们的之前的 lodash几乎是一样的，但是要比loadsh轻量一些const { compose,curry } = require('folktale/core/lambda')
+const { toUpper,first } = require('lodash/fp')
+
+//第一个参数是传入的函数的参数的个数
+
+let f = curry(2,function(x,y) {
+  console.log( x +y)
+})
+
+f(3,4)
+f(3)(4)
+
+// 函数组合 
+let f = compose(toUpperr,first)
+f(['one'.'tow'])
+
+可以看到和我们的之前的 lodash几乎是一样的，但是要比loadsh轻量一些
+```
+
+## <font style="color:rgb(64, 72, 91);">Task函子</font>
+<font style="color:rgb(106, 115, 125);">这个东西哈，就要是用来处理 异步操作的，包括读取文件什么的，这个函子来自于 folktale库中，注意 一些它的2.x版本和1.x不一样，需要看文档，这里讲的2.x的版本</font>
+
+<font style="color:rgb(106, 115, 125);">需求：读取当前文件下的package.json文件中的version字段</font>
+
+```javascript
+const fs = require('fs')
+const { task } = require('follktale/concurrency/task')
+const { split, find } = require('lodash/fp')
+
+function readFile (fileNmae) {
+  return task (reslover => {
+    fs.readFile( fileName,'utf-8',(err,data)=>{  // node处理错误优先
+      if (err) { resolver.reject(err) }
+
+      resolver.resolve(data)
+    } )
+  })
+}
+
+// 封装好之后就是去读取数据了
+readFile('package.json')
+    // 定义获取到的文件的处理过程
+  .map( split( '\n' ) )
+  .map(find( x =x.includes('versoin') ))
+  .run() // 1.先抛弃了来处理一些拿到的数据
+  .listen({
+    onRejected:err => {
+      console.log(err)
+    },
+    onResolved:value => {
+      console.log(value)
+    }
+  })
+```
+
+## <font style="color:rgb(64, 72, 91);">poined函子</font>
+<font style="color:rgb(106, 115, 125);">实际上就是之前的仅仅有的of方法的函子 都叫 poined函子</font>
+
+## <font style="color:rgb(64, 72, 91);">IO函子中的问题</font>
+```javascript
+
+// liunx 下有一个shell 叫做cat 命令，是一个读取并且打印的 
+const fs = require('fs')
+const fp = require('lodash/fp')
+ 
+class IO {
+  static of ( value ) {
+    return new IO(function(){
+      return value
+    })
+  }
+
+  constructor (fn){
+    this._value = fn
+  }
+
+  map (fn) {
+    // 这一步，我们有一些不一样 我们需要 对这个 函数做处理于是使用函数组合
+    return new IO(fp.flowRight( fn,this._value ))
+  }
+}
+
+// 定义方法 读取文件并且打印
+let readFile = function (filename) {
+  return new IO (function () {
+    return fs.readFileSync( filename.'utf-8' )  // 同步处理
+  })
+}
+
+// 打印
+let print = function (x) {
+  return new IO(function () {
+    log(x)
+    return x
+  }) 
+}
+
+// 这是又问题的就是。print 实际上拿到的结果是 这样的一个结构
+// IO( IO (filename) )
+let cat = fp.flowRight(print,readFile)
+let r = cat('package.json')._value() // 只拿到了最外层 
+let r = cat('package.json')._value()._value()
+
+// 这样的做法是非常low的 为此我们要解决这个我
+
+```
+
+## <font style="color:rgb(64, 72, 91);">Monad 函子</font>
+<font style="color:rgb(106, 115, 125);">这是一个可以变扁的 Ponited 函子 ，扁 就是解决嵌套问题,</font>**<font style="color:rgb(106, 115, 125);">包含一个join方法</font>**<font style="color:rgb(106, 115, 125);">可以解决函子嵌套的问题</font>
+
+```javascript
+
+// 改造开始
+const fs = require('fs')
+const fp = require('lodash/fp')
+ 
+class IO {
+  
+  static of ( value ) {
+    return new IO(function(){
+      return value
+    })
+  }
+
+  constructor (fn){
+    this._value = fn
+  } 
+
+  map (fn) {
+    return new IO(fp.flowRight( fn,this._value ))
+  }
+
+  // 新增几个方法 直接在内部处理
+  join () {
+    return this._value()
+  }
+
+  flatMap (fn) {
+    return this.map(fn).join()  // 直接去执行 函子中的函数 拉平
+  }
+
+}
+
+// 传递的具有副作用的函数
+let readFile =  function (filename) {
+  return new IO(function () {
+    return fs.readFileSync(filename,'utf-8')
+  })
+}
+
+// 使用
+let print = function (x) {
+  return new IO(function() {
+    log(x)
+    return x 
+  })
+}
+
+//可以直接获取，并且还可以做额外的处理
+let r = readFile('package.json')
+        .map(x => x.toUpper()) // 全文大写
+        .flatMap(print)
+```
+

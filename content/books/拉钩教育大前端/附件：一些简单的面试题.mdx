@@ -1,0 +1,354 @@
+---
+title: "JS异步编程与函数式编程面试题详解"
+date: "2024-12-19"
+summary: "深入讲解JavaScript异步编程、EventLoop、消息队列、宏任务与微任务等核心概念，以及函数式编程实践和Promise手写实现。"
+status: "completed"
+tech: ["JavaScript","异步编程","EventLoop","函数式编程","Promise"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "拉钩教育大前端"
+---
+
+## <font style="color:rgb(64, 72, 91);">JS异步编程的理解，对EventLoop的理解，消息队列是用来干什么的，什么是宏任务，什么是微任务？</font>
+### <font style="color:rgb(64, 72, 91);">异步编程</font>
++ <font style="color:rgb(64, 72, 91);">是什么?</font>
+
+<font style="color:rgb(106, 115, 125);">异步 是一门计算机语言的特性，异步和同步相对；A -> B 两件事 同步就是 A 先跑 跑完 A 再跑 B。异步就是 A先跑，不管你A有没有跑完，B都可以自己接着跑。 js 是单线程的，天生异步，适合 IO 密集型，异步编程就是控制异步行为的一种编程方式</font>
+
++ <font style="color:rgb(64, 72, 91);">解决了什么？</font>
+
+<font style="color:rgb(106, 115, 125);">一是 解决了单线程的js 运行 堵塞的问题，二是为了提高 CPU 的利用率。为js提供了 更强大的能力</font>
+
++ <font style="color:rgb(64, 72, 91);">怎么使用？</font>
+
+<font style="color:rgb(106, 115, 125);">最常见就是回调函数，再到现在es6 es2020等新特性出来后，基本来就是 async 语法糖的天下了</font>
+
+### <font style="color:rgb(64, 72, 91);">消息队列</font>
++ <font style="color:rgb(64, 72, 91);">是什么?</font>
+
+<font style="color:rgb(106, 115, 125);">消息队列是一个先进先出的队列数据结构，它里面存放着各种消息。</font>
+
++ <font style="color:rgb(64, 72, 91);">解决了什么？</font>
+
+<font style="color:rgb(106, 115, 125);">工作线程将消息放在消息队列，主线程通过事件循环过程去取消息。是 js实现异步编程的一个基建</font>
+
+### <font style="color:rgb(64, 72, 91);">事件循环</font>
++ <font style="color:rgb(64, 72, 91);">是什么?</font>
+
+<font style="color:rgb(106, 115, 125);">事件循环 是一种代码运行机制。指主线程重复从消息队列中取消息、执行的过程。取一次消息并执行的过程叫一次循环。</font>
+
++ <font style="color:rgb(64, 72, 91);">解决了什么？</font>
+
+<font style="color:rgb(106, 115, 125);">事件循环是JavaScript实现异步的具体解决方案，其中同步代码，直接执行；异步函数先放在异步队列中，待同步函数执行完毕后，轮询执行 异步队列 的回调函数。</font>
+
+### <font style="color:rgb(64, 72, 91);">宏任务和微任务</font>
++ <font style="color:rgb(64, 72, 91);">是什么?</font>
+
+<font style="color:rgb(106, 115, 125);">微任务和宏任务皆为异步任务，它们都属于一个队列，主要区别在于他们的执行顺序，Event Loop的走向和取值 js异步有一个机制，就是遇到宏任务，先执行宏任务，将宏任务放入eventqueue（消息队列），然后在执行微任务，将微任务放入eventqueue，这两个queue不是一个queue。当你往外拿的时候先从微任务里拿这个回掉函数，然后再从宏任务的queue上拿宏任务的回掉函数。他们的分类主要是：</font>
+
+1. <font style="color:rgb(64, 72, 91);">宏任务：整体代码script，setTimeout，setInterval、setImmediate。</font>
+2. <font style="color:rgb(64, 72, 91);">微任务：原生Promise(有些实现的promise将then方法放到了宏任务中)、process.nextTick、Object.observe(已废弃)、 MutationObserver</font>
++ <font style="color:rgb(64, 72, 91);">解决了什么？</font>
+
+**<font style="color:rgb(106, 115, 125);">为了插队</font>**<font style="color:rgb(106, 115, 125);">一个Event Loop，Microtask 是在 Macrotask 之后调用，Microtask 会在下一个Event Loop 之前执行调用完，并且其中会将 Microtask 执行当中新注册的 Microtask 一并调用执行完，然后才开始下一次 Event loop，所以如果有新的 Macrotask 就需要一直等待，等到上一个 Event loop 当中 Microtask 被清空为止。由此可见， 我们可以在下一次 Event loop 之前进行插队。如果不区分 Microtask 和 Macrotask，那就无法在下一次 Event loop 之前进行插队，其中新注册的任务得等到下一个 Macrotask 完成之后才能进行，这中间可能你需要的状态就无法在下一个 Macrotask 中得到同步。状态的同步对于视图来说至关重要</font>
+
+## <font style="color:rgb(64, 72, 91);">代码题目</font>
+<font style="color:rgb(106, 115, 125);">设计文档，如下，详细的实现细节 ，请参阅代码code目录</font>
+
+### <font style="color:rgb(64, 72, 91);">使用Promise 改写 嵌套的定时器</font>
+<font style="color:rgb(136, 136, 136);">// 可以简化成一个promise ，set1 ，有结果之后 去掉set2 然后依次递归下去，</font>
+
+### <font style="color:rgb(64, 72, 91);">函数式编程的四个联系</font>
+<font style="color:rgb(106, 115, 125);">具体代码请看 app.js</font>
+
+### <font style="color:rgb(64, 72, 91);">函子的编程练习</font>
+### <font style="color:rgb(64, 72, 91);">手写Promise</font>
+<font style="color:rgb(106, 115, 125);">详见code下的 myPromise</font>
+
+## code题
+```javascript
+const fp = require('lodash/fp')
+
+// 题目
+
+
+// 数据
+// horsepower 马力, dollar_value 价格, in_stock 库存
+const cars = [{
+      name: 'Ferrari FF',
+      horsepower: 660,
+      dollar_value: 700000,
+      in_stock: true
+    },
+    {
+
+        name: 'Spyker C12 Zagato',
+
+        horsepower: 650,
+
+        dollar_value: 648000,
+
+        in_stock: false
+
+    },
+
+    {
+
+        name: 'Jaguar XKR-S',
+
+        horsepower: 550,
+
+        dollar_value: 132000,
+
+        in_stock: false
+
+    },
+
+    {
+
+        name: 'Audi R8',
+
+        horsepower: 625,
+
+        dollar_value: 114200,
+
+        in_stock: false
+
+    },
+
+    {
+
+        name: 'Aston Martin One-7',
+
+        horsepower: 750,
+
+        dollar_value: 1850000,
+
+        in_stock: true
+
+    },
+
+    {
+
+        name: 'Pagani Huayara',
+
+        horsepower: 700,
+
+        dollar_value: 1300000,
+
+        in_stock: true
+
+    }
+]
+
+/*
+  练习1:  
+    let last_car = fp.last(cars)   获取最后一条数据
+    fp.prop('in_stock', last_car)  获取最后一条数据的 in_stock 属性值
+  实现 isLastInStock 函数, 要求使用 fp.flowRight() 
+  把 fp.last(), fp.prop() 组合而成
+*/
+
+
+
+// 1.实现 isLastInStock 函数 
+const isLastInStock = fp.flowRight(fp.prop('in_stock'), fp.last)
+// 2.打印测试
+console.log( isLastInStock(cars) )  // 最终返回 true
+
+
+
+/*
+
+  练习2: 
+
+  实现 firstName 函数, 要求使用 fp.flowRight()
+
+  把 fp.prop(), fp.first() 组合而成
+
+*/
+
+// 1.实现 firstName 函数
+const firstName = fp.flowRight( fp.prop('name' ), fp.first)
+
+// 2.打印测试
+
+console.log( firstName(cars) )  // 最终返回 Ferrari FF (第一个 car 的 name) 
+
+
+
+
+
+/*
+
+  练习3: 
+
+  实现函数 averageDollarValue, 要求使用 fp.flowRight()
+
+  把 fp.map(), _average() 组合而成
+
+
+  参考代码:
+
+    let averageDollarValue = function (cars) {
+
+        let dollar_values = fp.map(function (car) {
+
+            return car.dollar_value
+
+        }, cars)
+
+        return _average(dollar_values)
+
+    }
+
+*/
+
+  let _average = function (xs) {
+    return fp.reduce(fp.add, 0, xs) / xs.length
+  } // <- 无须改动
+
+  
+
+  // 1.实现 averageDollarValue 函数
+const averageDollarValue = fp.flowRight(_average,fp.map(fp.prop('dollar_value')))
+
+  // 2.打印测试
+  console.log( averageDollarValue(cars) )  // 最终返回 
+
+
+/*
+
+  练习4: 
+
+  实现 sanitizeNames() 函数，要求使用 fp.flowRight()
+
+  把 返回一个下划线连接的小写字符串，
+
+  把数组中的 name 转换为这种形式： 例如：sanitizeNames(["Hello World"]) => ["hello_world"]
+
+*/
+
+// 把非字母数字替换为下划线
+let _underscore = fp.replace(/\W+/g, '_') // <--无须改动
+// 1.实现 sanitizeNames 函数
+const sanitizeNames = fp.flowRight( fp.map( fp.flowRight(_underscore, fp.toLower, fp.prop('name')) ) )
+
+
+// 2.打印测试
+
+console.log( sanitizeNames(cars) )
+```
+
+```javascript
+// 函子练习
+class Container {
+  static of(value) {
+    return new Container(value)
+  }
+
+  constructor(value) {
+    this._value = value
+  }
+
+  map(fn) {
+    return Container.of(fn(this._value))
+  }
+}
+
+class Maybe {
+  static of(x) {
+    return new Maybe(x)
+  }
+
+  isNothing() {
+    return this._value === null || this._value === undefined
+  }
+
+  constructor(x) {
+    this._value = x
+  }
+
+  map(fn) {
+    return this.isNothing() ?  this : Maybe.of(fn(this._value))
+  }
+}
+
+const fp = require('lodash/fp')
+const { Maybe, Container } = require('./support')
+
+
+/*
+  练习1: 
+  实现函数 ex1 
+  使用 fp.add(x, y) 和 fp.map(f, x)
+  让函子里的值 增加1
+*/
+// 1.创建一个函子
+let maybe = Maybe.of([5, 6, 1])
+
+// 2.实现 ex1 函数
+const ex1 =  fp.map( x => fp.add(x,1) )
+// 3.调用测试
+console.log( maybe. map(ex1) )  // Maybe { _value: [ 6, 7, 2 ] }
+
+
+/*
+  练习2:
+  实现 ex2 函数
+  函数中使用 fp.first 获取列表的第一个元素
+*/
+// 1.生成一个函子
+let xs = Container.of(['do', 'ray', 'me', 'fa', 'so', 'la', 'ti', 'do'])
+
+// 2.实现 ex2
+const ex2 = fp.flowRight(fp.first, fp.map( x=>x))
+// 3.测试打印
+console.log( xs.map(ex2) )  // Container { _value: 'do' }
+
+
+/*
+  练习3:
+  实现  函数
+  使用 safeProp 和 fp.first 找到 user 的名字的首字母
+*/
+let safeProp = fp.curry(function (x, o) {
+	return Maybe.of(o[x])
+})
+let user = { id: 2, name: 'Albert'}
+
+// 1.实现 ex3
+const ex3 =() =>  safeProp('name',user).map( fp.flowRight(fp.first, fp.map(x => x)) )
+            
+// 2.测试打印
+console.log( ex3() ) // Maybe { _value: 'A' }
+
+
+/*
+  练习4:
+  使用 Maybe 重写 ex4, 不要有 if 语句
+  let ex4 = function (n) {
+    if (n) {
+      return parseInt(n)
+    }
+  }
+  功能描述:
+  把参数中数值部分转为整数,并且以函子形式返回
+  换言之, 提取字符串里的数字作为返回结果函子的 _value 值
+*/
+
+// 1.实现 ex4 函数
+// const chooseNumber = (value)=>{ value, }
+const ex4  = (value) => Maybe.of(value).map(  fp.flowRight( fp.first,fp.map(parseInt) ,fp.map(x => x)) )
+// 2.测试打印
+console.log( ex4('7R') )   // Maybe { _value: 7 }
+console.log( ex4('7.6B'))  // Maybe { _value: 7 }
+console.log( ex4('8.2G') ) // Maybe { _value: 8 }
+
+console.log( ex4(null) )      // Maybe { _value: null }
+console.log( ex4(undefined) ) // Maybe { _value: undefined }
+
+console.log( ex4('i7.5') )    // Maybe { _value: NaN }
+console.log( ex4('abc') )     // Maybe { _value: NaN }
+```
+

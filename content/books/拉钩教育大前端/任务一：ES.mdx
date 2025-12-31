@@ -1,0 +1,75 @@
+---
+title: "任务一：ES"
+date: "2024-12-19"
+summary: "深入讲解ES2015/ES6的关系、新特性概览，包括let/const、数组解构等核心语法特性。"
+status: "completed"
+tech: ["ES6","JavaScript","ECMAScript"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "拉钩教育大前端"
+---
+
+## 一、es2015到底是不是es6？
+    ECMScrtip ，js语言本身就是ECM，node下 是ECM + node底层提供的其它一些api 如 fs net ...
+
+es2015，这个版本相对比较特殊，es2015 是一个变化比较大的版本，从这之后，es的更新都是“小步快跑”的更新版本方式，es2015也被称之为es6,  从这折后几乎所有的后来的版本都被称之为 es6 
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1620205305969-a6cf89b4-a9c9-4b2e-942a-179165999bf9.png)
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1620205323833-2a12c5ab-2d08-4406-ba26-e15ed709b063.png)
+
+官方es6 标准发布的链接.http://www.ecma-international.org/ecma-262/6.0
+
+## 二、新特性
+### 1.预览图
+ 最主要的就是下面这几个
+
+- [x] 解决原有语法上的一些不足和问题
+- [x] 对原有语法进行增强
+- [x] 全新的对象、全新的方法、全新的功能
+- [x] 全新的数据类型和数据结构
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1620205363174-88c604e5-0ce1-439f-90ca-ab2a67a142eb.png)
+
+![](https://cdn.nlark.com/yuque/0/2021/png/1627571/1620205376323-caa1b0f8-8c3f-40cd-a0fe-9051c006b06a.png)
+
+
+
+### 2.let & const 
+```javascript
+// 注意这样写哈 是存在问题的
+{ }   一般而言 大括号。之间会产生 块级作用域，
+
+// 意味着这样的面试题
+let a = 'xxx'
+if( true ){
+  log(a)
+  let a =213,
+}
+// 打印的是213 哈
+
+
+```
+
+### 3. 素组的结构
+```javascript
+const arr = [100, 200, 300]
+
+// 我可以只要其中的几个
+  const [, , baz] = arr
+  console.log(baz)
+
+
+  const [foo, ...rest] = arr
+  console.log(rest)
+
+// 我可以 设置，默认值
+  const [foo, bar, baz = 123, more = 'default value'] = arr
+  console.log(bar, more)
+
+// 应用
+const path = '/foo/bar/baz'
+const [, rootdir] = path.split('/')
+console.log(rootdir)
+```
+
