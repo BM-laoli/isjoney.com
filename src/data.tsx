@@ -888,7 +888,27 @@ export const DATA = {
           ],
         }
       },
-      
+      {
+        slug: "English", // 固定为 English
+        metadata: {
+          title: "English 英语学习全书",
+          summary: "包含公三英语词汇入门、EF 教育实用口语课程以及经典新概念英语（第一至四册）全套学习资料。从基础音标到高级阅读，构建系统的英语语言能力体系。",
+          tags: ["English", "Language", "New Concept", "Vocabulary"],
+          // 暖色调 (浅桃色背景 ffe4e6，深红文字 881337)
+          image: "https://placehold.co/322x172/ffe4e6/881337.png?text=English",
+          status: "Mar. 2024 - Mar. 2025",
+          href: "/books/English/词汇入门篇",
+          authors: "Joney",
+          video: "",
+          links: [
+            {
+              type: "Github",
+              href: "https://github.com/BM-laoli",
+              icon: <Icons.github className="size-3" />,
+            },
+          ],
+        }
+      }
 
     ],
     // 配置项 Books 目录
@@ -1859,7 +1879,84 @@ export const DATA = {
           slug: "微信小程序开发/项目开发（阶段1）"
         }
       ],
-
+      English: [
+        {
+          title: "公三 英语",
+          slug: "English/公三 英语",
+          children: [
+            {
+              title: "词汇入门篇",
+              slug: "English/词汇入门篇"
+            }
+          ]
+        },
+        {
+          title: "EF教育",
+          slug: "English/EF教育",
+          children: [
+            {
+              title: "初级5-第3单元【学会讲故事】",
+              slug: "English/初级5-第3单元【学会讲故事】"
+            },
+            {
+              title: "做决定",
+              slug: "English/做决定"
+            },
+            {
+              title: "初步的学习计划",
+              slug: "English/初步的学习计划"
+            },
+            {
+              title: "普通英语-阶段2 入门级",
+              slug: "English/普通英语-阶段2 入门级"
+            }
+          ]
+        },
+        {
+          title: "新概念",
+          slug: "English/新概念",
+          children: [
+            {
+              title: "基础音标",
+              slug: "English/基础音标"
+            },
+            {
+              title: "第一册",
+              slug: "English/第一册",
+              children: [
+                {
+                  title: "第四章节",
+                  slug: "English/第四章节"
+                },
+                {
+                  title: "第三章节",
+                  slug: "English/第三章节"
+                },
+                {
+                  title: "第二章节",
+                  slug: "English/第二章节"
+                },
+                {
+                  title: "第一章节",
+                  slug: "English/第一章节"
+                }
+              ]
+            },
+            {
+              title: "第二册",
+              slug: "English/第二册"
+            },
+            {
+              title: "第三册",
+              slug: "English/第三册"
+            },
+            {
+              title: "第四册",
+              slug: "English/第四册"
+            }
+          ]
+        }
+      ]
       //更多
     }
   }
