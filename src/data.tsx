@@ -866,7 +866,30 @@ export const DATA = {
             },
           ],
         }
-      }
+      },
+      {
+        slug: "微信小程序开发", // 固定为 微信小程序开发
+        metadata: {
+          title: "微信小程序开发从入门到实战",
+          summary: "从零基础快速上手微信小程序开发，涵盖环境搭建、基础组件、API 调用及原生框架语法。通过四天高强度特训与阶段性项目实战，掌握小程序全栈开发能力。",
+          tags: ["WeChat", "MiniProgram", "Frontend", "Mobile"],
+          // 暖色调 (浅黄色背景 fef9c3，深黄文字 a16207)
+          image: "https://placehold.co/322x172/fef9c3/a16207.png?text=MiniProgram",
+          status: "Mar. 2024 - Mar. 2025",
+          href: "books/微信小程序开发/第一天的简单入门",
+          authors: "Joney",
+          video: "",
+          links: [
+            {
+              type: "Github",
+              href: "https://github.com/BM-laoli",
+              icon: <Icons.github className="size-3" />,
+            },
+          ],
+        }
+      },
+      
+
     ],
     // 配置项 Books 目录
     booksContent: {
@@ -1671,149 +1694,172 @@ export const DATA = {
         }
       ],
       "拉钩教育大前端": [
-          {
-            title: "章节1——JavaScript深度解析",
-            slug: "拉钩教育大前端/章节1——JavaScript深度解析",
-            children: [
-              {
-                title: "阶段一、函数式编程 ，JS异步，手写Promise",
-                slug: "拉钩教育大前端/阶段一、函数式编程 ，JS异步，手写Promise",
-                children: [
-                  {
-                    title: "任务一：函数式编程",
-                    slug: "拉钩教育大前端/任务一：函数式编程"
-                  },
-                  {
-                    title: "任务二：js异步编程",
-                    slug: "拉钩教育大前端/任务二：js异步编程"
-                  },
-                  {
-                    title: "任务三：手写Promise源代码",
-                    slug: "拉钩教育大前端/任务三：手写Promise源代码"
-                  },
-                  {
-                    title: "附件：一些简单的面试题",
-                    slug: "拉钩教育大前端/附件：一些简单的面试题"
-                  }
-                ]
-              },
-              {
-                title: "阶段二、——ES新特性TS、JS性能",
-                slug: "拉钩教育大前端/阶段二、——ES新特性TS、JS性能",
-                children: [
-                  {
-                    title: "任务一：ES",
-                    slug: "拉钩教育大前端/任务一：ES"
-                  },
-                  {
-                    title: "任务二：TS",
-                    slug: "拉钩教育大前端/任务二：TS"
-                  },
-                  {
-                    title: "任务三：JS性能优化",
-                    slug: "拉钩教育大前端/任务三：JS性能优化"
-                  },
-                  {
-                    title: "任务四：JS性能优化2",
-                    slug: "拉钩教育大前端/任务四：JS性能优化2"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            title: "章节2——前端工程化",
-            slug: "拉钩教育大前端/章节2——前端工程化",
-            children: [
-              {
-                title: "阶段一、开发脚手架CLI，以及构建自动化工作流",
-                slug: "拉钩教育大前端/阶段一、开发脚手架CLI，以及构建自动化工作流",
-                children: [
-                  {
-                    title: "任务一：什么是工程化",
-                    slug: "拉钩教育大前端/任务一：什么是工程化"
-                  },
-                  {
-                    title: "任务二：脚手架工具（创建一个自己的cli）",
-                    slug: "拉钩教育大前端/任务二：脚手架工具（创建一个自己的cli）"
-                  },
-                  {
-                    title: "任务三：自动化构建",
-                    slug: "拉钩教育大前端/任务三：自动化构建"
-                  },
-                  {
-                    title: "附件：作业构建一个自己的cli",
-                    slug: "拉钩教育大前端/附件：作业构建一个自己的cli"
-                  }
-                ]
-              },
-              {
-                title: "阶段二、webpack专题",
-                slug: "拉钩教育大前端/阶段二、webpack专题",
-                children: [
-                  {
-                    title: "一、模块化开发",
-                    slug: "拉钩教育大前端/一、模块化开发"
-                  },
-                  {
-                    title: "二、Webpack打包",
-                    slug: "拉钩教育大前端/二、Webpack打包"
-                  },
-                  {
-                    title: "三、其它打包工具",
-                    slug: "拉钩教育大前端/三、其它打包工具"
-                  },
-                  {
-                    title: "四、规范化标准",
-                    slug: "拉钩教育大前端/四、规范化标准"
-                  },
-                  {
-                    title: "五、webpack源码",
-                    slug: "拉钩教育大前端/五、webpack源码"
-                  },
-                  {
-                    title: "附件：作业",
-                    slug: "拉钩教育大前端/附件：作业"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            title: "章节3——Vue",
-            slug: "拉钩教育大前端/章节3——Vue",
-            children: [
-              {
-                title: "阶段一、 Vue回顾-VueRouter-sanDOm-手写Vue",
-                slug: "拉钩教育大前端/阶段一、 Vue回顾-VueRouter-sanDOm-手写Vue"
-              },
-              {
-                title: "阶段二、Vue源码分析（响应式，虚拟DOM，模板编译额呵组件化）",
-                slug: "拉钩教育大前端/阶段二、Vue源码分析（响应式，虚拟DOM，模板编译额呵组件化）"
-              },
-              {
-                title: "阶段三、Vuex数据流管理与SSR",
-                slug: "拉钩教育大前端/阶段三、Vuex数据流管理与SSR"
-              },
-              {
-                title: "阶段四、构建自己的SSR SSG方案 封装组件库",
-                slug: "拉钩教育大前端/阶段四、构建自己的SSR SSG方案 封装组件库"
-              },
-              {
-                title: "阶段五、Vue3原理剖析",
-                slug: "拉钩教育大前端/阶段五、Vue3原理剖析"
-              },
-              {
-                title: "阶段六、Vue2 + VueX + TS实战",
-                slug: "拉钩教育大前端/阶段六、Vue2 + VueX + TS实战"
-              },
-              {
-                title: "阶段七、Vue3 + Vite + TS实战",
-                slug: "拉钩教育大前端/阶段七、Vue3 + Vite + TS实战"
-              }
-            ]
-          }
-        ]
+        {
+          title: "章节1——JavaScript深度解析",
+          slug: "拉钩教育大前端/章节1——JavaScript深度解析",
+          children: [
+            {
+              title: "阶段一、函数式编程 ，JS异步，手写Promise",
+              slug: "拉钩教育大前端/阶段一、函数式编程 ，JS异步，手写Promise",
+              children: [
+                {
+                  title: "任务一：函数式编程",
+                  slug: "拉钩教育大前端/任务一：函数式编程"
+                },
+                {
+                  title: "任务二：js异步编程",
+                  slug: "拉钩教育大前端/任务二：js异步编程"
+                },
+                {
+                  title: "任务三：手写Promise源代码",
+                  slug: "拉钩教育大前端/任务三：手写Promise源代码"
+                },
+                {
+                  title: "附件：一些简单的面试题",
+                  slug: "拉钩教育大前端/附件：一些简单的面试题"
+                }
+              ]
+            },
+            {
+              title: "阶段二、——ES新特性TS、JS性能",
+              slug: "拉钩教育大前端/阶段二、——ES新特性TS、JS性能",
+              children: [
+                {
+                  title: "任务一：ES",
+                  slug: "拉钩教育大前端/任务一：ES"
+                },
+                {
+                  title: "任务二：TS",
+                  slug: "拉钩教育大前端/任务二：TS"
+                },
+                {
+                  title: "任务三：JS性能优化",
+                  slug: "拉钩教育大前端/任务三：JS性能优化"
+                },
+                {
+                  title: "任务四：JS性能优化2",
+                  slug: "拉钩教育大前端/任务四：JS性能优化2"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          title: "章节2——前端工程化",
+          slug: "拉钩教育大前端/章节2——前端工程化",
+          children: [
+            {
+              title: "阶段一、开发脚手架CLI，以及构建自动化工作流",
+              slug: "拉钩教育大前端/阶段一、开发脚手架CLI，以及构建自动化工作流",
+              children: [
+                {
+                  title: "任务一：什么是工程化",
+                  slug: "拉钩教育大前端/任务一：什么是工程化"
+                },
+                {
+                  title: "任务二：脚手架工具（创建一个自己的cli）",
+                  slug: "拉钩教育大前端/任务二：脚手架工具（创建一个自己的cli）"
+                },
+                {
+                  title: "任务三：自动化构建",
+                  slug: "拉钩教育大前端/任务三：自动化构建"
+                },
+                {
+                  title: "附件：作业构建一个自己的cli",
+                  slug: "拉钩教育大前端/附件：作业构建一个自己的cli"
+                }
+              ]
+            },
+            {
+              title: "阶段二、webpack专题",
+              slug: "拉钩教育大前端/阶段二、webpack专题",
+              children: [
+                {
+                  title: "一、模块化开发",
+                  slug: "拉钩教育大前端/一、模块化开发"
+                },
+                {
+                  title: "二、Webpack打包",
+                  slug: "拉钩教育大前端/二、Webpack打包"
+                },
+                {
+                  title: "三、其它打包工具",
+                  slug: "拉钩教育大前端/三、其它打包工具"
+                },
+                {
+                  title: "四、规范化标准",
+                  slug: "拉钩教育大前端/四、规范化标准"
+                },
+                {
+                  title: "五、webpack源码",
+                  slug: "拉钩教育大前端/五、webpack源码"
+                },
+                {
+                  title: "附件：作业",
+                  slug: "拉钩教育大前端/附件：作业"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          title: "章节3——Vue",
+          slug: "拉钩教育大前端/章节3——Vue",
+          children: [
+            {
+              title: "阶段一、 Vue回顾-VueRouter-sanDOm-手写Vue",
+              slug: "拉钩教育大前端/阶段一、 Vue回顾-VueRouter-sanDOm-手写Vue"
+            },
+            {
+              title: "阶段二、Vue源码分析（响应式，虚拟DOM，模板编译额呵组件化）",
+              slug: "拉钩教育大前端/阶段二、Vue源码分析（响应式，虚拟DOM，模板编译额呵组件化）"
+            },
+            {
+              title: "阶段三、Vuex数据流管理与SSR",
+              slug: "拉钩教育大前端/阶段三、Vuex数据流管理与SSR"
+            },
+            {
+              title: "阶段四、构建自己的SSR SSG方案 封装组件库",
+              slug: "拉钩教育大前端/阶段四、构建自己的SSR SSG方案 封装组件库"
+            },
+            {
+              title: "阶段五、Vue3原理剖析",
+              slug: "拉钩教育大前端/阶段五、Vue3原理剖析"
+            },
+            {
+              title: "阶段六、Vue2 + VueX + TS实战",
+              slug: "拉钩教育大前端/阶段六、Vue2 + VueX + TS实战"
+            },
+            {
+              title: "阶段七、Vue3 + Vite + TS实战",
+              slug: "拉钩教育大前端/阶段七、Vue3 + Vite + TS实战"
+            }
+          ]
+        }
+      ],
+      "微信小程序开发": [
+        {
+          title: "第一天的简单入门",
+          slug: "微信小程序开发/第一天的简单入门"
+        },
+        {
+          title: "第二天的学习",
+          slug: "微信小程序开发/第二天的学习"
+        },
+        {
+          title: "第三天",
+          slug: "微信小程序开发/第三天"
+        },
+        {
+          title: "第四天",
+          slug: "微信小程序开发/第四天"
+        },
+        {
+          title: "项目开发（阶段1）",
+          slug: "微信小程序开发/项目开发（阶段1）"
+        }
+      ],
+
       //更多
     }
   }

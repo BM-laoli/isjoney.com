@@ -1,0 +1,229 @@
+---
+title: "微信小程序开发第三天：WXS、模板与组件详解"
+date: "2024-12-19"
+summary: "深入讲解微信小程序WXS脚本的使用方法、语法特点和应用场景，以及模板和组件的创建、属性传递、事件处理等核心概念，并介绍第三方UI库Vant Weapp的集成方式。"
+status: ""
+tech: ["微信小程序","WXS","组件","Vant Weapp"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "微信小程序开发"
+---
+
+## wxs是什么鬼？
+> 注意啊，我们的微信小程序是不会在页面上去调用函数额，我们的渲染层与逻辑陈是彼此独立的，js中定义的函数，view中不能使用，只有某些特殊的数据如data被访问的，于是我们的就出现了这个wxs，它就是一个微信这个家伙自己搞出来的一个东西，目的就是实现页面与路基的数据交互
+>
+
+### 如何玩wxs
+> 注意啊，如果我们是直接在wxml中想使用我们的在js'逻辑中定义的东西，那么是不被允许的
+>
+
+```javascript
+// pages/wxs/index.js
+Page({
+
+  /**
+   * 页面的初始数据
+   */
+  data: {
+
+  },
+  hehe(){
+    console.log('heheh')
+  },
+```
+
+```html
+<view>{{hehe()}}</view>
+```
+
++ 我的wxs的出现就是为了解决这个问题的
+1. 我们可以直接在wxml中直接定义这些东西，只要遵循一定的语法规则就可以
+
+```html
+<view>{{m1.sayHi()}}</view>
+
+<!-- 2. 必须指定module属性 -->
+<!-- 3. 导出使用 -->
+<wxs module="m1">
+  function sayHi() {
+    console.log('hi')
+  }
+  module.exports.sayHi = sayHi 
+</wxs>
+```
+
+2. 我们也可以把它单独的定义成单文件出去，然后引入
++ 在我们同名我的文件夹下有个wxs后缀的文件，
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595293106241-5547f11d-2699-45cb-927a-efb72be79d29.png)
+
+```javascript
+function sayHi(nane){
+  return nane  //在更多的使用场景下，我们更加喜欢把把这些东西直接返回出去
+}
+module.exports.sayHi  = sayHi
+```
+
+```html
+<!-- 4. 为了能工实现复用的逻辑还有输出的逻辑，我们可以把模块给它单独的独立出去 -->
+
+<view>{{m2.sayHi('hehehe')}}</view>
+
+<!-- 注意啊这里也是要指定我们的这个module属性的 -->
+<wxs  module="m2" src="./m1.wxs"></wxs>
+
+```
+
+### 蛋疼的wxs
+> 注意啊，wxs不是js！！！！它从来都不是js，所以有些语法上的细节是不一样的，我们一点点来看看，一点一点来剖析，这个东西
+>
+> 现在我们在wxs中尝试模块引入模块
+>
+> ![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595294228935-012c44bb-4314-43cf-a910-b4161a882b5e.png)
+>
+> 
+>
+> 
+>
+
+### wxs的运用 再强调一下，wxs不是jS!!!
+1. wxs可以做filter ，在view层数据做处理了
++ 首先是定义我们过滤器
+
+```html
+
+<view>  {{ now }} </view>
+<view>  {{ m4.fromdata(now) }} </view>
+
+<wxs module="m4" >
+function fromdata(timestamp) {
+  console.log(timestamp)
+  var d =  getDate(timestamp)
+  return d.getFullYear() + '年'  +  (d.getMonth() + 1)  + '月' + d.getDate() + '日'  
+}
+  module.exports.fromdata = fromdata
+</wxs>
+```
+
++ 注意，我们的数据是需要在我们的js业务代码中定义的
+
+```javascript
+data: {
+    now:(new Date()).getTime()
+  },
+```
+
+### 小程序中的模板使用
+> 这个东西，实际上就是为了实现公共部分的复用，功能类似于组件，以前我们的小程序是没有组件的，所以只能使用模板，但是现在这个就鸡肋了，我们直接使用组件就好了,但是！！！如果你正在接手公司的老项目，那么这些东西还是有必要的学习的，
+>
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595297987601-4d42225c-ae14-4496-a084-0ced83109158.png)
+
+
+
+### 组件
+> 1. 第一步创建我们
+>
+> ![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595298531572-28cbee5c-3c28-49d1-ac22-5dc0f34b21f8.png)
+>
+> 2. 第二步 在我们页面上行使用就好了
+> 3. ![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595298821836-dcf99ed7-ed57-4aa9-af8b-dccf45707572.png)
+>
+
+### 组件的属性，还是组件的数据处理
+> 首先我们来看看组件的属性如何传递进去
+>
+> 1. 传递数据/做为属性到我们的组件里去,首先我们在使用的地方定义一下
+>
+
+```html
+<!-- 使用组件 -->
+
+<hader message="heheheh"  userlist="{{ [{name:'小明',age:18},{name:'小',age:18}] }}" />
+```
+
+2. 在我们的组件中处理我们的数据渲染还有事件的监听函数
+
+```javascript
+// pages/components/header/index.js
+Component({
+  /**
+   * 组件的属性列表
+   */
+  properties: {
+    message:{
+      type:String,
+      value:'默认值'
+    },
+    userlist:{
+      type:Array
+    }
+    
+  },
+
+  /**
+   * 组件的初始数据
+   */
+  data: {
+
+  },
+
+  /**
+   * 组件的方法列表
+   */
+  methods: {
+    changeDate(){
+      this.setData({
+        userlist:this.data.userlist.sort(() => -1)
+      })
+    }
+  }
+})
+
+// 小程序的文档中介绍了组件的声明周期是非常的全面的，建议一定要去看文档
+```
+
+在我们的页面中我们应该这样的去使用这些数据
+
+```html
+  <view class="hader">
+    <text> 首页 </text>
+    <text> 登录 </text>
+    <text> 注册 </text>
+  </view>
+
+<view> {{message}}  </view>
+
+<view wx:for="{{userlist}}" wx:key="*this"  >
+  <text>{{item.name}}</text>
+  <text>{{item.age}}</text>
+</view>
+
+<button type="primary" bind:tap="changeDate">点击切换数据</button>
+```
+
++ 以上就是我们的小程序中的组件的使用
+
+### 使用第三方的组件
+> 再本小节中，我们将会学习到如下的几个非常的有优秀的组件UI库，
+>
+> ## Vant Weapp    @antv/wx-f2 --save
+> 一个是构建图形界面的，一个是构建我们的数据分析统计图表的
+>
+> 对于他们的使用方式非常的简单，
+>
+> 1. 在自己 的项目中的根目录npm init -y
+> 2. 通过npm方式下载下来，
+> 3. 点击这里进行构建
+>
+> ![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595306457675-8bae71a6-8490-4ca5-bf49-1ffb02126b05.png)
+>
+> 4. 根使用组件的方式是一毛一样的，你只需要using一下就好了，我选择在全局中引入
+>
+> ![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595306505535-a3c26e90-15e6-4576-993f-17f27e4d3d57.png)/  
+>
+> 接下里直接用就行，组件的一些具体的参数还是得去看看对应的付官方介绍才行
+>
+
+
+

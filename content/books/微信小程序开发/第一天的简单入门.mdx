@@ -1,0 +1,218 @@
+---
+title: "第一天的简单入门"
+date: "2024-12-19"
+summary: "介绍微信小程序开发的基础知识，包括微信生态圈、小程序与网页的区别、开发工具使用、项目创建流程、团队管理、目录结构、全局配置项、常用组件使用以及布局和CSS注意事项。"
+status: ""
+tech: ["微信小程序","开发工具","项目配置","组件开发"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "微信小程序开发"
+---
+
+### <font style="color:#268bd2;">微信的生态圈</font>
+> <font style="color:#859900;">微信开发是一个非常大的一个范畴，是一个整个的生态系统下的开发</font>
+>
+
+> <font style="color:#859900;">微信的开发包括了如下的几个部分</font>
+>
+
+<font style="color:#859900;"></font>
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595143708297-ec02082f-c4f7-413f-a2db-cd3bcdfc601f.png)
+
+> 我们的每一个功能都是具体的子模块下的，比如，你想要你的网页支持微信支付，不好意思，你找不到，因为微信的网站开发没有这个支付功能，所以有些功能呢你是做不到的。我们学习的小程序开发是在微信公众号下的小程序开发，
+>
+
+
+
+### <font style="color:#268bd2;">微信小程序是网页吗？</font>
+> 小程序不是网页
+>
+
+
+
+### <font style="color:#268bd2;"> 官方的文档，和开发工具</font>
+> 官方文档非常重要需要多看看   ，我们需要微信小程序的开发工具进行开发，注意啊，如果有问题大多都是代理问题
+>
+> ![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595143959087-5f1fd688-ebb2-44eb-bd6f-74d9bebb35a3.png)
+>
+
+
+
+### 开始创建第一个引用
+> 我们 首先是创建以一个小程序的init项目，然后我们的可以点击这个按钮进行，真机调试，但是只能自己开，如果是发布上线的话，需要在小程序中的点击这个，之后才能上线，注意啊小程序名称和你的项目名称是不一样的东西！！！
+>
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595144517991-05e52713-befd-4a1b-9d44-b085116c0a08.png)
+
+
+
+
+
+> 按照你的东西next就好了
+>
+
+### 团队管理
+> 我们在公司中，我们的小程序的账户是公司创建的，然后又老大给我们权限，把我们加入到项目中
+>
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595144925148-53c620a2-2080-41e3-8114-d3b3a1aa7869.png)
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595145235753-ac5222ce-3792-467e-b388-3c6788d0e3e2.png)
+
+1. 第一步把id要过来
+2. 第二步叫他们给你授权
+
+### 认识小程序的的目录结构
+> 以下是小程序的目录结构，还是相对来说比较简单的东西。
+>
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595145629839-0629c4fe-6859-4d65-a1ba-2a0fcff49721.png)
+
+### 全局的几个配置项
+> 这个东西实际上就是用来配置windows还有底部顶部的导航用的
+>
+
+
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595169574351-6aad03e1-8f8f-4835-9f7f-9589119fba3f.png)
+
+> 它的具体的功能还是需要看文档的，这个是重要的，一定要学会如何去看技术文档
+>
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595169625473-f60d76fe-f6b7-4ddb-8aca-78291dca6cba.png)
+
+
+
+```json
+{
+  "pages": [
+    "pages/index/index",
+    "pages/logs/logs",
+    "pages/ticke/ticke"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#262626",
+    "navigationBarTitleText": "TestBMlaoli",
+    "navigationBarTextStyle": "white"
+  },
+  "tabBar": {
+    "backgroundColor": "#FECA49",
+    "color": "#D78B09",
+    "selectedColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "text": "首页",
+        "iconPath": "icons/home-default.png",
+        "selectedIconPath": "icons/home-active.png",
+        "pagePath": "pages/index/index"
+      },
+      {
+        "text": "卡卷",
+        "iconPath": "icons/ticket-default.png",
+        "selectedIconPath": "icons/ticket-active.png",
+        "pagePath": "pages/ticke/ticke"
+      },
+      {
+        "text": "我的",
+        "iconPath": "icons/face-default.png",
+        "selectedIconPath": "icons/face-active.png",
+        "pagePath": "pages/index/index"
+      }
+    ]
+  },
+  "style": "v2",  //这个地方的配置项的设置是有点小坑爹的
+  "sitemapLocation": "sitemap.json"
+}
+```
+
+### 几个简单的组件
+> 这里我们的使用一个swiper组件来建立轮播的效果，代码非常的简单，需要注意的事情就是这个swaper上的小圆点有一个默认的高度 你需要重新调整一下就好
+>
+
+```html
+<swiper 
+  indicator-dots indicator-color="ragba(255,255,255,0.6)" indicator-active-color="#fff"
+  autoplay interval="3000" circular
+>
+  <swiper-item>
+    <image src="/static/uploads/slide_1.jpg" ></image>
+  </swiper-item>
+  <swiper-item>
+    <image src="/static/uploads/slide_2.jpg" ></image>
+  </swiper-item>
+  <swiper-item>
+    <image src="/static/uploads/slide_3.jpg" ></image>
+  </swiper-item>
+  <swiper-item>
+    <image src="/static/uploads/slide_4.jpg" ></image>
+  </swiper-item>
+  <swiper-item>
+    <image src="/static/uploads/slide_5.jpg" ></image>
+  </swiper-item>
+</swiper>
+
+swiper {
+  height: 320rpx;  
+}
+
+```
+
+### 布局还有css的问题
+> 注意啊这个小程序中的，css的单位我们都使用rpx
+>
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595169851716-4e251749-6a0f-4bda-81de-04f4a84605cc.png)
+
+一般来说设计搞给750我们会量多时写多少就好了，反正屏幕会自动的去适配，但是如果是375的这个时候都要*2
+
+
+
+这里布局有些要说明的就是：一个优秀的有工作经验的程序员总是会想得比较的全面一些，比如下面的代码
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595170005939-7b4eaefe-cef3-49c7-a760-a3cf6748dcae.png)
+
+```css
+
+/* 一个有经验的程序员，应该考虑到卡片布局中额高度要写死的道理,但是注意原来的pading需要开减去就是box-sizeing就好了，1 */
+.item > .info{
+  padding: 16rpx 130rpx 20rpx 30rpx;
+  position: relative;
+  font-size: 30rpx;
+  margin-bottom: 25rpx;
+
+  height: 180rpx;
+  box-sizing: border-box;
+}
+
+.item  .info  .message {
+  font-size: 25rpx;
+  color: #3c3c3c;
+  /* 这个也需要考虑到这个到的，我们这个也需要把这个东西定位下去，因为你无法确定上面的活动到底有多少的数据 */
+  position: absolute;
+  /* left: 0; */
+  bottom: 5rpx;
+}
+
+```
+
+
+
+### 关于编译的问题，
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595170122868-50c03dda-97f4-459c-8139-b2a5c3388831.png)
+
+> 你有可能会遇到这样的问题，
+>
+> 点击预览的时候，说体积太大了，这个时候，就需要使用线上的资源进行引入，因为小程序是实实在在编译运行的，所以都是打包之后的代码，如果有图片高清的，那就凉了 ，小程序限制是2MB，因为是小程序
+>
+
+
+
+解决方案也非常的简单，只需要把东西丢上去就好了，做成在线的地址起一个服务，实际在工作中都设有服务器给到你的，这个更本就不用去担心这个问题
+
+
+
+
+

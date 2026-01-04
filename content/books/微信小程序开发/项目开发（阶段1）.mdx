@@ -1,0 +1,73 @@
+---
+title: "项目开发（阶段1）"
+date: "2024-12-19"
+summary: "介绍微信小程序项目初始化配置，包括tabBar和页面基础布局设置，以及相关JSON配置文件的编写。"
+status: "completed"
+tech: ["微信小程序","uniapp","项目配置"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "微信小程序开发"
+---
+
+### 初始化项目基础配置
+> 首先我们按照官方给出的配置项就能把基础的样子布局出来，我们先来布局我们的tabber还有windows
+>
+> 它需要实现的效果就是：
+>
+> ![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595329970745-5d11f7d5-a6c8-4550-99ba-2ec3ff7aaf3f.png)
+>
+
+```json
+{
+	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "购物天堂一本道"
+			}
+		}
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "white",
+		"navigationBarBackgroundColor": "#ea4451",
+		"backgroundColor": "#ffff"
+	},
+	"tabBar": {
+		"color": "#343434",
+    "selectedColor": "#ea4451",
+    "backgroundColor": "#ffffff",
+    "list": [
+			{
+        "pagePath": "pages/index/index",
+        "iconPath": "static/tabs/icon_home@3x.png",
+        "selectedIconPath": "static/tabs/icon_home_active@3x.png",
+				"text": "首页"
+			},
+			{
+        "pagePath": "pages/index/index",
+        "iconPath": "static/tabs/icon_category@3x.png",
+        "selectedIconPath": "static/tabs/icon_category_active@3x.png",
+				"text": "分类"
+			},
+			{
+        "pagePath": "pages/index/index",
+        "iconPath": "static/tabs/icon_cart@3x.png",
+        "selectedIconPath": "static/tabs/icon_cart_active@3x.png",
+				"text": "购物车"
+			},
+			{
+        "pagePath": "pages/index/index",
+        "iconPath": "static/tabs/icon_user@3x.png",
+        "selectedIconPath": "static/tabs/icon_user_active@3x.png",
+				"text": "我的"
+			}
+		]
+}
+}
+
+```
+
+> 注意啊，这里我就不去详细的介绍如何再vscode中运用这些东西了，非常的简单，只需要去uniapp的文档就好了，接下来的演示我们都是使vscode进行大部分的编码工作
+>
+
+### 基础的样式布局的设置

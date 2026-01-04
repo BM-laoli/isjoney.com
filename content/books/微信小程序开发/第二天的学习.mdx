@@ -1,0 +1,192 @@
+---
+title: "第二天的学习"
+date: "2024-12-19"
+summary: "介绍微信小程序的上线流程、静态资源管理、字体图标使用、开发工具配置、数据绑定、事件处理、网络请求等核心开发知识点。"
+status: ""
+tech: ["微信小程序","数据绑定","事件处理","网络请求"]
+github: "https://github.com/BM-laoli"
+arxiv: ""
+keyId: "微信小程序开发"
+---
+
+### 小程序的上线流程
+1. 首先你需要点击上传，它就能上传到你的微信服务器了，
+2. 来到你的微信服务器，直接查看就按照步骤  =====> 发测试  ======> 提交审核，=====审核通过发布上线就好了
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595209002991-553dcc3a-7aeb-470d-aee9-011c2174bce1.png)
+
+### 静态资源说明
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595209944086-761a5896-0667-441d-8da8-e84461c215be.png)
+
+### 字体图标的使用注意事项以及要点说明
+> 这里也没有啥需要特殊说明，或则特别说明的，主要就是这里的资源也是一样的道理必须使网络的资源
+>
+> ![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595210761129-1076c807-d316-4ac2-b281-11b9f70de8a3.png)
+>
+
+> ![]()
+>
+
+> ![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595210839354-8d6afb4b-1973-4375-8d4f-96e556ef5049.png)这里url是通过把static丢到gihutb的一个仓库上，然后点击它，让它自动生成的    
+>
+
+### 关于开发工具，实际上微信的开发者功能就已经是够用的
+> 实际上微信开发者工具就是已经是够用的了，没有必要在去给你的vscode再整一个上去，但是如果你非要整夜是没有问题的
+>
+> ![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595211160059-8494127f-500d-49fb-8702-0beae3487998.png)
+>
+
+安装这个插件就好了
+
+### 有关于数据绑定的说明
+> 有关于数据绑定的内容实际上非常的简单，和我们的vue是差不太多的，也就仅仅是语法换了一下，
+>
+
+1. 第一步你需要在你的代码中进行加入我们的数据,(每个页面逻辑的所在地方)
+
+```javascript
+// 每一个必须也页面都必须要调用一个pag函数
+// 传入一个对象配置想，这里由只能的代码提示，非常的给力 
+Page({
+
+  /**
+   * 页面的初始数据
+   */
+  data: {
+    msg:'hellow 哈哈哈哈',
+    num:90,
+    falge:false,
+    list:['1','hehe','312312'],
+    obj:{ name:'hehe',age:18 },
+    students:[
+      { name:'小明',age:18,gender:'男' },
+      { name:'小花',age:6,gender:'女' },
+      { name:'小强',age:18,gender:'男' },
+      { name:'小利',age:17,gender:'女' },
+      { name:'小呵',age:16,gender:'男' },
+    ]
+  },
+
+```
+
+2. 开到我们的wxml直接进行使用就好了
+
+```html
+<!-- 注意啊，这个我们没有一个body 吧这些东西包裹起来，实际上它外面会自动的给你生成一个Body的结构，外面还会由一个大的嵌套view -->
+
+<!-- 简单的上数据渲染 -->
+<view>
+  <text>{{msg}}</text>
+</view>
+<view>{{num}}</view>
+<view>{{list[0]}}</view>
+<view>{{obj.name}}</view>
+<view>{{falge ? "是" :'否'}}</view>
+
+<!-- 接下来，我们就看看小程序中的一系列的指令 -->
+<!-- 遍历操作 ,在小程序中访问数据都得是{{}}格式-->
+<view>  
+<!-- 语法   wx:for="{{list}}" item是写死的 默认是indx-->
+ <text wx:for="{{list}}"  wx:key="*this"> {{item}} --- {{index}}</text> 
+
+<!-- 语法   自定义的  wx:for="{{list}}"  wx:for-item="val" wx:for-index="i" wx:key指定的值:key一样 
+注意啊这里的key是可以允许使用strign的，vue就不行，这里还有个特殊的*this
+-->
+ <text wx:for="{{list}}"  wx:for-item="val" wx:for-index="i" wx:key="*this">  {{val}} --- {{i}}</text> 
+</view>
+
+<!-- 条件判读操作 条件判断也是soeage啦 -->
+
+<view class="items">
+  <text>编号</text>
+  <text>姓名</text>
+  <text>性别</text>
+  <text>年龄</text>
+  <!-- <text>状态</text> -->
+  <text>批准</text>
+</view>
+<view class="items" wx:for="{{students}}" wx:key="*this" >
+  <text>{{index}}</text>
+  <text>{{item.name}}</text>
+  <text>{{item.gender}}</text>
+  <text>{{item.age}}</text>
+  <!-- <text wx:if="{{ item.age <= 14 }}"></text> -->
+  <!-- <text wx:elif="{{ item.age > 18 }}"> 未成年 </text>
+  <text wx:else> 成年 </text> -->
+
+<!-- 这个就相当于 代码块，类似template但是有区别，这个东西不会被渲染到页面上，主要的作用就是为了集中控制逻辑 。这个不会被渲染出了来-->
+  <block wx:if="{{ item.age <= 18 }}">
+    <text>是</text>
+    <text>是</text>
+  </block>
+
+  <block wx:else>
+    <text>否</text>
+    <text>否</text>
+  </block>
+
+
+</view>
+
+
+```
+
+### 关于开发中的代码调试
+> 我们可以使用不同的编译模式来处理不同的编译页面的属性效果
+>
+> ![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595231712084-b67ad7df-195a-4fe3-905f-b3a4a5b78bd9.png)
+>
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595229963863-fa0c298c-949e-4711-8b8a-9f8d511dcf94.png)
+
+### 关于我们的事件还有我们的事件对象
+> 在小程序中的事件实际上和我们之前在html中学习到的 是差不多的  
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595231540184-cdd96aea-6f15-43b0-bd48-02bd29a2df9b.png)
+>
+
+### 如何在小程序中实现数据到视图的更新
+> 以下的方案是小程序实现的方式，我们只需要按照它定义的规则来使用就好了
+>
+> ![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595232223233-ba3f81bb-4753-4500-bcf7-3468937c4da8.png)
+>
+> 除此之外，我们的小程序和我们的vue一样也是有的数据调试工具的
+>
+> ![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595232274139-87478f5a-2bdf-43a1-ab91-a44f6c375e55.png)
+>
+
+### 如何在小程序中发送网络请求
+> 这里需要强调一下，微信小程序不是网页！！！既然不是网页，那就意味着Axios Ajax就凉了。小程序提供了另另一种的方式给我们使用
+>
+> 
+>
+
+```javascript
+  sent(){
+    wx.request({
+      url: 'http://localhost:3045',
+      dataType:'json',
+      method:'GET',
+      success:() => {},  ?//注意啊这里建议使用箭头函数，因为这个能拿到外面的东西
+      fail:()=>{}
+    })
+  },
+```
+
+> 
+>
+> 如果你需要使用本地的服务器，只能这样来做
+>
+
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595234093294-6bceab80-de5f-4a2d-b032-1e6ffdb5b5a4.png)
+
+### 
+### 注意啊小程序中是有事件的冒泡该有捕获的
+![](https://cdn.nlark.com/yuque/0/2020/png/1627571/1595239649512-2e1f586c-e22f-4b23-93bb-f172959767cc.png)
+
+> 如果我子盒子有事件的冒泡，那么我们就把catch直接加在子盒子上就好了就能阻止子盒子的冒泡行为
+>
+
+
+
+
+
