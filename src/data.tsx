@@ -908,6 +908,27 @@ export const DATA = {
             },
           ],
         }
+      },
+      {
+        slug: "Diary", // 固定为 Diary
+        metadata: {
+          title: "Joney's Diary 随笔/日记",
+          summary: "记录生活的点滴瞬间与心路历程，跨越两年的时光印记。从南宁的冬日暖阳到成都的街头巷尾，用文字定格真实的自我与世界。",
+          tags: ["Life", "Journal", "Personal", "Travel"],
+          // 暖色调 (米黄色背景 fdf6e3，深棕色文字 5d4037)
+          image: "https://placehold.co/322x172/fdf6e3/5d4037.png?text=Diary",
+          status: "Dec. 2020 - Apr. 2023",
+          href: "/books/Diary/2020-12-28日于南宁",
+          authors: "Joney",
+          video: "",
+          links: [
+            {
+              type: "Github",
+              href: "https://github.com/BM-laoli",
+              icon: <Icons.github className="size-3" />,
+            },
+          ],
+        }
       }
 
     ],
@@ -1955,6 +1976,48 @@ export const DATA = {
               slug: "English/第四册"
             }
           ]
+        }
+      ],
+      Diary: [
+        {
+          title: "2020-12-28日于南宁",
+          slug: "Diary/2020-12-28日于南宁"
+        },
+        {
+          title: "2020-12-29日于南宁",
+          slug: "Diary/2020-12-29日于南宁"
+        },
+        {
+          title: "2020-12-30日于长沙",
+          slug: "Diary/2020-12-30日于长沙"
+        },
+        {
+          title: "2020-12-31日于长沙",
+          slug: "Diary/2020-12-31日于长沙"
+        },
+        {
+          title: "2021-01-01日于长沙",
+          slug: "Diary/2021-01-01日于长沙"
+        },
+        {
+          title: "2021-01-02日于长沙",
+          slug: "Diary/2021-01-02日于长沙"
+        },
+        {
+          title: "2021-01-03日于长沙",
+          slug: "Diary/2021-01-03日于长沙"
+        },
+        {
+          title: "2022-09-10日于成都",
+          slug: "Diary/2022-09-10日于成都"
+        },
+        {
+          title: "2023-04-14日于成都",
+          slug: "Diary/2023-04-14日于成都"
+        },
+        {
+          title: "2025-12-12日于广州",
+          slug: "Diary/2025-12-12日于广州"
         }
       ]
       //更多
