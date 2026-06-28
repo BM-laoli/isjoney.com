@@ -1,7 +1,6 @@
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
-import { Inter as FontSans } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 
 import {
@@ -13,13 +12,7 @@ import Footer from "@/components/blocks/Footer";
 import Navbar from "@/components/blocks/Navbar/Navbar";
 import { TooltipProvider } from "@/components/ui/Tooltip";
 import { DATA } from "@/data";
-import { cn, jsonldScript } from "@/lib/utils";
-
-/* Fonts */
-const fontSans = FontSans({
-  subsets: ["latin"],
-  variable: "--font-sans",
-});
+import { jsonldScript } from "@/lib/utils";
 
 /* Metadata */
 export const metadata: Metadata = {
@@ -42,7 +35,7 @@ export const metadata: Metadata = {
     },
   },
   // Also: manifest.ts
-  manifest: "/manifest.json",
+  manifest: "/manifest",
   // Also: opengraph-image.png, opengraph-image.alt.txt
   openGraph: {
     title: `${DATA.chinese.name}`,
@@ -75,7 +68,7 @@ export default function ChineseLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh" suppressHydrationWarning>
+    <>
       <head>
         {/* Google Tag Manager */}
         {/* Baidu Site Verification */}
@@ -85,28 +78,22 @@ export default function ChineseLayout({
         {jsonldScript(generateBreadcrumbListJsonLd())}
         {jsonldScript(generatePersonJsonLd())}
       </head>
-      <body
-        className={cn(
-          "bg-background min-h-screen font-sans antialiased",
-          fontSans.variable,
-        )}
-      >
-        {/* Google Tag Manager (noscript) */}
-        {/* End Google Tag Manager (noscript) */}
 
-        {/* Main Layout */}
-        <ThemeProvider attribute="class" defaultTheme="system">
-          <TooltipProvider delayDuration={0}>
-            <Navbar />
-            {children}
-            <Footer />
-          </TooltipProvider>
-        </ThemeProvider>
+      {/* Google Tag Manager (noscript) */}
+      {/* End Google Tag Manager (noscript) */}
 
-        {/* Vercel Analytics and Speed Insights */}
-        <Analytics />
-        <SpeedInsights />
-      </body>
-    </html>
+      {/* Main Layout */}
+      <ThemeProvider attribute="class" defaultTheme="system">
+        <TooltipProvider delayDuration={0}>
+          <Navbar />
+          {children}
+          <Footer />
+        </TooltipProvider>
+      </ThemeProvider>
+
+      {/* Vercel Analytics and Speed Insights */}
+      <Analytics />
+      <SpeedInsights />
+    </>
   );
 }

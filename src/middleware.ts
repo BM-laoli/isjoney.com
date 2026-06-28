@@ -142,6 +142,6 @@ export const config = {
      * - 静态文件（图片、字体等）
      * - sitemap、robots 等 SEO 文件
      */
-    "/((?!api|_next/static|_next/image|favicon\\.ico|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|pdf|xml|txt|woff|woff2|ttf|eot)).*)",
+    "/((?!api|_next/static|_next/image|manifest|favicon\\.ico|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|pdf|xml|txt|json|webmanifest|woff|woff2|ttf|eot)).*)",
   ],
 };
