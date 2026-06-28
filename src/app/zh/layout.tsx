@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     },
   },
   // Also: manifest.ts
-  manifest: "/manifest",
+  manifest: "/manifest.webmanifest",
   // Also: opengraph-image.png, opengraph-image.alt.txt
   openGraph: {
     title: `${DATA.chinese.name}`,

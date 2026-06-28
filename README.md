@@ -103,5 +103,51 @@ Selected Projects 要做两个一个是 自己的项目 一个是参与的项目
 
 ## 20260628 TODO:
 
-1.检查页面 页面中有些内容有问题 先扫扫描一下 我也不确定...
+1.检查页面 页面中有些内容有问题 先扫扫描一下 我也不确定... 
+✅
+
 2.SEO 有严重问题 但是我没看出来 从google 那边看 权重很低 根本搜不到
+✅
+
+3.首页-footer
+Resources，Discover，Contact 都存在问题
+✅
+
+4.首页-content
+
+
+Check out my latest work 还不是自己的
+✅
+
+Latest News 还不是自己的
+
+
+EN切换有问题，我们优先使用EN为主 zh-ch次要
+✅
+
+5.首页home的tab按钮有问题 download CSV 有问题 Projects 图标有问题
+✅
+
+6.404 默认展示一个前往 en首页按钮
+✅
+
+7.SRR 订阅有问题
+✅
+
+8.一些 Discover
+迷失岛
+ {
+      name: "Godot_CottonPuzzle",
+      url: "https://github.com/BM-laoli/Godot_CottonPuzzle",
+    },
+图片是 J:\Origin\isjoney.com\public\proj-misidao.png
+
+Nestjs系统性教程
+https://juejin.cn/column/7179578893353877565
+图片是 J:\Origin\isjoney.com\public\proj-nest-js.png
+
+夸端AppRN设计
+https://juejin.cn/column/7343606012581904410
+图片是 J:\Origin\isjoney.com\public\proj-cross-app.png
+
+✅

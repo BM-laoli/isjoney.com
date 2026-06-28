@@ -10,24 +10,24 @@ export function LanguageToggle() {
   const router = useRouter();
   const isChinese = pathname.startsWith("/zh");
 
-const handleLanguageToggle = (e: React.MouseEvent) => {
-  e.preventDefault();
-  
-  if (isChinese) {
-    // 切换到英文：删除 cookie，走默认语言
-    document.cookie = `${LOCALE_COOKIE}=; path=/; max-age=0`;
-    const targetUrl = pathname.replace("/zh", "") || "/";
-    router.push(targetUrl);
-  } else {
-    // 切换到中文：设置 cookie
-    document.cookie = `${LOCALE_COOKIE}=zh; path=/; max-age=31536000; samesite=lax`;
-    router.push("/zh" + pathname);
-  }
-};
+  const handleLanguageToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+
+    if (isChinese) {
+      // 切换到英文：设置 cookie 为 en，覆盖浏览器语言自动检测
+      document.cookie = `${LOCALE_COOKIE}=en; path=/; max-age=31536000; samesite=lax`;
+      const targetUrl = pathname.replace("/zh", "") || "/";
+      router.push(targetUrl);
+    } else {
+      // 切换到中文：设置 cookie，始终跳转到中文首页
+      document.cookie = `${LOCALE_COOKIE}=zh; path=/; max-age=31536000; samesite=lax`;
+      router.push("/zh");
+    }
+  };
 
   return (
     <Button
-      variant="ghost" 
+      variant="ghost"
       type="button"
       size="icon"
       className="px-2"

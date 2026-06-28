@@ -9,9 +9,10 @@ export const DATA = {
   avatarUrl: "/mex.jpg",
   navbar: [ // @TODO: 需要换
     { href: "/", icon: Icons.home, label: "Home" },
-    { href: "/projects", icon: Icons.fileuser, label: "Projects" }, // Personal Produces
+    { href: "/projects", icon: Icons.briefcase, label: "Projects" }, // Personal Produces
     { href: "/books", icon: Icons.notebook, label: "Books" }, // blog 需要改成外联
-    { href: "/resume.pdf", icon: Icons.fileuser, label: "CV" },
+    // 暂时不开放 — CV 下载暂时不开放
+    // { href: "/resume.pdf", icon: Icons.paper, label: "CV" },
   ],
   // Blog info
   blogDescription: // @TODO:需要换
@@ -48,8 +49,8 @@ export const DATA = {
   surname: "Li",
   firstName: "Joney",
   initials: "J.S",
-  location: "Singapore/China-Chendu",
-  locationLink: "https://www.google.com/maps/place/Chendu",
+  location: "Chengdu, China",
+  locationLink: "https://www.google.com/maps/place/Chengdu",
   // Chinese general data
   chinese: {
     name: "李仕增",
@@ -179,389 +180,71 @@ export const DATA = {
   // News only From Project/Blog 需要自己整理 @TODO: 目前Joney 在Game方向和前端方向都有很多文章 自己找AI设置和整理一下就好了，直接链接到掘金去
   news: [
     {
-      date: "2025.8",
-      title: "[VideoOcean Agent](https://video-ocean.com/en/agent) Online",
+      date: "2026.06.29",
+      title: "🏫 K-12 Master Teacher Classroom Analysis",
       content:
-        "🌊 VideoOcean Agent is now online! Generate videos up to minutes with a few clicks.",
+        "🤖 I designed an AI tool that scanned a large number of master teacher courses and automatically generated precise summaries and outlines, accurately organizing the teaching plan content. [Try it →](https://kjcodegen.iamjoney.com/) #AI #EdTech #Education",
     },
-    {
-      date: "2025.5",
-      title: "Ph.D. Graduated",
-      content:
-        "🎓 Graduated from [HPC-AI @ NUS](https://ai.comp.nus.edu.sg/). Thanks to my supervisor and friends' help!",
-    },
-    // {
-    //   date: "2025.3",
-    //   title:
-    //     "[Open-Sora 2.0](https://arxiv.org/abs/2503.09642) [![GitHub Repo stars](https://img.shields.io/github/stars/hpcaitech/Open-Sora?style=social)](https://github.com/hpcaitech/Open-Sora) Released!",
-    //   content:
-    //     "🚀 Despite constrained computational resources, it achieves Sora-level metrics, fulfilling our goal of providing an open-source implementation of Sora.",
-    // },
-    // {
-    //   date: "2024.9",
-    //   title:
-    //     "Paper Accepted ([MSIER](https://arxiv.org/abs/2404.12866), EMNLP 2024)",
-    //   content:
-    //     "📘 Got one paper accepted to EMNLP 2024. Congratulations to [Yang Luo](https://yangluo7.github.io/)!",
-    // },
-    // {
-    //   date: "2024.9",
-    //   title: "[VideoOcean](https://video-ocean.com/en/app) Online",
-    //   content:
-    //     "🌊 VideoOcean is now online! Generate your own video with a few clicks.",
-    // },
-    // {
-    //   date: "2024.6",
-    //   title:
-    //     "Paper Accepted ([Dataset Growth](https://arxiv.org/pdf/2405.18347), ECCV 2024)",
-    //   content:
-    //     "📘 Got one paper accepted to ECCV 2024. Congratulations to [Ziheng Qin](https://scholar.google.com/citations?user=I04VhPMAAAAJ)!",
-    // },
-    // {
-    //   date: "2024.6",
-    //   title: "[Open-Sora 1.2](https://github.com/hpcaitech/Open-Sora) Released",
-    //   content: "🚀 A 1.1B model on >30M data with improved performance.",
-    // },
-    // {
-    //   date: "2024.5",
-    //   title:
-    //     "Paper Accepted ([Token Crisis](https://arxiv.org/pdf/2305.13230), ICML 2024)",
-    //   content:
-    //     "📘 Got one paper accepted to ICML 2024. Congratulations to [Fuzhao Xue](https://xuefuzhao.github.io/)!",
-    // },
-    // {
-    //   date: "2024.4",
-    //   title: "[Open-Sora 1.1](https://github.com/hpcaitech/Open-Sora) Released",
-    //   content:
-    //     "🚀 Support 0s~15s, 144p to 720p, various aspect ratios videos generation, plus a data processing pipeline.",
-    // },
-    // {
-    //   date: "2024.4",
-    //   title:
-    //     "Paper Accepted ([Helen optimizer](https://arxiv.org/pdf/2403.00798), WWW 2024)",
-    //   content:
-    //     "📘 Got one paper accepted to WWW 2024. Congratulations to [Zirui Zhu](https://scholar.google.com/citations?user=eCAzecoAAAAJ&hl)!",
-    // },
-    // {
-    //   date: "2024.3",
-    //   title: "[Open-Sora 1.0](https://github.com/hpcaitech/Open-Sora) Released",
-    //   content: "🎥 The first open-source Sora-like video generation model.",
-    // },
-    // {
-    //   date: "2024.1",
-    //   title:
-    //     "Paper Accepted ([InfoBatch](https://arxiv.org/pdf/2303.04947), ICLR 2024 Oral)",
-    //   content:
-    //     "🎉 Got one paper accepted to ICLR 2024 (oral). Congratulations to [Ziheng Qin](https://scholar.google.com/citations?user=I04VhPMAAAAJ) and [Kai Wang](https://kaiwang960112.github.io/)!",
-    // },
-    // {
-    //   date: "2023.9",
-    //   title:
-    //     "Papers Accepted (first-authored [Sequence-Scheduling](https://arxiv.org/pdf/2305.13144), NeurIPS 2023)",
-    //   content:
-    //     "🔥 Got two papers accepted to NeurIPS 2023. Cong to [Fuzhao Xue](https://xuefuzhao.github.io/) and myself. So many thanks to my collaborators!",
-    // },
-    // {
-    //   date: "2023.7",
-    //   title:
-    //     "Paper Accepted (first-authored  [ZSCL](https://arxiv.org/pdf/2303.06628), ICCV 2023)",
-    //   content:
-    //     "📄 Got one first-authored paper accepted to ICCV 2023. Thanks to all my collaborators!",
-    // },
-    // {
-    //   date: "2023.7",
-    //   title:
-    //     "Award ([CAME optimizer](https://arxiv.org/abs/2307.02047), [ACL Outstanding Paper](https://2023.aclweb.org/program/best_papers/))",
-    //   content: "🏅 The CAME paper won the ACL Outstanding Paper Award!",
-    // },
-    // {
-    //   date: "2023.5",
-    //   title:
-    //     "Paper Accepted ([CAME optimizer](https://arxiv.org/abs/2307.02047), ACL 2023)",
-    //   content:
-    //     "📘 Got one paper accepted to ACL 2023. Congratulations to [Yang Luo](https://yangluo7.github.io/)!",
-    // },
-    // {
-    //   date: "2023.4",
-    //   title:
-    //     "Paper Accepted ([Bamboo](https://proceedings.mlr.press/v202/xue23b.html), ICML 2023)",
-    //   content:
-    //     "📘 Got one paper accepted to ICML 2023. Congratulations to [Fuzhao Xue](https://xuefuzhao.github.io/)!",
-    // },
-    // {
-    //   date: "2023.3",
-    //   title:
-    //     "[ColossalChat](https://github.com/hpcaitech/ColossalAI/tree/main/applications/Chat) [![GitHub Repo Stars](https://img.shields.io/github/stars/hpcaitech/ColossalAI?style=social)](https://github.com/hpcaitech/ColossalAI/tree/main/applications/ColossalChat) Released",
-    //   content:
-    //     "🤖 Open-sourced LLM training framework for you to train your own version of ChatGPT. Congratulations to colleagues at HPC-AI-Tech!",
-    // },
-    // {
-    //   date: "2023.2",
-    //   title:
-    //     "Award ([CowClip optimizer](https://arxiv.org/abs/2204.06240), [AAAI Distinguished Paper](https://aaai-23.aaai.org/wp-content/uploads/2023/02/AAAI-23-Paper-Awards-1.pdf))",
-    //   content: "🥇 The CowClip paper won the AAAI Distinguished Paper Award!",
-    // },
-    // {
-    //   date: "2022.12",
-    //   title: "Ph.D. Qualifying Exam Passed",
-    //   content:
-    //     "🎓 Passed the qualifying exam. Cong to myself :) and thanks for my supervisor and friends’ help!",
-    // },
-    // {
-    //   date: "2022.11",
-    //   title:
-    //     "Paper Accepted (first-authored [CowClip optimizer](https://arxiv.org/abs/2204.06240), AAAI 2023)",
-    //   content:
-    //     "📑 Got one first-authored paper accepted to AAAI 2023. Thanks to all my collaborators!",
-    // },
-    // {
-    //   date: "2021.8",
-    //   title:
-    //     "[NJU-CSE-Flyers Handbook](https://nju-cse-flyers.github.io/) Published",
-    //   content: "📘 The NJU-CSE-Flyers Handbook 2021 has been published.",
-    // },
-    // {
-    //   date: "2021.7",
-    //   title: "Internship at ByteDance",
-    //   content: "💼 Happy to start my internship in ByteDance.",
-    // },
-    // {
-    //   date: "2021.6",
-    //   title: "Graduated from [Nanjing University](https://www.nju.edu.cn/)",
-    //   content:
-    //     "🎓 Bacheror's degree from Nanjing University. Thanks and good luck to all my teachers and classmates.",
-    // },
-    // {
-    //   date: "2021.3",
-    //   title: "Joined [HPC-AI @ NUS](https://ai.comp.nus.edu.sg/) Ph.D. Program",
-    //   content:
-    //     "📚 I will join HPC-AI @ NUS to start my Ph.D. degree under the supervision of Presidential Young Prof. [Yang You](https://www.comp.nus.edu.sg/~youy/)!",
-    // },
-    // {
-    //   date: "2021.2",
-    //   title:
-    //     "Paper Accepted (co-first-authored [PCS-FUDA](https://arxiv.org/pdf/2103.16765), CVPR 2021)",
-    //   content:
-    //     "📑 Got one co-first-authored paper accepted to CVPR 2021. Thanks to all my collaborators!",
-    // },
   ],
-  // Projects 这里是所有作品 我们可以 link 到不同的页面去和子 域名上去 #TODO:
+  // Projects 个人项目作品展示
   projects: [
     {
-      title: "Open-Sora",
-      href: "https://github.com/hpcaitech/Open-Sora",
-      dates: "Mar. 2024 - Mar. 2025",
+      title: "Lost Island",
+      href: "https://github.com/BM-laoli/Godot_CottonPuzzle",
+      dates: "",
       active: true,
       description:
-        "The world’s first open-source Sora-like video generation model — bringing efficient, high-quality video production to everyone.",
+        "A puzzle adventure game built with Godot Engine — explore a mysterious lost island and unravel its secrets.",
       technologies: [],
       authors: "",
       links: [
         {
-          type: "Github",
-          href: "https://github.com/hpcaitech/Open-Sora",
+          type: "GitHub",
+          href: "https://github.com/BM-laoli/Godot_CottonPuzzle",
           icon: <Icons.github className="size-3" />,
         },
-        {
-          type: "Open-Sora 1.2",
-          href: "https://arxiv.org/abs/2412.20404",
-          icon: <Icons.paper className="size-3" />,
-        },
-        {
-          type: "Open-Sora 2.0",
-          href: "https://arxiv.org/abs/2503.09642",
-          icon: <Icons.paper className="size-3" />,
-        },
       ],
-      image: "/proj-open-sora.png",
+      image: "/proj-misidao.png",
       video: "",
     },
     {
-      title: "VideoOcean Video Agent",
-      href: "https://video-ocean.com/en/agent",
-      dates: "Jun. 2025 - Present",
+      title: "NestJS Tutorial Series",
+      href: "https://juejin.cn/column/7179578893353877565",
+      dates: "",
       active: true,
       description:
-        "VideoOcean Video Agent generates videos up to minutes with a few clicks, including voice and face.",
+        "A comprehensive NestJS backend development tutorial series — from beginner to advanced, covering real-world projects and best practices.",
       technologies: [],
       authors: "",
       links: [
         {
-          type: "Website",
-          href: "https://video-ocean.com/en/agent",
+          type: "Juejin",
+          href: "https://juejin.cn/column/7179578893353877565",
           icon: <Icons.globe className="size-3" />,
         },
       ],
-      image: "",
-      video: "https://files.zangwei.dev/proj-video-agent.mp4",
+      image: "/proj-nest-js.png",
+      video: "",
     },
-    // {
-    //   title: "VideoOcean",
-    //   href: "https://video-ocean.com/app",
-    //   dates: "April 2025 - Present",
-    //   active: true,
-    //   description:
-    //     "VideoOcean is a video generation platform that allows you to generate videos, images and audios with state-of-the-art models.",
-    //   technologies: [],
-    //   authors: "",
-    //   links: [
-    //     {
-    //       type: "Website",
-    //       href: "https://video-ocean.com/app",
-    //       icon: <Icons.globe className="size-3" />,
-    //     },
-    //   ],
-    //   image: "/proj-video-ocean.png",
-    //   video: "",
-    // },
-    // {
-    //   title: "ColossalChat",
-    //   href: "https://github.com/hpcaitech/ColossalAI/tree/main/applications/ColossalChat",
-    //   dates: "Mar. 2023",
-    //   active: true,
-    //   description:
-    //     "ColossalChat is a project to implement LLM with RLHF, powered by the Colossal-AI.",
-    //   technologies: [],
-    //   authors: "",
-    //   links: [
-    //     {
-    //       type: "Github",
-    //       href: "https://github.com/hpcaitech/ColossalAI/tree/main/applications/ColossalChat",
-    //       icon: <Icons.github className="size-3" />,
-    //     },
-    //     {
-    //       type: "Blog",
-    //       href: "https://medium.com/pytorch/colossalchat-an-open-source-solution-for-cloning-chatgpt-with-a-complete-rlhf-pipeline-5edf08fb538b",
-    //       icon: <Icons.newspaper className="size-3" />,
-    //     },
-    //   ],
-    //   image: "/proj-colossalchat.png",
-    //   video: "",
-    // },
-    // {
-    //   title: "Instruction in the Wild",
-    //   href: "https://github.com/XueFuzhao/InstructionWild",
-    //   dates: "Apr. 2024",
-    //   active: true,
-    //   description:
-    //     "This project focuses on building a larger and more diverse instruction dataset by collecting 110K instructions from shared ChatGPT usage.",
-    //   technologies: [],
-    //   authors: "",
-    //   links: [
-    //     {
-    //       type: "Github",
-    //       href: "https://github.com/XueFuzhao/InstructionWild",
-    //       icon: <Icons.github className="size-3" />,
-    //     },
-    //   ],
-    //   image: "/proj-inst-wild.png",
-    //   video: "",
-    // },
-    // {
-    //   title: "Sequence Schedule",
-    //   href: "https://arxiv.org/abs/2305.13144",
-    //   dates: "NeurIPS 2023",
-    //   active: true,
-    //   description:
-    //     "Discovered that LLMs can foresee their response length — leading to Sequence Scheduling, an efficient LLM batch inference technique.",
-    //   technologies: [],
-    //   authors:
-    //     "**Authors:** **Zangwei Zheng**, Xiaozhe Ren, Fuzhao Xue, Yang Luo, Xin Jiang, Yang You",
-    //   links: [
-    //     {
-    //       type: "Paper",
-    //       href: "https://arxiv.org/abs/2305.13144",
-    //       icon: <Icons.paper className="size-3" />,
-    //     },
-    //     {
-    //       type: "Github",
-    //       href: "https://github.com/zhengzangw/Sequence-Scheduling",
-    //       icon: <Icons.github className="size-3" />,
-    //     },
-    //   ],
-    //   image: "/proj-sequence-schedule.png",
-    //   video: "",
-    // },
-    // {
-    //   title: "Zero-Shot Continual Learning",
-    //   href: "https://arxiv.org/abs/2303.06628",
-    //   dates: "ICCV 2023",
-    //   active: true,
-    //   description:
-    //     "A new benchmark and method to mitigate forgetting problem existed in the continual learning of large pretrained vision-language models.",
-    //   technologies: [],
-    //   authors:
-    //     "**Authors:** **Zangwei Zheng**, Mingyuan Ma, Kai Wang, Ziheng Qin, Xiangyu Yue, Yang You",
-    //   links: [
-    //     {
-    //       type: "Paper",
-    //       href: "https://arxiv.org/abs/2303.06628",
-    //       icon: <Icons.paper className="size-3" />,
-    //     },
-    //     {
-    //       type: "Github",
-    //       href: "https://github.com/Thunderbeee/ZSCL",
-    //       icon: <Icons.github className="size-3" />,
-    //     },
-    //   ],
-    //   image: "/proj-zscl.png",
-    //   video: "",
-    // },
-    // {
-    //   title: "CowClip Optimizer",
-    //   href: "https://arxiv.org/abs/2204.06240",
-    //   dates: "AAAI 2023",
-    //   active: true,
-    //   description:
-    //     "An optimizer that can train CTR prediction models with large batch (~128k)",
-    //   technologies: [],
-    //   authors:
-    //     "**Authors:** **Zangwei Zheng**, Pengtai Xu, Xuan Zou, Da Tang, Zhen Li, Chenguang Xi, Peng Wu, Leqi Zou, Yijie Zhu, Ming Chen, Xiangzhuo Ding, Fuzhao Xue, Ziheng Qin, Youlong Cheng, Yang You",
-    //   links: [
-    //     {
-    //       type: "Paper",
-    //       href: "https://arxiv.org/abs/2204.06240",
-    //       icon: <Icons.paper className="size-3" />,
-    //     },
-    //     {
-    //       type: "Github",
-    //       href: "https://github.com/bytedance/LargeBatchCTR",
-    //       icon: <Icons.github className="size-3" />,
-    //     },
-    //   ],
-    //   image: "/proj-cowclip.png",
-    //   video: "",
-    // },
-    // {
-    //   title: "PCS Learning",
-    //   href: "https://arxiv.org/abs/2103.16765",
-    //   dates: "CVPR 2021",
-    //   active: true,
-    //   description:
-    //     "An end-to-end Prototypical Cross-domain Self-Supervised Learning (PCS) framework for Few-shot Unsupervised Domain Adaptation (FUDA).",
-    //   technologies: [],
-    //   authors:
-    //     "**Authors:** Xiangyu Yue, **Zangwei Zheng** (co-first-author), Shanghang Zhang, Yang Gao, Trevor Darrell, Kurt Keutzer, Alberto Sangiovanni Vincentelli",
-    //   links: [
-    //     {
-    //       type: "Paper",
-    //       href: "https://arxiv.org/abs/2103.16765",
-    //       icon: <Icons.paper className="size-3" />,
-    //     },
-    //     {
-    //       type: "Blog",
-    //       href: "https://xyue.io/pcs-fuda/index.html",
-    //       icon: <Icons.newspaper className="size-3" />,
-    //     },
-    //     {
-    //       type: "Github",
-    //       href: "https://github.com/zhengzangw/PCS-FUDA",
-    //       icon: <Icons.github className="size-3" />,
-    //     },
-    //   ],
-    //   image: "/proj-pcs-fuda.png",
-    //   video: "",
-    // },
+    {
+      title: "Cross-Platform App with RN",
+      href: "https://juejin.cn/column/7343606012581904410",
+      dates: "",
+      active: true,
+      description:
+        "Cross-platform mobile app design and practice — building high-performance, cross-platform mobile applications with React Native.",
+      technologies: [],
+      authors: "",
+      links: [
+        {
+          type: "Juejin",
+          href: "https://juejin.cn/column/7343606012581904410",
+          icon: <Icons.globe className="size-3" />,
+        },
+      ],
+      image: "/proj-cross-app.png",
+      video: "",
+    },
   ],
   // Skills
   skills: [
@@ -664,20 +347,16 @@ export const DATA = {
   // @TODO: 这里放的几个你自己 比较知名的项目 ，挑出 4 个
   discover: [
     {
-      name: "HPC-AI Lab",
-      url: "https://ai.comp.nus.edu.sg/",
+      name: "Lost Island",
+      url: "https://github.com/BM-laoli/Godot_CottonPuzzle",
     },
     {
-      name: "NJU-CSE-Flyers",
-      url: "https://nju-cse-flyers.github.io/",
+      name: "NestJS Tutorial Series",
+      url: "https://juejin.cn/column/7179578893353877565",
     },
     {
-      name: "Open-Sora",
-      url: "https://github.com/hpcaitech/Open-Sora",
-    },
-    {
-      name: "Video Ocean",
-      url: "https://video-ocean.com/en/app",
+      name: "Cross-Platform App with RN",
+      url: "https://juejin.cn/column/7343606012581904410",
     },
   ],
   // Fun facts rehype-pretty-code shiki

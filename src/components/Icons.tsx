@@ -1,6 +1,7 @@
 import {
   ArrowRightIcon,
   BookIcon,
+  BriefcaseBusinessIcon,
   ChevronRightIcon,
   FileTextIcon,
   FileUserIcon,
@@ -20,6 +21,7 @@ export type IconProps = React.HTMLAttributes<SVGElement>;
 
 export const Icons = {
   book: (props: IconProps) => <BookIcon {...props} />,
+  briefcase: (props: IconProps) => <BriefcaseBusinessIcon {...props} />,
   chevronright: (props: IconProps) => <ChevronRightIcon {...props} />,
   email: (props: IconProps) => <MailIcon {...props} />,
   fileuser: (props: IconProps) => <FileUserIcon {...props} />,

@@ -16,11 +16,11 @@ export async function GET() {
 
   const atomFeed = `<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  <title>${DATA.name} - Blog</title>
+  <title>${DATA.name} - Projects</title>
   <subtitle>${DATA.description}</subtitle>
-  <link href="${DATA.url}/blog" rel="self"/>
+  <link href="${DATA.url}/projects" rel="self"/>
   <link href="${DATA.url}"/>
-  <id>${DATA.url}/blog</id>
+  <id>${DATA.url}/projects</id>
   <author>
     <name>${DATA.name}</name>
     <email>${getEmail()}</email>
@@ -28,7 +28,7 @@ export async function GET() {
   <updated>${new Date().toISOString()}</updated>
   ${sortedPosts
     .map((post) => {
-      const postUrl = `${DATA.url}/blog/${post.slug}`;
+      const postUrl = `${DATA.url}/projects/${post.slug}`;
       const publishedDate = new Date(post.metadata.date).toISOString();
       const updatedDate = new Date(post.metadata.date).toISOString();
 

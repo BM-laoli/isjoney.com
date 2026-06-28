@@ -48,7 +48,7 @@ export default function ChinesePage() {
           <div className="text-center">
             <p className="text-muted-foreground mb-4">更多信息请查看英文页面</p>
             <Link
-              href="/"
+              href="/en"
               className="inline-flex items-center gap-2 text-blue-500 underline transition-colors hover:text-blue-600 hover:no-underline"
             >
               查看完整英文页面

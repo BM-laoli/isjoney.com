@@ -60,26 +60,28 @@ export function middleware(request: NextRequest) {
   const pathLocale = getLocaleFromPath(pathname);
   if (pathLocale) {
     if (pathLocale === "zh" && !zhAvailablePages.has(pathname)) {
-      // 中文页面不存在，重定向到提示页
-      const targetPath = pathname.replace(/^\/zh/, "") || "/";
-      return NextResponse.redirect(
-        new URL(`/zh/not-available?redirect=${encodeURIComponent(targetPath)}`, request.url)
-      );
-      
-      // 或者直接重定向到中文首页（更简单）：
-      // return NextResponse.redirect(new URL("/zh", request.url));
+      // 中文页面不存在，直接重定向到中文首页
+      return NextResponse.redirect(new URL("/zh", request.url));
     }
 
-    const response = NextResponse.next();
-
-    // 如果用户主动访问 /zh/...，记住这个偏好
-    if (pathLocale !== i18n.defaultLocale) {
-      response.cookies.set(LOCALE_COOKIE, pathLocale, {
+    // 如果用户显式访问 /en，记住 EN 偏好
+    if (pathLocale === i18n.defaultLocale) {
+      const response = NextResponse.next();
+      response.cookies.set(LOCALE_COOKIE, i18n.defaultLocale, {
         maxAge: 60 * 60 * 24 * 365,
         path: "/",
         sameSite: "lax",
       });
+      return response;
     }
+
+    // 用户访问 /zh/...，记住 ZH 偏好
+    const response = NextResponse.next();
+    response.cookies.set(LOCALE_COOKIE, pathLocale, {
+      maxAge: 60 * 60 * 24 * 365,
+      path: "/",
+      sameSite: "lax",
+    });
 
     return response;
   }
@@ -89,29 +91,8 @@ export function middleware(request: NextRequest) {
     | Locale
     | undefined;
 
-  // 首次访问：检测浏览器语言
-  if (!cookieLocale) {
-    const preferredLocale = getPreferredLocale(request);
-
-    if (preferredLocale !== i18n.defaultLocale) {
-      const targetZhPath = `/${preferredLocale}${pathname}`;
-      if (preferredLocale === "zh" && !zhAvailablePages.has(targetZhPath)) {
-        // 目标中文页面不存在，走默认语言，不重定向
-        return NextResponse.rewrite(
-          new URL(`/${i18n.defaultLocale}${pathname}`, request.url)
-        );
-      }
-
-      const url = new URL(targetZhPath, request.url);
-      const response = NextResponse.redirect(url);
-      response.cookies.set(LOCALE_COOKIE, preferredLocale, {
-        maxAge: 60 * 60 * 24 * 365,
-        path: "/",
-        sameSite: "lax",
-      });
-      return response;
-    }
-  }
+  // 首次访问：始终默认 EN（英文为主），不根据浏览器语言自动跳转
+  // 用户可通过页面上的语言切换按钮手动选择中文
 
   // 3. 用户之前选择了非默认语言 → 重定向
   if (cookieLocale && cookieLocale !== i18n.defaultLocale) {

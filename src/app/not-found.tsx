@@ -15,13 +15,13 @@ export default function NotFound() {
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button asChild>
-            <Link href="/">
-              Go Home
+            <Link href="/en">
+              Go to EN Home
             </Link>
           </Button>
           <Button variant="outline" asChild>
-            <Link href="/blog">
-              View Blog
+            <Link href="/zh">
+              前往中文首页
             </Link>
           </Button>
         </div>

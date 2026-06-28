@@ -33,7 +33,8 @@ export default function Footer() {
       },
       // 之类需要补充 @TODO:
       resources: {
-        blog: "Blog",
+        books: "Books",
+        github: "GitHub",
         downloadCV: "Download CV",
       },
       contact: {
@@ -67,7 +68,8 @@ export default function Footer() {
         contact: "联系",
       },
       resources: {
-        blog: "博客",
+        books: "书籍",
+        github: "GitHub",
         downloadCV: "下载简历",
       },
       contact: {
@@ -150,11 +152,21 @@ export default function Footer() {
             </h3>
             <nav className="space-y-2">
               <Link
-                href={isChinese ? "/zh/blog" : "/blog"}
+                href={isChinese ? "/zh/books" : "/books"}
                 className="text-muted-foreground hover:text-foreground block text-sm transition-colors"
               >
-                {t.resources.blog}
+                {t.resources.books}
               </Link>
+              <Link
+                href="https://github.com/BM-laoli"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground block text-sm transition-colors"
+              >
+                {t.resources.github}
+              </Link>
+              {/* 暂时不开放 — CV 下载暂时不开放 */}
+              {/*
               <Link
                 href="/resume.pdf"
                 target="_blank"
@@ -164,6 +176,7 @@ export default function Footer() {
               >
                 {t.resources.downloadCV}
               </Link>
+              */}
             </nav>
           </div>
 
