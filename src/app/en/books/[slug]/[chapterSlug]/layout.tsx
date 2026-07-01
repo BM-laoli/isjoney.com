@@ -3,13 +3,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { generateProjectJsonLd } from "@/app/jsonld";
-import { DATA } from "@/data";
-import { jsonldScript } from "@/lib/utils";
-import {  getBooksContent, getContent } from "@/lib/content";
-import { TableOfContents } from "@/components/mdx/TableOfContents";
-import { MobileTOC } from "@/components/Books/MobileTOC";
 import { BookDirectoryTree } from "@/components/Books/BookDirectory";
+import { MobileTOC } from "@/components/Books/MobileTOC";
+import { TableOfContents } from "@/components/mdx/TableOfContents";
+import { DATA } from "@/data";
+import { getBooksContent, getContent } from "@/lib/content";
 
 export async function generateMetadata(props: {
   params: Promise<{
@@ -55,15 +53,19 @@ export default async function BooksLayout(props: {
   }>;
 }) {
   const params = await props.params;
-  
-  // 1. 调用函数获取 MDX 解析后的数据  
-  const bookPage = await getBooksContent(params.slug, params.chapterSlug);  
-  // 2. 从 metadata 中提取 keyId，用于关联全局配置  
-  const { keyId } = bookPage?.metadata || {};
-  // 3.获取books目录数据
-  // @ts-ignore
-  const directoryTree = DATA.books.booksContent[keyId];
-  if(!bookPage){
+
+  // 1. 调用函数获取 MDX 解析后的数据
+  const bookPage = await getBooksContent(params.slug, params.chapterSlug);
+  if (!bookPage) {
+    notFound();
+  }
+
+  // 2. 从 metadata 中提取 keyId，用于关联全局配置
+  const { keyId } = bookPage.metadata;
+  // 3. 获取 books 目录数据
+  const booksContent = DATA.books.booksContent as unknown as Record<string, readonly unknown[]>;
+  const directoryTree = keyId ? booksContent[keyId] : undefined;
+  if (!directoryTree || !Array.isArray(directoryTree)) {
     notFound();
   }
 

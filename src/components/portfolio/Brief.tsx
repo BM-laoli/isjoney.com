@@ -19,7 +19,6 @@ export default function Brief({
   avatarUrl: string;
   className?: string;
 }) {
-  console.log("avatarUrl:", avatarUrl);
   return (
     <div
       className={`flex flex-col-reverse items-center justify-center gap-6 sm:flex-row sm:justify-between md:gap-8 lg:gap-10 ${className || ""}`}

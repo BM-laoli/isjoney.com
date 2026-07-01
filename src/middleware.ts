@@ -87,9 +87,10 @@ export function middleware(request: NextRequest) {
   }
 
   // 2. 路径无 locale 前缀 → 检查用户偏好
-  const cookieLocale = request.cookies.get(LOCALE_COOKIE)?.value as
-    | Locale
-    | undefined;
+  const rawCookieLocale = request.cookies.get(LOCALE_COOKIE)?.value;
+  const cookieLocale = rawCookieLocale && i18n.locales.includes(rawCookieLocale as Locale)
+    ? (rawCookieLocale as Locale)
+    : undefined;
 
   // 首次访问：始终默认 EN（英文为主），不根据浏览器语言自动跳转
   // 用户可通过页面上的语言切换按钮手动选择中文
