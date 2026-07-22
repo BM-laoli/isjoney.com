@@ -53,11 +53,11 @@ export const DATA = {
   locationLink: "https://www.google.com/maps/place/Chengdu",
   // Chinese general data
   chinese: {
-    name: "李仕增",
+    name: "JoneySli",
     subtitle: "游戏开发者(UE4) & 全栈架构师(React)",
     description: "用工程师的严谨打造沉浸式世界\n Unreal Engine C++ | React | Nodejs | .NET Core",
     summary:
-      "你好，我是李仕增👋，一位独立游戏开发者，拥有独特的工程背景。我擅长将高保真游戏开发与可扩展的全栈架构相结合。\n\n我的旅程从扎实的企业软件背景（React & .NET Core）开始，到掌握Unreal Engine 4。这种跨学科的专业知识使我不仅能够使用C++打造沉浸式的游戏体验，还能构建稳健的后端系统和自定义的流水线工具来支持它们。我将Web架构的严谨性带入了游戏开发的创造性混沌中。\n\n我获得了南开大学计算机科学学士学位。目前，我作为自由职业者运营，利用我的混合技能集来构建连接的游戏和交互式3D解决方案。你可以在我的[作品集](/projects)中看到我的作品。\n\n🛠 **技术栈：** **Unreal Engine 4** (C++ Gameplay/Slate), **.NET Core** (Game Server/Backend), **React** (Web/Tools UI), HLSL。",
+      "你好，我是JoneySli👋，一位独立游戏开发者，拥有独特的工程背景。我擅长将高保真游戏开发与可扩展的全栈架构相结合。\n\n我的旅程从扎实的企业软件背景（React & .NET Core）开始，到掌握Unreal Engine 4。这种跨学科的专业知识使我不仅能够使用C++打造沉浸式的游戏体验，还能构建稳健的后端系统和自定义的流水线工具来支持它们。我将Web架构的严谨性带入了游戏开发的创造性混沌中。\n\n我获得了南开大学计算机科学学士学位。目前，我作为自由职业者运营，利用我的混合技能集来构建连接的游戏和交互式3D解决方案。你可以在我的[作品集](/projects)中看到我的作品。\n\n🛠 **技术栈：** **Unreal Engine 4** (C++ Gameplay/Slate), **.NET Core** (Game Server/Backend), **React** (Web/Tools UI), HLSL。",
     blogDescription: "关于GamePlayer、 AI、软件、生活等的思考。短篇笔记和长篇写作。",
     blogInfo: {
       "note-aievaluation": {
