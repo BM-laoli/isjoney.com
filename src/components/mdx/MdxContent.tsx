@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useId, useState, memo, useCallback } from "react";
 import mermaid from "mermaid";
+import { memo, useCallback,useEffect, useId, useRef, useState } from "react";
+
 import { PreviewContent, UniversalPreviewModal } from "./ImageModal";
 
 interface MdxContentProps {
@@ -97,6 +98,13 @@ const MermaidDrawioContent = memo(({ html, className = "" }: InnerContentProps) 
         script.id = "drawio-viewer-script";
         script.src = "https://viewer.diagrams.net/js/viewer-static.min.js";
         script.onload = () => renderDrawio(drawioElements);
+        script.onerror = () => {
+          drawioElements.forEach((el) => {
+            if (!el.getAttribute("data-processed")) {
+              el.innerHTML = `<div class="text-red-500 text-xs p-2 border border-red-200 bg-red-50 rounded">Failed to load DrawIO viewer</div>`;
+            }
+          });
+        };
         document.body.appendChild(script);
       } else {
         renderDrawio(drawioElements);

@@ -4,17 +4,23 @@ import { getContentList } from "@/lib/content";
 // ISR configuration - revalidate every hour (3600 seconds)
 export const revalidate = 3600;
 
+function safeISODate(dateStr: string): string {
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return new Date().toISOString();
+  return d.toISOString();
+}
+
 export async function GET() {
-  const posts = await getContentList('projects');
+  try {
+    const posts = await getContentList('projects');
 
-  // Sort posts by published date (newest first)
-  const sortedPosts = posts.sort((a, b) => {
-    return (
-      new Date(b.metadata.date).getTime() - new Date(a.metadata.date).getTime()
-    );
-  });
+    const sortedPosts = posts.sort((a, b) => {
+      return (
+        new Date(b.metadata.date).getTime() - new Date(a.metadata.date).getTime()
+      );
+    });
 
-  const atomFeed = `<?xml version="1.0" encoding="UTF-8"?>
+    const atomFeed = `<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>${DATA.name} - Projects</title>
   <subtitle>${DATA.description}</subtitle>
@@ -27,12 +33,12 @@ export async function GET() {
   </author>
   <updated>${new Date().toISOString()}</updated>
   ${sortedPosts
-    .map((post) => {
-      const postUrl = `${DATA.url}/projects/${post.slug}`;
-      const publishedDate = new Date(post.metadata.date).toISOString();
-      const updatedDate = new Date(post.metadata.date).toISOString();
+      .map((post) => {
+        const postUrl = `${DATA.url}/projects/${post.slug}`;
+        const publishedDate = safeISODate(post.metadata.date);
+        const updatedDate = safeISODate(post.metadata.date);
 
-      return `
+        return `
   <entry>
     <title>${escapeXml(post.metadata.title)}</title>
     <link href="${postUrl}"/>
@@ -46,16 +52,20 @@ export async function GET() {
     <summary>${escapeXml(post.metadata.summary || "")}</summary>
     <content type="html">${escapeXml(post.html)}</content>
   </entry>`;
-    })
-    .join("")}
+      })
+      .join("")}
 </feed>`;
 
-  return new Response(atomFeed, {
-    headers: {
-      "Content-Type": "application/atom+xml; charset=utf-8",
-      "Cache-Control": "public, max-age=3600, s-maxage=3600",
-    },
-  });
+    return new Response(atomFeed, {
+      headers: {
+        "Content-Type": "application/atom+xml; charset=utf-8",
+        "Cache-Control": "public, max-age=3600, s-maxage=3600",
+      },
+    });
+  } catch (error) {
+    console.error("Atom feed generation failed:", error);
+    return new Response("Internal Server Error", { status: 500 });
+  }
 }
 
 function escapeXml(unsafe: string): string {

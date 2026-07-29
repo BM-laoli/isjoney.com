@@ -1,15 +1,15 @@
 import fs from "fs";
-import path from "path";
 import matter from "gray-matter";
-import { unified } from "unified";
-import remarkParse from "remark-parse";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import remarkRehype from "remark-rehype";
-import rehypeSlug from "rehype-slug";
+import path from "path";
 import rehypeKatex from "rehype-katex";
 import rehypePrettyCode from "rehype-pretty-code";
+import rehypeSlug from "rehype-slug";
 import rehypeStringify from "rehype-stringify";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import remarkParse from "remark-parse";
+import remarkRehype from "remark-rehype";
+import { unified } from "unified";
 
 
 export interface ContentMetadata {
@@ -162,28 +162,34 @@ export async function markdownToHtml(
     }
   );
 
-  // ... (unified 处理流程保持不变) ...
-  const result = await unified()
-    .use(remarkParse)
-    .use(remarkGfm)
-    .use(remarkMath)
-    .use(remarkRehype, { allowDangerousHtml: true })
-    .use(rehypeSlug)
-    .use(rehypeKatex)
-    .use(rehypePrettyCode, {
-      theme: 'dracula', 
-      keepBackground: true,
-      onVisitLine(node) {
-        // 防止空行塌陷
-        if (node.children.length === 0) {
-          node.children = [{ type: "text", value: " " }];
-        }
-      },
-    })
-    .use(rehypeStringify, { allowDangerousHtml: true })
-    .process(processed);
+  // Unified processing pipeline
+  let html: string;
+  try {
+    const result = await unified()
+      .use(remarkParse)
+      .use(remarkGfm)
+      .use(remarkMath)
+      .use(remarkRehype, { allowDangerousHtml: true })
+      .use(rehypeSlug)
+      .use(rehypeKatex)
+      .use(rehypePrettyCode, {
+        theme: 'dracula',
+        keepBackground: true,
+        onVisitLine(node) {
+          if (node.children.length === 0) {
+            node.children = [{ type: "text", value: " " }];
+          }
+        },
+      })
+      .use(rehypeStringify, { allowDangerousHtml: true })
+      .process(processed);
 
-  let html = result.toString();
+    html = result.toString();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`Markdown processing failed for ${contentType}/${slug}:`, message);
+    throw new Error(`Failed to process markdown for ${contentType}/${slug}: ${message}`);
+  }
 
   // ... (恢复 mermaid 和 drawio 的逻辑保持不变) ...
   html = html.replace(
@@ -211,23 +217,29 @@ export async function getContent(
 
   if (!fs.existsSync(filePath)) return null;
 
-  const source = fs.readFileSync(filePath, "utf-8");
-  const { content, data } = matter(source);
-  const html = await markdownToHtml(content, type, slug);
-  const headings = extractHeadings(html);
+  try {
+    const source = fs.readFileSync(filePath, "utf-8");
+    const { content, data } = matter(source);
+    const html = await markdownToHtml(content, type, slug);
+    const headings = extractHeadings(html);
 
-  return {
-    slug,
-    content,
-    html,
-    headings,
-    metadata: {
-      title: data.title || "",
-      date: data.date || "",
-      summary: data.summary || "",
-      ...data,
-    },
-  };
+    return {
+      slug,
+      content,
+      html,
+      headings,
+      metadata: {
+        title: data.title || "",
+        date: data.date || "",
+        summary: data.summary || "",
+        ...data,
+      },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`Failed to load content ${type}/${slug}:`, message);
+    return null;
+  }
 }
 
 export async function getContentList(type: ContentType): Promise<ContentItem[]> {
@@ -284,7 +296,7 @@ export async function getBooksContent(
 
     const bookDir = path.join(getContentPath("books"), safeBookSlug);
     
-    console.log('Safe Book Dir:', bookDir);
+
     // 2. 尝试匹配多种后缀 (mdx 或 md)
     let filePath = path.join(bookDir, `${safeChapterSlug}.mdx`);
     if (!fs.existsSync(filePath)) {
@@ -305,29 +317,33 @@ export async function getBooksContent(
   }
 
   // 2. 读取文件内容
-  const source = fs.readFileSync(filePath, "utf-8");
-  const { content, data } = matter(source);
+  try {
+    const source = fs.readFileSync(filePath, "utf-8");
+    const { content, data } = matter(source);
 
-  // 3. 构造组合 Slug (用于传给 markdownToHtml 生成正确的资源路径)
-  // 结果示例: "Interview/test"
-  const compositeSlug = `${bookSlug}/${chapterSlug}`;
+    // 3. 构造组合 Slug (用于传给 markdownToHtml 生成正确的资源路径)
+    const compositeSlug = `${bookSlug}/${chapterSlug}`;
 
-  // 4. 转换 HTML (触发 books 类型的特殊图片处理)
-  const html = await markdownToHtml(content, "books", compositeSlug);
-  const headings = extractHeadings(html);
+    // 4. 转换 HTML (触发 books 类型的特殊图片处理)
+    const html = await markdownToHtml(content, "books", compositeSlug);
+    const headings = extractHeadings(html);
 
-  return {
-    slug: compositeSlug, // 返回组合路径作为唯一标识
-    content,
-    html,
-    headings,
-    metadata: {
-      title: data.title || "",
-      date: data.date || "",
-      summary: data.summary || "",
-      // 如果 frontmatter 没写 keyId，自动用 bookSlug 填充，方便关联目录
-      keyId: data.keyId || bookSlug, 
-      ...data,
-    },
-  };
+    return {
+      slug: compositeSlug,
+      content,
+      html,
+      headings,
+      metadata: {
+        title: data.title || "",
+        date: data.date || "",
+        summary: data.summary || "",
+        keyId: data.keyId || bookSlug,
+        ...data,
+      },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`Failed to load book content ${bookSlug}/${chapterSlug}:`, message);
+    return null;
+  }
 }

@@ -8,9 +8,9 @@ import { NextResponse } from "next/server";
 // This makes the response cached for 24 hours and regenerated in the background
 export const revalidate = 86400; // 86400 seconds = 24 hours
 
-const propertyId = process.env.GA4_PROPERTY_ID!;
-const clientEmail = process.env.GA4_CLIENT_EMAIL!;
-const privateKey = (process.env.GA4_PRIVATE_KEY || "").replace(/\\n/g, "\n");
+const propertyId = process.env.GA4_PROPERTY_ID ?? "";
+const clientEmail = process.env.GA4_CLIENT_EMAIL ?? "";
+const privateKey = (process.env.GA4_PRIVATE_KEY ?? "").replace(/\\n/g, "\n");
 
 export async function GET() {
   try {
@@ -57,10 +57,7 @@ export async function GET() {
   } catch (err: unknown) {
     console.error("GA4 API Error:", err);
     return NextResponse.json(
-      {
-        error: "Failed to fetch GA4 data",
-        detail: String(err),
-      },
+      { error: "Failed to fetch GA4 data" },
       { status: 500 },
     );
   }
