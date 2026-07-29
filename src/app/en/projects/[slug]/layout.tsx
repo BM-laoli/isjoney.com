@@ -1,14 +1,12 @@
-// app/projects/[slug]/layout.tsx
-
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { generateProjectJsonLd } from "@/app/jsonld";
-import { DATA } from "@/data";
-import { jsonldScript } from "@/lib/utils";
-import { getContent } from "@/lib/content";
 import { TableOfContents } from "@/components/mdx/TableOfContents";
-import { MobileTOC } from "@/components/mdx/MobileTOC";
+import { MobileTOC } from "@/components/shared/MobileTOC";
+import { getContent } from "@/lib/content";
+import { generateContentMetadata } from "@/lib/metadata";
+import { jsonldScript } from "@/lib/utils";
 
 export async function generateMetadata(props: {
   params: Promise<{
@@ -16,33 +14,7 @@ export async function generateMetadata(props: {
   }>;
 }): Promise<Metadata | undefined> {
   const params = await props.params;
-  const project = await getContent("projects", params.slug);
-
-  if (!project) {
-    return undefined;
-  }
-
-  const { title, summary: description, image } = project.metadata;
-
-  return {
-    title,
-    description,
-    alternates: {
-      canonical: `${DATA.url}/projects/${project.slug}`,
-    },
-    openGraph: {
-      title,
-      description,
-      type: "article",
-      url: `${DATA.url}/projects/${project.slug}`,
-      images: image ? [{ url: `${DATA.url}${image}` }] : undefined,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-    },
-  };
+  return generateContentMetadata("projects", params.slug);
 }
 
 export default async function ProjectLayout(props: {

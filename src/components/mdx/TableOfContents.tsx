@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { ReadingProgress } from "@/components/shared/ReadingProgress";
 import { cn } from "@/lib/utils";
 
 interface Heading {
@@ -112,41 +113,6 @@ function TocItems({
   );
 }
 
-// 阅读进度指示器
-function ReadingProgress() {
-  const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    const updateProgress = () => {
-      const scrollTop = window.scrollY;
-      const docHeight =
-        document.documentElement.scrollHeight - window.innerHeight;
-      const scrollProgress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-      setProgress(Math.min(100, Math.max(0, scrollProgress)));
-    };
-
-    window.addEventListener("scroll", updateProgress, { passive: true });
-    updateProgress();
-
-    return () => window.removeEventListener("scroll", updateProgress);
-  }, []);
-
-  return (
-    <div className="space-y-1.5">
-      <div className="flex justify-between text-xs text-muted-foreground">
-        <span>阅读进度</span>
-        <span>{Math.round(progress)}%</span>
-      </div>
-      <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
-        <div
-          className="h-full rounded-full bg-primary transition-all duration-150"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
 export function TableOfContents({
   headings,
   hideTitle = false,
@@ -209,7 +175,7 @@ export function TableOfContents({
 
       {!hideTitle && (
         <div className="mt-4 border-t border-border pt-3">
-          <ReadingProgress />
+          <ReadingProgress compact />
         </div>
       )}
     </nav>

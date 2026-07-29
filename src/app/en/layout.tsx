@@ -1,19 +1,7 @@
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
-import { ThemeProvider } from "next-themes";
 
-import {
-  generateBreadcrumbListJsonLd,
-  generatePersonJsonLd,
-  generateWebsiteJsonLd,
-} from "@/app/jsonld";
-import Footer from "@/components/blocks/Footer";
-import Navbar from "@/components/blocks/Navbar/Navbar";
-import { TooltipProvider } from "@/components/ui/Tooltip";
+import LocaleLayoutShell from "@/components/layouts/LocaleLayoutShell";
 import { DATA } from "@/data";
-import { jsonldScript } from "@/lib/utils";
-
 
 /* Metadata */
 export const metadata: Metadata = {
@@ -68,33 +56,5 @@ export default function EnglishLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <>
-      <head>
-        {/* Google Tag Manager */}
-        {/* Baidu Site Verification */}
-
-        {/* JSON-LD Schemas */}
-        {jsonldScript(generateWebsiteJsonLd())}
-        {jsonldScript(generateBreadcrumbListJsonLd())}
-        {jsonldScript(generatePersonJsonLd())}
-      </head>
-
-      {/* Google Tag Manager (noscript) */}
-      {/* End Google Tag Manager (noscript) */}
-
-      {/* Main Layout */}
-      <ThemeProvider attribute="class" defaultTheme="system">
-        <TooltipProvider delayDuration={0}>
-          <Navbar />
-          {children}
-          <Footer />
-        </TooltipProvider>
-      </ThemeProvider>
-
-      {/* Vercel Analytics and Speed Insights */}
-      <Analytics />
-      <SpeedInsights />
-    </>
-  );
+  return <LocaleLayoutShell>{children}</LocaleLayoutShell>;
 }
